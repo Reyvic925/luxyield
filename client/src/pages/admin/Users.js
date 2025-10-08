@@ -71,19 +71,32 @@ const AdminUsers = () => {
 
   const handleBalanceUpdate = async ({ userId, amount, operation }) => {
     try {
-      // Convert amount to number and ensure positive value
-      const numAmount = Math.abs(Number(amount));
-      if (isNaN(numAmount) || numAmount <= 0) {
-        throw new Error('Please enter a valid amount greater than 0');
+      // Validate inputs
+      if (!userId) throw new Error('User ID is required');
+      if (!amount || amount <= 0) throw new Error('Please enter a valid amount greater than 0');
+      if (!['add', 'subtract'].includes(operation)) throw new Error('Invalid operation');
+
+      // Get current user
+      const currentUser = users.find(u => u._id === userId || u.id === userId);
+      if (!currentUser) throw new Error('User not found');
+
+      // Validate sufficient balance for subtraction
+      if (operation === 'subtract') {
+        const availableBalance = Number(currentUser.availableBalance || 0);
+        if (amount > availableBalance) {
+          throw new Error(`Cannot subtract more than the available balance ($${availableBalance.toFixed(2)})`);
+        }
       }
 
-      const updatedUser = await updateUserBalance(userId, numAmount, operation);
+      // Update balance through API
+      const updatedUser = await updateUserBalance(userId, Number(amount), operation);
       
       // Format the updated user data
       const updatedUserData = {
-        ...balanceUser,
+        ...currentUser,
         ...updatedUser,
-        balance: Number(updatedUser.balance || 0),
+        balance: Number(updatedUser.balance).toFixed(2),
+        availableBalance: Number(updatedUser.availableBalance).toFixed(2),
         _id: updatedUser._id || updatedUser.id,
         id: updatedUser._id || updatedUser.id
       };
@@ -96,8 +109,9 @@ const AdminUsers = () => {
       );
       setBalanceUser(updatedUserData);
 
-      // Log successful update
-      console.log('Balance updated successfully:', updatedUserData.balance);
+      console.log(`Balance updated successfully: ${operation === 'add' ? '+' : '-'}$${amount} (New balance: $${updatedUserData.balance})`);
+      
+      return updatedUserData; // Return the updated user data for the modal to use
     } catch (error) {
       console.error('Failed to update balance:', error);
       throw error;

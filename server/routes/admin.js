@@ -143,18 +143,29 @@ router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', 
 
   // Update user's available balance based on operation
   const prevAvailable = Number(user.availableBalance || 0);
+  const prevBalance = Number(user.balance || 0);
   const finalAmount = operation === 'subtract' ? -Number(amount) : Number(amount);
-  user.availableBalance = Number((prevAvailable + finalAmount).toFixed(2)); // Ensure 2 decimal places
+  
+  // Update both available balance and total balance
+  user.availableBalance = Number((prevAvailable + finalAmount).toFixed(2));
+  user.balance = Number((prevBalance + finalAmount).toFixed(2));
 
-    // Create audit record
-    const auditEntry = {
-      timestamp: new Date(),
-      action: operation,
-      amount: Number(amount),
-      prevBalance,
-      newBalance: user.balance,
-      adminId: req.user.id
-    };
+  // Validate the result isn't negative
+  if (user.availableBalance < 0 || user.balance < 0) {
+    return res.status(400).json({ message: 'Insufficient balance for this operation' });
+  }
+
+  // Create audit record
+  const auditEntry = {
+    timestamp: new Date(),
+    action: operation,
+    amount: Number(amount),
+    prevBalance: prevBalance,
+    newBalance: user.balance,
+    prevAvailable: prevAvailable,
+    newAvailable: user.availableBalance,
+    adminId: req.user.id
+  };
 
     // Add to balance history if the array exists
     if (!user.balanceHistory) {
@@ -164,9 +175,20 @@ router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', 
 
     await user.save();
     
-    console.log(`[ADMIN] Balance update for user ${user.email}: ${amount > 0 ? '+' : '-'}$${Math.abs(amount)}. New balance: $${user.balance}`);
+    console.log(`[ADMIN] Balance update for user ${user.email}:
+      Operation: ${operation}
+      Amount: ${amount > 0 ? '+' : '-'}$${Math.abs(amount)}
+      Previous Balance: $${prevBalance.toFixed(2)}
+      New Balance: $${user.balance.toFixed(2)}
+      Previous Available: $${prevAvailable.toFixed(2)}
+      New Available: $${user.availableBalance.toFixed(2)}
+    `);
     
-    res.json(user);
+    res.json({
+      ...user.toObject(),
+      balance: Number(user.balance).toFixed(2),
+      availableBalance: Number(user.availableBalance).toFixed(2)
+    });
   } catch (err) {
     console.error('Balance update error:', err);
     res.status(500).json({ message: err.message });

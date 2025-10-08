@@ -6,15 +6,27 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
   const [operation, setOperation] = useState('add');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess(false);
     
+    // Validate amount
     const numAmount = parseFloat(amount);
     if (!numAmount || isNaN(numAmount) || numAmount <= 0) {
       setError('Please enter a valid amount greater than 0');
       return;
+    }
+
+    // Check if subtracting more than available balance
+    if (operation === 'subtract') {
+      const availableBalance = Number(user.availableBalance || 0);
+      if (numAmount > availableBalance) {
+        setError(`Cannot subtract more than the available balance ($${availableBalance.toFixed(2)})`);
+        return;
+      }
     }
 
     setLoading(true);
@@ -24,7 +36,8 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
         amount: numAmount,
         operation
       });
-      onClose();
+      setSuccess(true);
+      setTimeout(() => onClose(), 1500); // Close after showing success message
     } catch (err) {
       setError(err.message || 'Failed to update balance');
       setLoading(false);
@@ -58,6 +71,12 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {success && (
+          <div className="bg-green-500 bg-opacity-10 text-green-400 px-4 py-2 rounded-lg">
+            Balance updated successfully!
+          </div>
+        )}
+        
         <div>
           <label className="block text-sm font-medium mb-2">Operation</label>
           <div className="flex gap-4">
@@ -68,6 +87,7 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
                 value="add"
                 checked={operation === 'add'}
                 onChange={(e) => setOperation(e.target.value)}
+                disabled={loading}
                 className="mr-2"
               />
               Add Funds
@@ -79,6 +99,7 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
                 value="subtract"
                 checked={operation === 'subtract'}
                 onChange={(e) => setOperation(e.target.value)}
+                disabled={loading}
                 className="mr-2"
               />
               Subtract Funds
@@ -88,16 +109,19 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
 
         <div>
           <label className="block text-sm font-medium mb-2">Amount</label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full px-4 py-2 bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-            placeholder="Enter amount"
-            required
-          />
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full pl-8 pr-4 py-2 bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              placeholder="0.00"
+              required
+              disabled={loading}
+            />
         </div>
 
         <div className="flex justify-end gap-4 pt-4">

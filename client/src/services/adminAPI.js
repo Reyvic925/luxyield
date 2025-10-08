@@ -34,18 +34,28 @@ export const updateUser = async (userId, updates) => {
 
 export const updateUserBalance = async (userId, amount, operation) => {
   try {
+    if (!userId) throw new Error('User ID is required');
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      throw new Error('Please enter a valid amount greater than 0');
+    }
+    if (!['add', 'subtract'].includes(operation)) {
+      throw new Error('Invalid operation type');
+    }
+
     const response = await API.post(`/users/${userId}/balance`, {
       amount: Number(amount),
       operation
     });
     
-    // Ensure balance is properly formatted in the response
+    // Ensure numeric values are properly formatted
     const userData = response.data;
     return {
       ...userData,
-      balance: Number(userData.balance || 0).toFixed(2)
+      balance: Number(userData.balance || 0).toFixed(2),
+      availableBalance: Number(userData.availableBalance || 0).toFixed(2)
     };
   } catch (error) {
+    console.error('Balance update error:', error);
     throw error.response?.data?.message || 'Failed to update balance';
   }
 };
