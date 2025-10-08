@@ -41,12 +41,12 @@ const UserSchema = new mongoose.Schema({
   balance: {
     type: Number,
     default: 0,
-    get: v => Math.round(v * 100) / 100 // Ensures 2 decimal places
+    get: v => parseFloat((v || 0).toFixed(2))
   },
   availableBalance: {
     type: Number,
     default: 0,
-    get: v => Math.round(v * 100) / 100 // Ensures 2 decimal places
+    get: v => parseFloat((v || 0).toFixed(2))
   },
   kyc: {
     idUrl: { type: String, default: '' },

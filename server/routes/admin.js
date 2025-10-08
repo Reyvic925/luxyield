@@ -106,11 +106,15 @@ router.delete('/market-events/:id', authAdmin, async (req, res) => {
 // Get all users
 router.get('/users', authAdmin, async (req, res) => {
   try {
-    const users = await User.find().select('+balance');
-    res.json(users.map(user => ({
-      ...user.toObject(),
-      balance: user.balance || 0
-    })));
+    const users = await User.find();
+    res.json(users.map(user => {
+      const userData = user.toObject();
+      return {
+        ...userData,
+        availableBalance: parseFloat((userData.availableBalance || 0).toFixed(2)),
+        balance: parseFloat((userData.balance || 0).toFixed(2))
+      };
+    }));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -183,10 +187,11 @@ router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', 
       Updated Balance: $${user.availableBalance.toFixed(2)}
     `);
     
+    const userData = user.toObject();
     res.json({
-      ...user.toObject(),
-      balance: Number(user.balance).toFixed(2),
-      availableBalance: Number(user.availableBalance).toFixed(2)
+      ...userData,
+      availableBalance: parseFloat((userData.availableBalance || 0).toFixed(2)),
+      balance: parseFloat((userData.balance || 0).toFixed(2))
     });
   } catch (err) {
     console.error('Balance update error:', err);
