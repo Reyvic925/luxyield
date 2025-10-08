@@ -107,14 +107,7 @@ router.delete('/market-events/:id', authAdmin, async (req, res) => {
 router.get('/users', authAdmin, async (req, res) => {
   try {
     const users = await User.find();
-    res.json(users.map(user => {
-      const userData = user.toObject();
-      return {
-        ...userData,
-        availableBalance: parseFloat((userData.availableBalance || 0).toFixed(2)),
-        balance: parseFloat((userData.balance || 0).toFixed(2))
-      };
-    }));
+    res.json(users);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -127,72 +120,6 @@ router.patch('/users/:id', authAdmin, auditLog('update_user', 'User', req => req
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// Handle user balance updates
-router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', req => req.params.id), async (req, res) => {
-  try {
-    const { amount, operation } = req.body;
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Validate amount
-    const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || numAmount <= 0) {
-      return res.status(400).json({ message: 'Please enter a valid amount greater than 0' });
-    }
-
-    // Get current available balance
-    const currentBalance = parseFloat(user.availableBalance || 0);
-
-    // Calculate new balance based on operation
-    if (operation === 'add') {
-      user.availableBalance = currentBalance + numAmount;
-    } else if (operation === 'subtract') {
-      if (currentBalance < numAmount) {
-        return res.status(400).json({ message: 'Insufficient available balance' });
-      }
-      user.availableBalance = currentBalance - numAmount;
-    } else {
-      return res.status(400).json({ message: 'Invalid operation' });
-    }
-
-    // Format to 2 decimal places and ensure it's a number
-    user.availableBalance = parseFloat(user.availableBalance.toFixed(2));
-
-    // Create balance history record
-    const BalanceHistory = require('../models/BalanceHistory');
-    await new BalanceHistory({
-      userId: user._id,
-      type: operation === 'add' ? 'admin_add' : 'admin_subtract',
-      amount: Number(amount),
-      previousBalance: currentBalance,
-      newBalance: user.availableBalance,
-      description: `Admin ${operation} adjustment`,
-      adminId: req.user.id
-    }).save();
-
-    await user.save();
-    
-    console.log(`[ADMIN] Dashboard balance update for user ${user.email}:
-      Operation: ${operation}
-      Amount: $${numAmount}
-      Previous Balance: $${currentBalance.toFixed(2)}
-      Updated Balance: $${user.availableBalance.toFixed(2)}
-    `);
-    
-    const userData = user.toObject();
-    res.json({
-      ...userData,
-      availableBalance: parseFloat((userData.availableBalance || 0).toFixed(2)),
-      balance: parseFloat((userData.balance || 0).toFixed(2))
-    });
-  } catch (err) {
-    console.error('Balance update error:', err);
     res.status(500).json({ message: err.message });
   }
 });

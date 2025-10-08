@@ -1,9 +1,8 @@
 // src/pages/admin/Funds.js
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiFilter, FiDownload, FiSearch, FiRefreshCcw } from 'react-icons/fi';
+import { FiPlus, FiFilter, FiDownload } from 'react-icons/fi';
 import FundList from '../../components/admin/FundList';
 import FundEditor from '../../components/admin/FundEditor';
-import PageWrapper from '../../components/admin/PageWrapper';
 import { getFunds, updateFund, deleteFund } from '../../services/fundAPI';
 
 const AdminFunds = () => {

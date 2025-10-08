@@ -32,36 +32,6 @@ export const updateUser = async (userId, updates) => {
   }
 };
 
-export const updateUserBalance = async (userId, amount, operation) => {
-  try {
-    if (!userId) throw new Error('User ID is required');
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      throw new Error('Please enter a valid amount greater than 0');
-    }
-    if (!['add', 'subtract'].includes(operation)) {
-      throw new Error('Invalid operation type');
-    }
-
-    const response = await API.post(`/users/${userId}/balance`, {
-      amount: Number(amount),
-      operation
-    });
-    
-    const userData = response.data;
-    // Handle null/undefined values and ensure consistent number formatting
-    const formatBalance = (value) => parseFloat((parseFloat(value || 0)).toFixed(2));
-
-    return {
-      ...userData,
-      balance: formatBalance(userData.balance),
-      availableBalance: formatBalance(userData.availableBalance)
-    };
-  } catch (error) {
-    console.error('Balance update error:', error);
-    throw error.response?.data?.message || 'Failed to update balance';
-  }
-};
-
 export const approveKYC = async (userId) => {
   try {
     const response = await API.post(`/users/${userId}/kyc/approve`);

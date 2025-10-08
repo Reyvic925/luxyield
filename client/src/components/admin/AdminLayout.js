@@ -1,59 +1,22 @@
 // src/components/admin/AdminLayout.js
 import React, { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { 
-  FiUsers, FiDollarSign, FiDownload, FiSettings, FiHome, FiBell, 
-  FiChevronLeft, FiChevronRight, FiMail, FiPieChart,
-  FiMessageSquare, FiCpu, FiPercent
-} from 'react-icons/fi';
+import { FiUsers, FiDollarSign, FiDownload, FiSettings, FiHome, FiBell, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useAdminAuth } from '../../auth/AdminAuthProvider';
 
 const AdminLayout = () => {
   const { admin, logout } = useAdminAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false); // default closed on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(true); // default open on desktop
   const [darkMode, setDarkMode] = useState(true);
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
-  
-  React.useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) setSidebarOpen(true);
-    };
-
-    window.addEventListener('resize', handleResize);
-    handleResize();
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  React.useEffect(() => {
-    document.body.classList.toggle('mobile-menu-open', sidebarOpen && isMobile);
-    
-    return () => {
-      document.body.classList.remove('mobile-menu-open');
-    };
-  }, [sidebarOpen, isMobile]);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   return (
     <div className={
       `flex h-screen font-sans text-base relative transition-colors duration-300 ${darkMode ? 'bg-black text-gray-100' : 'bg-white text-gray-900'}`
     }>
-      {/* Mobile Menu Toggle */}
-      <button
-        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-gray-900 bg-opacity-80 text-gold hover:bg-gray-800 transition md:hidden"
-        onClick={() => setSidebarOpen(true)}
-        aria-label="Open menu"
-      >
-        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button>
       {/* Theme Toggle Button */}
       <button
-        className="fixed top-4 right-4 z-50 bg-gray-900 bg-opacity-80 p-2 rounded-lg text-gold hover:bg-gray-800 transition md:right-8"
+        className="fixed top-6 right-6 z-50 bg-gray-900 bg-opacity-80 p-2 rounded-lg text-gold hover:bg-gray-800 transition md:right-8"
         onClick={() => setDarkMode((prev) => !prev)}
         aria-label="Toggle theme"
       >
@@ -69,9 +32,9 @@ const AdminLayout = () => {
       )}
       {/* Sidebar */}
       <aside
-        className={`fixed md:static top-0 left-0 h-full ${sidebarOpen ? 'w-[280px] md:w-64' : 'w-0 md:w-16'} ${darkMode ? 'bg-gradient-to-b from-gray-950 to-gray-900 border-gray-800' : 'bg-gradient-to-b from-gray-100 to-white border-gray-200'} border-r shadow-lg z-40 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} transition-all duration-300 ease-in-out flex flex-col overflow-hidden`}
-        style={{ pointerEvents: sidebarOpen ? 'auto' : 'none' }}
-        aria-hidden={!sidebarOpen}
+        className={`fixed md:static top-0 left-0 h-full ${sidebarOpen ? 'w-64' : 'w-16'} ${darkMode ? 'bg-gradient-to-b from-gray-950 to-gray-900 border-gray-800' : 'bg-gradient-to-b from-gray-100 to-white border-gray-200'} border-r shadow-lg z-40 transform ${sidebarOpen || isMobile ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out flex flex-col`}
+        style={{ pointerEvents: sidebarOpen || isMobile ? 'auto' : 'none' }}
+        aria-hidden={!sidebarOpen && isMobile}
       >
         <div className={`flex items-center h-20 px-4 border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
           <span className={`text-2xl font-extrabold tracking-widest ${darkMode ? 'text-gold' : 'text-yellow-700'} transition-all duration-300 ${!sidebarOpen ? 'opacity-0 w-0' : 'opacity-100 w-auto'}`}>LUXHEDGE</span>
@@ -80,21 +43,15 @@ const AdminLayout = () => {
           </button>
           <button className="ml-auto md:hidden text-gray-400 hover:text-gold" onClick={() => setSidebarOpen(false)} style={{display: isMobile ? 'block' : 'none'}}>&times;</button>
         </div>
-        <nav className={`flex-1 py-8 ${sidebarOpen ? 'px-4' : 'px-1'} space-y-1 overflow-y-auto`}>
-          {/* Core Navigation */}
+        <nav className={`flex-1 py-8 ${sidebarOpen ? 'px-4' : 'px-1'} space-y-2 overflow-y-auto`}>
           <Link to="/admin" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
             <FiHome className="mr-3 text-lg" /> Dashboard
           </Link>
           <Link to="/admin/users" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
             <FiUsers className="mr-3 text-lg" /> Users
           </Link>
-
-          {/* Financial Section */}
-          <div className="pt-4 pb-2">
-            <div className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Financial</div>
-          </div>
           <Link to="/admin/funds" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiPieChart className="mr-3 text-lg" /> Funds
+            <FiDollarSign className="mr-3 text-lg" /> Funds
           </Link>
           <Link to="/admin/deposits" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
             <FiDollarSign className="mr-3 text-lg" /> Deposits
@@ -102,33 +59,23 @@ const AdminLayout = () => {
           <Link to="/admin/withdrawals" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
             <FiDownload className="mr-3 text-lg" /> Withdrawals
           </Link>
-          <Link to="/admin/roi-approvals" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiPercent className="mr-3 text-lg" /> ROI Approvals
-          </Link>
-
-          {/* Communications */}
-          <div className="pt-4 pb-2">
-            <div className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Communications</div>
-          </div>
-          <Link to="/admin/support" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiMessageSquare className="mr-3 text-lg" /> Support Chat
+          <Link to="/admin/settings" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiSettings className="mr-3 text-lg" /> Settings
           </Link>
           <Link to="/admin/send-email" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiMail className="mr-3 text-lg" /> Send Email
+            <FiSettings className="mr-3 text-lg" /> Send Email
           </Link>
           <Link to="/admin/announcements" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
             <FiBell className="mr-3 text-lg" /> Announcements
           </Link>
-
-          {/* Tools & Settings */}
-          <div className="pt-4 pb-2">
-            <div className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Tools</div>
-          </div>
-          <Link to="/admin/mirror" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiCpu className="mr-3 text-lg" /> Mirror User
+          <Link to="/admin/support" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiBell className="mr-3 text-lg" /> Support Chat
           </Link>
-          <Link to="/admin/settings" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiSettings className="mr-3 text-lg" /> Settings
+          <Link to="/admin/mirror" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiUsers className="mr-3 text-lg" /> Mirror User
+          </Link>
+          <Link to="/admin/roi-approvals" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiSettings className="mr-3 text-lg" /> ROI Approvals
           </Link>
         </nav>
         <div className={`px-4 py-6 border-t ${darkMode ? 'border-gray-800' : 'border-gray-200'} flex items-center transition-all duration-300 ${!sidebarOpen ? 'justify-center' : ''}`}>

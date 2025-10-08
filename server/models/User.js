@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const balanceValidator = require('../middleware/balanceValidator');
 
 const UserSchema = new mongoose.Schema({
   name: {
@@ -38,16 +37,6 @@ const UserSchema = new mongoose.Schema({
   referralEarnings: {
     type: Number,
     default: 0
-  },
-  balance: {
-    type: Number,
-    default: 0,
-    get: v => parseFloat((v || 0).toFixed(2))
-  },
-  availableBalance: {
-    type: Number,
-    default: 0,
-    get: v => parseFloat((v || 0).toFixed(2))
   },
   kyc: {
     idUrl: { type: String, default: '' },
@@ -107,7 +96,6 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  // balance field moved to top of schema with getter
   withdrawal2faCode: {
     type: String,
     default: undefined
@@ -212,6 +200,16 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  // Monetary balances
+  availableBalance: {
+    type: Number,
+    default: 0
+  },
+  // Some routes still reference depositBalance; keep for compatibility
+  depositBalance: {
+    type: Number,
+    default: 0
+  },
   lockedBalance: {
     type: Number,
     default: 0
@@ -232,8 +230,5 @@ const UserSchema = new mongoose.Schema({
   pinResetCode: { type: String, select: false },
   pinResetExpiry: { type: Number, select: false }
 });
-
-// Add balance validation middleware
-UserSchema.pre('save', balanceValidator);
 
 module.exports = mongoose.model('User', UserSchema);

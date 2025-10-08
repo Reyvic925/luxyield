@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { FiTrash2, FiInfo, FiClock, FiPlus, FiBell } from 'react-icons/fi';
-import PageWrapper from '../../components/admin/PageWrapper';
+import { FiTrash2, FiInfo, FiClock } from 'react-icons/fi';
 import '../Announcements.css';
 
 const AdminAnnouncements = () => {

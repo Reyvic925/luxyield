@@ -1,53 +1,54 @@
-﻿import React, { useState } from 'react';
-import { FiSearch, FiEdit2, FiEye, FiDollarSign } from 'react-icons/fi';
+// src/components/admin/UserTable.js
+import React, { useState } from 'react';
+import { FiSearch, FiFilter, FiEdit2, FiEye } from 'react-icons/fi';
 
-const UserTable = ({ users, onSelectUser, onUpdateUser, onManageBalance }) => {
+
+const UserTable = ({ users, onSelectUser }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('all');
+  // const [filters, setFilters] = useState({
+  //   verified: false,
+  //   active: false,
+  //   kycPending: false
+  // });
 
+  // Ensure users is always an array
   const safeUsers = Array.isArray(users) ? users : [];
 
   const filteredUsers = safeUsers.filter(user => {
     const matchesSearch = 
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (viewMode === 'all') return matchesSearch;
-    if (viewMode === 'verified') return matchesSearch && user.kycStatus === 'verified';
-    if (viewMode === 'pending') return matchesSearch && user.kycStatus === 'pending';
-    return matchesSearch;
+    // const matchesFilters = 
+    //   (!filters.verified || user.verified) &&
+    //   (!filters.active || user.status === 'active') &&
+    //   (!filters.kycPending || user.kycStatus === 'pending');
+    return matchesSearch; // && matchesFilters;
   });
 
+  // Ensure all users have an 'id' property for consistency
   const normalizedUsers = filteredUsers.map(user => ({ ...user, id: user.id || user._id }));
+  // Remove duplicate users by id
   const uniqueUsers = Array.from(new Map(normalizedUsers.map(u => [u.id, u])).values());
 
   return (
-    <>
-      <div className="mb-6 md:mb-8 flex flex-col md:flex-row gap-4 md:gap-6 justify-between">
-        <div className="w-full md:w-80 relative">
+    <div className="bg-gray-800 rounded-xl p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div className="relative w-full md:w-64">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search users..."
-            className="w-full py-2 pl-8 bg-transparent border-b border-gray-700 text-white focus:outline-none"
+            className="w-full pl-10 pr-4 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <FiSearch className="absolute top-[11px] left-0 text-gray-400" />
         </div>
-        <div className="flex flex-wrap items-center gap-4 md:gap-6">
-          <button onClick={() => setViewMode('all')} 
-            className={`${viewMode === 'all' ? 'text-gold' : 'text-gray-400'} text-sm md:text-base`}>
-            All Users
+        
+        <div className="flex items-center space-x-2">
+          <button className="flex items-center px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600">
+            <FiFilter className="mr-2" /> Filters
           </button>
-          <button onClick={() => setViewMode('verified')} 
-            className={`${viewMode === 'verified' ? 'text-green-400' : 'text-gray-400'} text-sm md:text-base`}>
-            Verified
-          </button>
-          <button onClick={() => setViewMode('pending')} 
-            className={`${viewMode === 'pending' ? 'text-yellow-400' : 'text-gray-400'} text-sm md:text-base`}>
-            Pending KYC
-          </button>
-          <select className="bg-transparent text-white border-b border-gray-700 py-1 text-sm md:text-base">
+          <select className="bg-gray-700 rounded-lg px-4 py-2 focus:outline-none">
             <option>Export</option>
             <option>CSV</option>
             <option>PDF</option>
@@ -55,82 +56,66 @@ const UserTable = ({ users, onSelectUser, onUpdateUser, onManageBalance }) => {
         </div>
       </div>
 
-            <div className="overflow-x-auto -mx-4 md:mx-0">
-        <table className="w-full min-w-[800px]">
+      <div className="overflow-x-auto">
+        <table className="w-full">
           <thead>
-            <tr>
-              <th className="text-left font-medium text-gray-400 px-4">User</th>
-              <th className="text-left font-medium text-gray-400">Email</th>
-              <th className="text-left font-medium text-gray-400">KYC Status</th>
-              <th className="text-left font-medium text-gray-400">Role</th>
-              <th className="text-left font-medium text-gray-400">Available Balance</th>
-              <th className="text-left font-medium text-gray-400">Total Balance</th>
-              <th className="text-left font-medium text-gray-400">Actions</th>
+            <tr className="border-b border-gray-700 text-left">
+              <th className="pb-4">User</th>
+              <th className="pb-4">Email</th>
+              <th className="pb-4">Tier</th>
+              <th className="pb-4">KYC Status</th>
+              <th className="pb-4">Balance</th>
+              <th className="pb-4">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {uniqueUsers.map((user) => (
-              <tr key={user.id} className="border-t border-gray-800 hover:bg-gray-900/30">
-                <td className="py-4 px-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-white shrink-0">
-                      {user.name ? user.name[0].toUpperCase() : 'U'}
+            {uniqueUsers.map(user => (
+              <tr key={user.id} className="border-b border-gray-700 hover:bg-gray-700">
+                <td className="py-4">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3">
+                      {user.name.charAt(0)}
                     </div>
-                    <div className="min-w-0">
-                      <div className="font-medium text-white truncate">{user.name}</div>
-                      <div className="text-sm text-gray-400 truncate">Joined {new Date(user.createdAt).toLocaleDateString()}</div>
+                    <div>
+                      <div className="font-medium">{user.name}</div>
+                      <div className="text-xs text-gray-400">ID: {user.id}</div>
                     </div>
                   </div>
                 </td>
-                <td className="py-4 text-white">
-                  <div className="truncate max-w-[180px]">{user.email}</div>
-                </td>
+                <td className="py-4">{user.email}</td>
                 <td className="py-4">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap
-                    ${user.kycStatus === 'verified' ? 'bg-green-100 text-green-800' : 
-                      user.kycStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-gray-100 text-gray-800'}`}>
-                    {user.kycStatus || 'Not Started'}
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    user.tier === 'VIP' ? 'bg-purple-500 bg-opacity-20 text-purple-400' :
+                    user.tier === 'Gold' ? 'bg-gold bg-opacity-20 text-gold' :
+                    'bg-gray-600'
+                  }`}>
+                    {user.tier}
                   </span>
                 </td>
                 <td className="py-4">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap
-                    ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
-                    {user.role || 'user'}
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    user.kycStatus === 'verified' ? 'bg-green-500 bg-opacity-20 text-green-400' :
+                    user.kycStatus === 'pending' ? 'bg-yellow-500 bg-opacity-20 text-yellow-400' :
+                    'bg-red-500 bg-opacity-20 text-red-400'
+                  }`}>
+                    {user.kycStatus}
                   </span>
                 </td>
-                <td className="py-4 text-white whitespace-nowrap">
-                  ${typeof user.availableBalance === 'number' ? 
-                    parseFloat(user.availableBalance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 
-                    '0.00'}
-                </td>
-                <td className="py-4 text-white whitespace-nowrap">
-                  ${typeof user.balance === 'number' ? 
-                    parseFloat(user.balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 
-                    '0.00'}
-                </td>
-                <td className="py-4 pr-4">
-                  <div className="flex items-center gap-2">
-                    <button
+                <td className="py-4 font-mono">{
+                  typeof user.availableBalance === 'number'
+                    ? `$${Number(user.availableBalance).toLocaleString()}`
+                    : '$0.00'
+                }</td>
+                <td className="py-4">
+                  <div className="flex space-x-2">
+                    <button 
                       onClick={() => onSelectUser(user)}
-                      className="p-2 text-gray-400 hover:text-white transition-colors"
-                      aria-label="View user"
+                      className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600"
                     >
-                      <FiEye className="w-5 h-5" />
+                      <FiEye />
                     </button>
-                    <button
-                      onClick={() => onManageBalance(user)}
-                      className="p-2 text-gray-400 hover:text-white transition-colors"
-                      aria-label="Manage balance"
-                    >
-                      <FiDollarSign className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => onSelectUser(user)}
-                      className="p-2 text-gray-400 hover:text-white transition-colors"
-                      aria-label="Edit user"
-                    >
-                      <FiEdit2 className="w-5 h-5" />
+                    <button className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600">
+                      <FiEdit2 />
                     </button>
                   </div>
                 </td>
@@ -139,7 +124,7 @@ const UserTable = ({ users, onSelectUser, onUpdateUser, onManageBalance }) => {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 };
 

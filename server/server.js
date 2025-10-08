@@ -11,33 +11,16 @@ const socketio = require('socket.io');
 const { startRoiCron } = require('./utils/roiCalculator');
 
 const app = express();
-
-// CORS Middleware
-// Allow both frontend and API subdomains in production
-const allowedOrigins = ['https://www.luxyield.com', 'https://api.luxyield.com'];
-if (process.env.NODE_ENV === 'development') {
-  allowedOrigins.push('http://localhost:3000');
-}
-
 // Trust proxy headers (needed for WebSocket support on Render and similar hosts)
 app.set('trust proxy', 1);
-
-// Create HTTP server
-const server = http.createServer(app);
-
-// Set up Socket.IO with CORS configuration
-const io = socketio(server, { 
-  cors: { 
-    origin: allowedOrigins,
-    credentials: true 
-  } 
-});
-
 // Log all /socket.io/ requests for debugging WebSocket handshake issues
 app.use('/socket.io', (req, res, next) => {
   console.log(`[SOCKET.IO] ${req.method} ${req.originalUrl} at ${new Date().toISOString()}`);
   next();
 });
+const server = http.createServer(app);
+
+const io = socketio(server, { cors: { origin: ['https://www.luxyield.com'], credentials: true } });
 
 // Basic Socket.IO connection handler
 io.on('connection', (socket) => {
@@ -47,27 +30,21 @@ io.on('connection', (socket) => {
   });
 });
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('Blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+// CORS Middleware
+app.use(cors({
+  origin: 'https://www.luxyield.com',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // Added PATCH
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Authorization']
-};
-
-app.use(cors(corsOptions));
+}));
 // Handle preflight requests for all routes
-app.options('*', cors(corsOptions));
+app.options('*', cors({
+  origin: 'https://www.luxyield.com',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // Added PATCH
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
 // Ensure Authorization header is explicitly allowed for all responses (safety for proxies)
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
