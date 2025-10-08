@@ -141,16 +141,18 @@ router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', 
       return res.status(400).json({ message: 'Please enter a valid amount greater than 0' });
     }
 
-  // Update user's available balance based on operation
-  const prevAvailable = Number(user.availableBalance || 0);
-  const prevBalance = Number(user.balance || 0);
-  const finalAmount = operation === 'subtract' ? -Number(amount) : Number(amount);
+    // Update user's available balance based on operation
+  const prevAvailable = parseFloat(user.availableBalance || 0);
+  const prevBalance = parseFloat(user.balance || 0);
+  const finalAmount = operation === 'subtract' ? -parseFloat(amount) : parseFloat(amount);
   
-  // Update both available balance and total balance
-  user.availableBalance = Number((prevAvailable + finalAmount).toFixed(2));
-  user.balance = Number((prevBalance + finalAmount).toFixed(2));
-
-  // Validate the result isn't negative
+  // Update both available balance and total balance with proper decimal handling
+  const newAvailable = parseFloat((prevAvailable + finalAmount).toFixed(2));
+  const newBalance = parseFloat((prevBalance + finalAmount).toFixed(2));
+  
+  // Ensure the values are stored as numbers with 2 decimal places
+  user.availableBalance = newAvailable;
+  user.balance = newBalance;  // Validate the result isn't negative
   if (user.availableBalance < 0 || user.balance < 0) {
     return res.status(400).json({ message: 'Insufficient balance for this operation' });
   }

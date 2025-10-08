@@ -47,12 +47,15 @@ export const updateUserBalance = async (userId, amount, operation) => {
       operation
     });
     
-    // Ensure numeric values are properly formatted
+    // Ensure numeric values are properly formatted and stored as numbers
     const userData = response.data;
+    const balance = parseFloat(parseFloat(userData.balance || 0).toFixed(2));
+    const availableBalance = parseFloat(parseFloat(userData.availableBalance || 0).toFixed(2));
+    
     return {
       ...userData,
-      balance: Number(userData.balance || 0).toFixed(2),
-      availableBalance: Number(userData.availableBalance || 0).toFixed(2)
+      balance,
+      availableBalance
     };
   } catch (error) {
     console.error('Balance update error:', error);

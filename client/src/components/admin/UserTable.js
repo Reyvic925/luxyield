@@ -63,7 +63,8 @@ const UserTable = ({ users, onSelectUser, onUpdateUser, onManageBalance }) => {
               <th className="text-left font-medium text-gray-400">Email</th>
               <th className="text-left font-medium text-gray-400">KYC Status</th>
               <th className="text-left font-medium text-gray-400">Role</th>
-              <th className="text-left font-medium text-gray-400">Balance</th>
+              <th className="text-left font-medium text-gray-400">Available Balance</th>
+              <th className="text-left font-medium text-gray-400">Total Balance</th>
               <th className="text-left font-medium text-gray-400">Actions</th>
             </tr>
           </thead>
@@ -99,8 +100,14 @@ const UserTable = ({ users, onSelectUser, onUpdateUser, onManageBalance }) => {
                   </span>
                 </td>
                 <td className="py-4 text-white whitespace-nowrap">
-                  {typeof user.availableBalance === 'number' ? `$${user.availableBalance.toLocaleString()}` : 
-                   typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : '$0.00'}
+                  ${typeof user.availableBalance === 'number' ? 
+                    parseFloat(user.availableBalance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 
+                    '0.00'}
+                </td>
+                <td className="py-4 text-white whitespace-nowrap">
+                  ${typeof user.balance === 'number' ? 
+                    parseFloat(user.balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 
+                    '0.00'}
                 </td>
                 <td className="py-4 pr-4">
                   <div className="flex items-center gap-2">
