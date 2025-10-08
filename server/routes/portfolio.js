@@ -15,48 +15,49 @@ async function getPortfolioData(userId) {
     throw new Error('Invalid user ID.');
   }
 
-  // Get all investments for the user
-  const investments = await Investment.find({ user: userId });
-  // Calculate totals
-  const totalValue = investments.reduce((sum, inv) => sum + inv.currentValue, 0);
-  // totalInvested, totalROI, and totalROIPercent will be calculated after investments are defined below
-  // Generate performance data (last 12 months)
-  const performanceData = generatePerformanceData(investments);
-  // Generate allocation data
-  const allocationData = generateAllocationData(investments);
-  // Get recent activity (investments + withdrawals + deposits)
-  const recentInvestments = await Investment.find({ user: userId })
-    .sort('-createdAt')
-    .limit(5);
-  const recentWithdrawals = await Withdrawal.find({ userId: userId })
-    .sort('-createdAt')
-    .limit(5);
-  const recentDeposits = await Deposit.find({ user: userId, status: 'confirmed' })
-    .sort('-createdAt')
-    .limit(5);
+  try {
+    // Get all investments for the user
+    const investments = await Investment.find({ user: userId }) || [];
+    // Calculate totals
+    const totalValue = investments.reduce((sum, inv) => sum + (inv.currentValue || 0), 0);
+    // totalInvested, totalROI, and totalROIPercent will be calculated after allInvestments is defined below
+    // Generate performance data (last 12 months)
+    const performanceData = generatePerformanceData(investments);
+    // Generate allocation data
+    const allocationData = generateAllocationData(investments);
+    // Get recent activity (investments + withdrawals + deposits)
+    const recentInvestments = await Investment.find({ user: userId })
+      .sort('-createdAt')
+      .limit(5) || [];
+    const recentWithdrawals = await Withdrawal.find({ userId: userId })
+      .sort('-createdAt')
+      .limit(5) || [];
+    const recentDeposits = await Deposit.find({ user: userId, status: 'confirmed' })
+      .sort('-createdAt')
+      .limit(5) || [];
   const recentActivity = [
-    ...recentInvestments.map(inv => ({
+    ...(recentInvestments || []).map(inv => ({
       type: 'Investment',
-      amount: inv.amount,
-      fund: inv.fundName,
-      date: inv.createdAt,
+      amount: inv.amount || 0,
+      fund: inv.fundName || '',
+      date: inv.createdAt || new Date(),
       status: inv.status || 'Completed',
       description: inv.planName ? `Invested in ${inv.planName}` : 'Investment',
     })),
-    ...recentWithdrawals.map(wd => ({
+    ...(recentWithdrawals || []).map(wd => ({
       type: 'Withdrawal',
-      amount: wd.amount,
+      amount: wd.amount || 0,
       fund: '',
-      date: wd.createdAt,
-      status: wd.status,
-      description: `Withdrawal to ${wd.walletAddress}`,
+      date: wd.createdAt || new Date(),
+      status: wd.status || 'Pending',
+      description: `Withdrawal to ${wd.walletAddress || 'wallet'}`,
     })),
-    ...recentDeposits.map(dep => ({
+    ...(recentDeposits || []).map(dep => ({
       type: 'Deposit',
-      amount: dep.amount,
+      amount: dep.amount || 0,
       fund: '',
-      date: dep.createdAt,
-      status: dep.status,
+      date: dep.createdAt || new Date(),
+      status: dep.status || 'Pending',
       description: `Deposit via ${dep.method || 'manual'}`,
     })),
   ]
@@ -67,105 +68,119 @@ async function getPortfolioData(userId) {
   // Calculate user's performance percentile (simulate for now)
   const performancePercentile = 87; // TODO: Replace with real calculation
   // Calculate depositBalance as sum of all confirmed deposits
-  const confirmedDeposits = await Deposit.find({ user: userId, status: 'confirmed' });
-  const depositBalance = confirmedDeposits.reduce((sum, d) => sum + d.amount, 0);
-  // investments already fetched above, reuse to calculate totals
+  const confirmedDeposits = await Deposit.find({ user: userId, status: 'confirmed' }) || [];
+  const depositBalance = confirmedDeposits.reduce((sum, d) => sum + (d.amount || 0), 0);
+  // Calculate total invested (active + completed investments)
+  const allInvestments = await Investment.find({ user: userId }) || [];
   // Calculate admin-confirmed ROI withdrawals (status: 'confirmed', type: 'roi')
-  const confirmedRoiWithdrawals = await Withdrawal.find({ userId: userId, status: 'confirmed', type: 'roi' });
-  const totalConfirmedRoi = confirmedRoiWithdrawals.reduce((sum, w) => sum + w.amount, 0);
-  // Calculate totalInvested based on investments
-  const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
+  const confirmedRoiWithdrawals = await Withdrawal.find({ userId: userId, status: 'confirmed', type: 'roi' }) || [];
+  const totalConfirmedRoi = confirmedRoiWithdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
+  // Calculate totalInvested after allInvestments is defined
+  const totalInvested = allInvestments.reduce((sum, inv) => sum + (inv.amount || 0), 0);
   // Calculate availableBalance: depositBalance - totalInvested + totalConfirmedRoi
   const availableBalance = depositBalance - totalInvested + totalConfirmedRoi;
   function calculateInvestmentROI(inv) {
-    const roiTransactions = (inv.transactions || []).filter(t => t.type === 'roi');
-    const roiSum = roiTransactions.reduce((sum, t) => sum + t.amount, 0);
-    // ROI = (all ROI payouts + (currentValue - amount)) / amount * 100
-    return ((roiSum + (inv.currentValue - inv.amount)) / inv.amount) * 100;
+    try {
+      const roiTransactions = ((inv.transactions || []).filter(t => t && t.type === 'roi')) || [];
+      const roiSum = roiTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+      // ROI = (all ROI payouts + (currentValue - amount)) / amount * 100
+      const amount = inv.amount || 1; // Prevent division by zero
+      return ((roiSum + ((inv.currentValue || 0) - amount)) / amount) * 100;
+    } catch (err) {
+      console.error('Error calculating investment ROI:', err);
+      return 0;
+    }
   }
   // Fetch user gain logs
-  const userGainLogs = await UserGainLog.find({ user_id: userId }).sort('-logged_at').limit(20);
+  const userGainLogs = await UserGainLog.find({ user_id: userId }).sort('-logged_at').limit(20) || [];
   // Calculate advanced performance metrics from performanceData
   function calculatePerformanceMetrics(performanceData) {
-    if (!performanceData || performanceData.length < 2) {
-      return { sharpeRatio: null, alpha: null, volatility: null, maxDrawdown: null };
-    }
-    // Calculate monthly returns
-    const returns = [];
-    for (let i = 1; i < performanceData.length; i++) {
-      const prev = performanceData[i - 1].portfolioValue;
-      const curr = performanceData[i].portfolioValue;
-      if (prev > 0) {
-        returns.push((curr - prev) / prev);
+    try {
+      if (!performanceData || performanceData.length < 2) {
+        return { sharpeRatio: null, alpha: null, volatility: null, maxDrawdown: null };
       }
-    }
-    // Volatility (std dev of returns)
-    const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
-    const variance = returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (returns.length - 1);
-    const volatility = Math.sqrt(variance) * Math.sqrt(12) * 100; // annualized, percent
-    // Sharpe Ratio (assume risk-free rate = 0)
-    const sharpeRatio = volatility > 0 ? (mean * 12) / (Math.sqrt(variance) * Math.sqrt(12)) : null;
-    // Max Drawdown
-    let maxDrawdown = 0;
-    let peak = performanceData[0].portfolioValue;
-    for (const d of performanceData) {
-      if (d.portfolioValue > peak) peak = d.portfolioValue;
-      const drawdown = (peak - d.portfolioValue) / peak;
-      if (drawdown > maxDrawdown) maxDrawdown = drawdown;
-    }
-    maxDrawdown = maxDrawdown * 100;
-    // Alpha (vs. benchmark, if available)
-    let alpha = null;
-    if (performanceData[0].benchmark !== undefined) {
-      // Calculate benchmark returns
-      const benchReturns = [];
+      // Calculate monthly returns
+      const returns = [];
       for (let i = 1; i < performanceData.length; i++) {
-        const prev = performanceData[i - 1].benchmark;
-        const curr = performanceData[i].benchmark;
+        const prev = performanceData[i - 1].portfolioValue || 0;
+        const curr = performanceData[i].portfolioValue || 0;
         if (prev > 0) {
-          benchReturns.push((curr - prev) / prev);
+          returns.push((curr - prev) / prev);
         }
       }
-      const meanBench = benchReturns.reduce((a, b) => a + b, 0) / benchReturns.length;
-      alpha = (mean * 12 - meanBench * 12) * 100; // annualized, percent
+    // Volatility (std dev of returns)
+      const mean = returns.length > 0 ? returns.reduce((a, b) => a + b, 0) / returns.length : 0;
+      const variance = returns.length > 1 ? returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (returns.length - 1) : 0;
+      const volatility = Math.sqrt(variance) * Math.sqrt(12) * 100; // annualized, percent
+      // Sharpe Ratio (assume risk-free rate = 0)
+      const sharpeRatio = volatility > 0 ? (mean * 12) / (Math.sqrt(variance) * Math.sqrt(12)) : null;
+      // Max Drawdown
+      let maxDrawdown = 0;
+      let peak = performanceData[0]?.portfolioValue || 0;
+      for (const d of performanceData) {
+        if ((d?.portfolioValue || 0) > peak) peak = d.portfolioValue || 0;
+        const drawdown = peak > 0 ? ((peak - (d?.portfolioValue || 0)) / peak) : 0;
+        if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+      }
+      maxDrawdown = maxDrawdown * 100;
+    // Alpha (vs. benchmark, if available)
+      let alpha = null;
+      if (performanceData[0]?.benchmark !== undefined) {
+        // Calculate benchmark returns
+        const benchReturns = [];
+        for (let i = 1; i < performanceData.length; i++) {
+          const prev = performanceData[i - 1]?.benchmark || 0;
+          const curr = performanceData[i]?.benchmark || 0;
+          if (prev > 0) {
+            benchReturns.push((curr - prev) / prev);
+          }
+        }
+        const meanBench = benchReturns.length > 0 ? benchReturns.reduce((a, b) => a + b, 0) / benchReturns.length : 0;
+        alpha = (mean * 12 - meanBench * 12) * 100; // annualized, percent
+      }
+      return {
+        sharpeRatio: sharpeRatio !== null ? parseFloat(sharpeRatio.toFixed(2)) : null,
+        alpha: alpha !== null ? parseFloat(alpha.toFixed(2)) : null,
+        volatility: volatility !== null ? parseFloat(volatility.toFixed(2)) : null,
+        maxDrawdown: maxDrawdown !== null ? parseFloat(maxDrawdown.toFixed(2)) : null,
+      };
+    } catch (err) {
+      console.error('Error calculating performance metrics:', err);
+      return { sharpeRatio: null, alpha: null, volatility: null, maxDrawdown: null };
     }
-    return {
-      sharpeRatio: sharpeRatio !== null ? parseFloat(sharpeRatio.toFixed(2)) : null,
-      alpha: alpha !== null ? parseFloat(alpha.toFixed(2)) : null,
-      volatility: volatility !== null ? parseFloat(volatility.toFixed(2)) : null,
-      maxDrawdown: maxDrawdown !== null ? parseFloat(maxDrawdown.toFixed(2)) : null,
-    };
+  }
   }
 
   const perfMetrics = calculatePerformanceMetrics(performanceData);
-  // Calculate totalROI, and totalROIPercent based on investments
-  const totalValueFinal = investments.reduce((sum, inv) => sum + inv.currentValue, 0);
+  // Calculate totalROI, and totalROIPercent after allInvestments is defined
+  const totalValueFinal = allInvestments.reduce((sum, inv) => sum + (inv.currentValue || 0), 0);
   const totalROI = totalValueFinal - totalInvested;
   const totalROIPercent = (totalROI / (totalInvested || 1)) * 100;
+  
   return {
-    investments: investments.map(inv => ({
+    investments: allInvestments.map(inv => ({
       id: inv._id,
-      fundId: inv.fundId,
-      fundName: inv.fundName,
-      planName: inv.planName,
-      initialAmount: inv.amount,
-      currentValue: inv.currentValue,
+      fundId: inv.fundId || '',
+      fundName: inv.fundName || '',
+      planName: inv.planName || '',
+      initialAmount: inv.amount || 0,
+      currentValue: inv.currentValue || 0,
       roi: calculateInvestmentROI(inv),
-      startDate: inv.startDate,
-      endDate: inv.endDate,
-      status: inv.status,
+      startDate: inv.startDate || new Date(),
+      endDate: inv.endDate || null,
+      status: inv.status || 'pending',
       roiWithdrawn: inv.roiWithdrawn || false
     })),
     summary: {
-      totalInvested: totalInvested,
-      totalValue: totalValue,
-      totalROI: totalROI,
-      totalROIPercent: totalROIPercent,
-      activeInvestments: investments.filter(inv => inv.status === 'active').length,
-      sharpeRatio: perfMetrics.sharpeRatio,
-      alpha: perfMetrics.alpha,
-      volatility: perfMetrics.volatility,
-      maxDrawdown: perfMetrics.maxDrawdown,
+      totalInvested: totalInvested || 0,
+      totalValue: totalValue || 0,
+      totalROI: totalROI || 0,
+      totalROIPercent: totalROIPercent || 0,
+      activeInvestments: investments.filter(inv => inv.status === 'active').length || 0,
+      sharpeRatio: perfMetrics.sharpeRatio || null,
+      alpha: perfMetrics.alpha || null,
+      volatility: perfMetrics.volatility || null,
+      maxDrawdown: perfMetrics.maxDrawdown || null,
     },
     userInfo: {
       name: userDoc?.name || 'Investor',
