@@ -11,20 +11,32 @@ const socketio = require('socket.io');
 const { startRoiCron } = require('./utils/roiCalculator');
 
 const app = express();
+
+// CORS Middleware
+// Allow both frontend and API subdomains in production
+const allowedOrigins = ['https://www.luxyield.com', 'https://api.luxyield.com'];
+if (process.env.NODE_ENV === 'development') {
+  allowedOrigins.push('http://localhost:3000');
+}
+
 // Trust proxy headers (needed for WebSocket support on Render and similar hosts)
 app.set('trust proxy', 1);
-// Log all /socket.io/ requests for debugging WebSocket handshake issues
-app.use('/socket.io', (req, res, next) => {
-  console.log(`[SOCKET.IO] ${req.method} ${req.originalUrl} at ${new Date().toISOString()}`);
-  next();
-});
+
+// Create HTTP server
 const server = http.createServer(app);
 
+// Set up Socket.IO with CORS configuration
 const io = socketio(server, { 
   cors: { 
     origin: allowedOrigins,
     credentials: true 
   } 
+});
+
+// Log all /socket.io/ requests for debugging WebSocket handshake issues
+app.use('/socket.io', (req, res, next) => {
+  console.log(`[SOCKET.IO] ${req.method} ${req.originalUrl} at ${new Date().toISOString()}`);
+  next();
 });
 
 // Basic Socket.IO connection handler
@@ -34,14 +46,6 @@ io.on('connection', (socket) => {
     console.log('Client disconnected:', socket.id);
   });
 });
-
-// CORS Middleware
-
-// Allow both frontend and API subdomains in production
-const allowedOrigins = ['https://www.luxyield.com', 'https://api.luxyield.com'];
-if (process.env.NODE_ENV === 'development') {
-  allowedOrigins.push('http://localhost:3000');
-}
 
 const corsOptions = {
   origin: function (origin, callback) {
