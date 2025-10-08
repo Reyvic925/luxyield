@@ -141,35 +141,33 @@ router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', 
       return res.status(400).json({ message: 'Please enter a valid amount greater than 0' });
     }
 
-    // Update user's available balance based on operation
+    // Only update available balance for add/subtract operations
   const prevAvailable = parseFloat(user.availableBalance || 0);
-  const prevBalance = parseFloat(user.balance || 0);
   const finalAmount = operation === 'subtract' ? -parseFloat(amount) : parseFloat(amount);
   
-  // Update both available balance and total balance with proper decimal handling
+  // Update only available balance with proper decimal handling
   const newAvailable = parseFloat((prevAvailable + finalAmount).toFixed(2));
-  const newBalance = parseFloat((prevBalance + finalAmount).toFixed(2));
   
-  // Ensure the values are stored as numbers with 2 decimal places
-  user.availableBalance = newAvailable;
-  user.balance = newBalance;  // Validate the result isn't negative
+  // Ensure the value is not negative
+  if (newAvailable < 0) {
+    return res.status(400).json({ message: 'Insufficient available balance for this operation' });
+  }
+  
+  // Update only the available balance
+  user.availableBalance = newAvailable;  // Validate the result isn't negative
   if (user.availableBalance < 0 || user.balance < 0) {
     return res.status(400).json({ message: 'Insufficient balance for this operation' });
   }
 
-  // Create audit record
+    // Create audit record
   const auditEntry = {
     timestamp: new Date(),
     action: operation,
     amount: Number(amount),
-    prevBalance: prevBalance,
-    newBalance: user.balance,
     prevAvailable: prevAvailable,
     newAvailable: user.availableBalance,
     adminId: req.user.id
-  };
-
-    // Add to balance history if the array exists
+  };    // Add to balance history if the array exists
     if (!user.balanceHistory) {
       user.balanceHistory = [];
     }
@@ -177,13 +175,11 @@ router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', 
 
     await user.save();
     
-    console.log(`[ADMIN] Balance update for user ${user.email}:
+    console.log(`[ADMIN] Available balance update for user ${user.email}:
       Operation: ${operation}
       Amount: ${amount > 0 ? '+' : '-'}$${Math.abs(amount)}
-      Previous Balance: $${prevBalance.toFixed(2)}
-      New Balance: $${user.balance.toFixed(2)}
-      Previous Available: $${prevAvailable.toFixed(2)}
-      New Available: $${user.availableBalance.toFixed(2)}
+      Previous Available Balance: $${prevAvailable.toFixed(2)}
+      New Available Balance: $${user.availableBalance.toFixed(2)}
     `);
     
     res.json({
