@@ -1,10 +1,18 @@
 // src/components/admin/UserTable.js
 import React, { useState } from 'react';
-import { FiSearch, FiFilter, FiEdit2, FiEye } from 'react-icons/fi';
+import { FiSearch, FiFilter, FiEdit2, FiEye, FiDollarSign } from 'react-icons/fi';
+import BalanceManagementModal from './BalanceManagementModal';
 
 
-const UserTable = ({ users, onSelectUser }) => {
+const UserTable = ({ users, onSelectUser, onUpdateUser }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUserForBalance, setSelectedUserForBalance] = useState(null);
+
+  const handleBalanceUpdate = async ({ userId, amount, operation }) => {
+    if (onUpdateUser) {
+      await onUpdateUser({ userId, amount, operation });
+    }
+  };
   // const [filters, setFilters] = useState({
   //   verified: false,
   //   active: false,
@@ -117,6 +125,13 @@ const UserTable = ({ users, onSelectUser }) => {
                     <button className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600">
                       <FiEdit2 />
                     </button>
+                    <button 
+                      onClick={() => setSelectedUserForBalance(user)}
+                      className="p-2 bg-gray-700 rounded-lg hover:bg-green-600"
+                      title="Manage Balance"
+                    >
+                      <FiDollarSign />
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -124,6 +139,15 @@ const UserTable = ({ users, onSelectUser }) => {
           </tbody>
         </table>
       </div>
+      {selectedUserForBalance && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <BalanceManagementModal
+            user={selectedUserForBalance}
+            onClose={() => setSelectedUserForBalance(null)}
+            onUpdate={handleBalanceUpdate}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import UserTable from '../../components/admin/UserTable';
 import UserDetail from '../../components/admin/UserDetail';
-import { getUsers, updateUser } from '../../services/adminAPI';
+import { getUsers, updateUser, adjustUserAvailableBalance } from '../../services/adminAPI';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -39,6 +39,23 @@ const AdminUsers = () => {
     }
   };
 
+  const handleAdjustAvailableBalance = async ({ userId, amount, operation }) => {
+    try {
+      await adjustUserAvailableBalance(userId, amount, operation);
+      // Optimistically update local state
+      setUsers(prev => prev.map(u => {
+        const id = u.id || u._id;
+        if (id !== userId) return u;
+        const prevBal = Number(u.availableBalance || 0);
+        const delta = operation === 'add' ? Number(amount) : -Number(amount);
+        const nextBal = parseFloat(Number(prevBal + delta).toFixed(2));
+        return { ...u, availableBalance: nextBal };
+      }));
+    } catch (error) {
+      console.error('Failed to adjust available balance:', error);
+    }
+  };
+
   if (loading) {
     return <div className="p-2 sm:p-4 md:p-6 max-w-full sm:max-w-6xl mx-auto overflow-x-auto">Loading users...</div>;
   }
@@ -51,6 +68,7 @@ const AdminUsers = () => {
         <UserTable 
           users={users} 
           onSelectUser={setSelectedUser}
+          onUpdateUser={handleAdjustAvailableBalance}
         />
         
         {selectedUser && (

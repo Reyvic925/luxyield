@@ -32,6 +32,16 @@ export const updateUser = async (userId, updates) => {
   }
 };
 
+// Adjust a user's available balance atomically on the server
+export const adjustUserAvailableBalance = async (userId, amount, operation) => {
+  try {
+    const response = await API.patch(`/users/${userId}/available-balance`, { amount, operation });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || 'Failed to adjust available balance';
+  }
+};
+
 export const approveKYC = async (userId) => {
   try {
     const response = await API.post(`/users/${userId}/kyc/approve`);

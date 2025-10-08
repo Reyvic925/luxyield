@@ -36,6 +36,7 @@ const express = require('express');
 const authAdmin = require('../middleware/authAdmin');
 const MarketEvent = require('../models/MarketEvent');
 const User = require('../models/User');
+const BalanceHistory = require('../models/BalanceHistory');
 const Withdrawal = require('../models/Withdrawal');
 const Deposit = require('../models/Deposit');
 const jwt = require('jsonwebtoken');
@@ -211,6 +212,60 @@ router.patch('/users/:id/role', authAdmin, async (req, res) => {
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+// Adjust user's available balance (admin only)
+router.patch('/users/:id/available-balance', authAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    let { amount, operation } = req.body;
+
+    amount = Number(amount);
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ message: 'Amount must be a number greater than 0' });
+    }
+    if (!['add', 'subtract'].includes(operation)) {
+      return res.status(400).json({ message: 'Invalid operation. Use add or subtract.' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const prev = Number(user.availableBalance || 0);
+    let next;
+    if (operation === 'subtract') {
+      if (amount > prev) {
+        return res.status(400).json({ message: 'Cannot subtract more than available balance' });
+      }
+      next = prev - amount;
+    } else {
+      next = prev + amount;
+    }
+    // Round to 2 decimals
+    next = parseFloat(Number(next).toFixed(2));
+    user.availableBalance = next;
+    await user.save();
+
+    // Audit balance change
+    try {
+      await BalanceHistory.create({
+        userId: user._id,
+        type: operation === 'add' ? 'admin_add' : 'admin_subtract',
+        amount,
+        previousBalance: prev,
+        newBalance: next,
+        description: `Admin ${operation} ${amount} to availableBalance`,
+        adminId: req.user.id
+      });
+    } catch (logErr) {
+      console.error('Balance history log failed:', logErr && logErr.message);
+    }
+
+    return res.json({ success: true, user: { id: user._id, availableBalance: user.availableBalance } });
+  } catch (err) {
+    console.error('Adjust available balance error:', err && err.message);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
