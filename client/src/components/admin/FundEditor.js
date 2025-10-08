@@ -1,6 +1,6 @@
 // src/components/admin/FundEditor.js
 import React, { useState, useEffect } from 'react';
-import { FiX, FiSave, FiTrash2 } from 'react-icons/fi';
+import { X, Save, Trash2, TrendingUp, DollarSign, Settings, FileText, Plus, Edit, Target, BarChart3, PieChart, Users, Shield } from 'lucide-react';
 import FundPerformanceChart from './FundPerformanceChart';
 
 const FundEditor = ({ fund, onSave, onCancel }) => {
@@ -167,18 +167,29 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-gray-700 w-full max-w-6xl max-h-[90vh] overflow-hidden">
         <div className="p-6">
-          <div className="flex justify-between items-start mb-6">
-            <h2 className="text-2xl font-bold">
-              {fund ? 'Edit Fund' : 'Create New Fund'}
-            </h2>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
+                <TrendingUp className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">
+                  {fund ? 'Edit Fund' : 'Create New Fund'}
+                </h2>
+                <p className="text-gray-400">
+                  {fund ? 'Modify fund settings and investment plans' : 'Set up a new investment fund with custom parameters'}
+                </p>
+              </div>
+            </div>
             <button
               onClick={onCancel}
-              className="p-2 rounded-full hover:bg-gray-700"
+              className="p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 hover:border-red-400/50 transition-all duration-200 group"
             >
-              <FiX size={24} />
+              <X className="h-6 w-6 group-hover:text-red-400" />
             </button>
           </div>
 
@@ -304,7 +315,7 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
                         onClick={() => removeLockPeriod(index)}
                         className="p-2 text-red-400 hover:bg-red-500 hover:bg-opacity-10 rounded-lg"
                       >
-                        <FiTrash2 />
+                        <Trash2 />
                       </button>
                     </div>
                   ))}
@@ -466,7 +477,7 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
                 type="submit"
                 className="px-6 py-2 bg-gold text-black rounded-lg hover:bg-yellow-600 transition flex items-center"
               >
-                <FiSave className="mr-2" /> Save Fund
+                <Save className="mr-2" /> Save Fund
               </button>
             </div>
           </form>
