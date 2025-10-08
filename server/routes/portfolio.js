@@ -76,8 +76,14 @@ async function getPortfolioData(userId) {
   const totalConfirmedRoi = confirmedRoiWithdrawals.reduce((sum, w) => sum + w.amount, 0);
   // Calculate totalInvested after allInvestments is defined
   const totalInvested = allInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-  // Calculate availableBalance: depositBalance - totalInvested + totalConfirmedRoi
-  const availableBalance = depositBalance - totalInvested + totalConfirmedRoi;
+  // Update user's availableBalance in the database
+  const calculatedAvailableBalance = depositBalance - totalInvested + totalConfirmedRoi;
+  // Update the user's availableBalance field
+  if (userDoc && userDoc.availableBalance !== calculatedAvailableBalance) {
+    userDoc.availableBalance = calculatedAvailableBalance;
+    await userDoc.save();
+    console.log(`Updated availableBalance for user ${userId} to ${calculatedAvailableBalance}`);
+  }
   function calculateInvestmentROI(inv) {
     const roiTransactions = (inv.transactions || []).filter(t => t.type === 'roi');
     const roiSum = roiTransactions.reduce((sum, t) => sum + t.amount, 0);
