@@ -1,54 +1,53 @@
-// src/components/admin/UserTable.js
-import React, { useState } from 'react';
-import { FiSearch, FiFilter, FiEdit2, FiEye } from 'react-icons/fi';
+﻿import React, { useState } from 'react';
+import { FiSearch, FiEdit2, FiEye, FiDollarSign } from 'react-icons/fi';
 
-
-const UserTable = ({ users, onSelectUser }) => {
+const UserTable = ({ users, onSelectUser, onUpdateUser, onManageBalance }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  // const [filters, setFilters] = useState({
-  //   verified: false,
-  //   active: false,
-  //   kycPending: false
-  // });
+  const [viewMode, setViewMode] = useState('all');
 
-  // Ensure users is always an array
   const safeUsers = Array.isArray(users) ? users : [];
 
   const filteredUsers = safeUsers.filter(user => {
     const matchesSearch = 
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    // const matchesFilters = 
-    //   (!filters.verified || user.verified) &&
-    //   (!filters.active || user.status === 'active') &&
-    //   (!filters.kycPending || user.kycStatus === 'pending');
-    return matchesSearch; // && matchesFilters;
+    
+    if (viewMode === 'all') return matchesSearch;
+    if (viewMode === 'verified') return matchesSearch && user.kycStatus === 'verified';
+    if (viewMode === 'pending') return matchesSearch && user.kycStatus === 'pending';
+    return matchesSearch;
   });
 
-  // Ensure all users have an 'id' property for consistency
   const normalizedUsers = filteredUsers.map(user => ({ ...user, id: user.id || user._id }));
-  // Remove duplicate users by id
   const uniqueUsers = Array.from(new Map(normalizedUsers.map(u => [u.id, u])).values());
 
   return (
-    <div className="bg-gray-800 rounded-xl p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div className="relative w-full md:w-64">
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+    <>
+      <div className="mb-8 flex justify-between items-center">
+        <div className="w-80">
           <input
             type="text"
             placeholder="Search users..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+            className="w-full py-2 pl-8 bg-transparent border-b border-gray-700 text-white focus:outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          <FiSearch className="absolute top-[11px] left-0 text-gray-400" />
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <button className="flex items-center px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600">
-            <FiFilter className="mr-2" /> Filters
+        <div className="flex items-center space-x-6">
+          <button onClick={() => setViewMode('all')} 
+            className={viewMode === 'all' ? 'text-gold' : 'text-gray-400'}>
+            All Users
           </button>
-          <select className="bg-gray-700 rounded-lg px-4 py-2 focus:outline-none">
+          <button onClick={() => setViewMode('verified')} 
+            className={viewMode === 'verified' ? 'text-green-400' : 'text-gray-400'}>
+            Verified
+          </button>
+          <button onClick={() => setViewMode('pending')} 
+            className={viewMode === 'pending' ? 'text-yellow-400' : 'text-gray-400'}>
+            Pending KYC
+          </button>
+          <select className="bg-transparent text-white border-b border-gray-700 py-1">
             <option>Export</option>
             <option>CSV</option>
             <option>PDF</option>
@@ -56,73 +55,68 @@ const UserTable = ({ users, onSelectUser }) => {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-700 text-left">
-              <th className="pb-4">User</th>
-              <th className="pb-4">Email</th>
-              <th className="pb-4">Tier</th>
-              <th className="pb-4">KYC Status</th>
-              <th className="pb-4">Balance</th>
-              <th className="pb-4">Actions</th>
+      <table className="w-full">
+        <thead>
+          <tr>
+            <th className="text-left py-4 font-normal text-gray-400">User</th>
+            <th className="text-left py-4 font-normal text-gray-400">Email</th>
+            <th className="text-left py-4 font-normal text-gray-400">Tier</th>
+            <th className="text-left py-4 font-normal text-gray-400">KYC Status</th>
+            <th className="text-left py-4 font-normal text-gray-400">Available Balance</th>
+            <th className="text-left py-4 font-normal text-gray-400">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {uniqueUsers.map(user => (
+            <tr key={user.id} className="border-t border-gray-800">
+              <td className="py-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 flex items-center justify-center bg-gray-800 mr-3">
+                    {user.name?.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="text-white">{user.name}</div>
+                    <div className="text-sm text-gray-400">ID: {user.id}</div>
+                  </div>
+                </div>
+              </td>
+              <td className="py-4 text-white">{user.email}</td>
+              <td className="py-4">
+                <span className={
+                  user.tier === 'VIP' ? 'text-purple-400' :
+                  user.tier === 'Gold' ? 'text-gold' :
+                  'text-gray-400'
+                }>{user.tier}</span>
+              </td>
+              <td className="py-4">
+                <span className={
+                  user.kycStatus === 'verified' ? 'text-green-400' :
+                  user.kycStatus === 'pending' ? 'text-yellow-400' :
+                  'text-red-400'
+                }>{user.kycStatus || 'Not Started'}</span>
+              </td>
+              <td className="py-4 text-white">
+                {typeof user.availableBalance === 'number' ? `$${user.availableBalance.toLocaleString()}` : 
+                 typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : '$0.00'}
+              </td>
+              <td className="py-4">
+                <div className="flex gap-4">
+                  <button onClick={() => onSelectUser(user)} className="text-blue-400 hover:text-blue-300">
+                    <FiEye />
+                  </button>
+                  <button onClick={() => onUpdateUser(user)} className="text-purple-400 hover:text-purple-300">
+                    <FiEdit2 />
+                  </button>
+                  <button onClick={() => onManageBalance?.(user)} className="text-gold hover:text-gold/80">
+                    <FiDollarSign />
+                  </button>
+                </div>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {uniqueUsers.map(user => (
-              <tr key={user.id} className="border-b border-gray-700 hover:bg-gray-700">
-                <td className="py-4">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3">
-                      {user.name.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="font-medium">{user.name}</div>
-                      <div className="text-xs text-gray-400">ID: {user.id}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-4">{user.email}</td>
-                <td className="py-4">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    user.tier === 'VIP' ? 'bg-purple-500 bg-opacity-20 text-purple-400' :
-                    user.tier === 'Gold' ? 'bg-gold bg-opacity-20 text-gold' :
-                    'bg-gray-600'
-                  }`}>
-                    {user.tier}
-                  </span>
-                </td>
-                <td className="py-4">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    user.kycStatus === 'verified' ? 'bg-green-500 bg-opacity-20 text-green-400' :
-                    user.kycStatus === 'pending' ? 'bg-yellow-500 bg-opacity-20 text-yellow-400' :
-                    'bg-red-500 bg-opacity-20 text-red-400'
-                  }`}>
-                    {user.kycStatus}
-                  </span>
-                </td>
-                <td className="py-4 font-mono">{
-                  typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'
-                }</td>
-                <td className="py-4">
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => onSelectUser(user)}
-                      className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600"
-                    >
-                      <FiEye />
-                    </button>
-                    <button className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600">
-                      <FiEdit2 />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          ))}
+        </tbody>
+      </table>
+    </>
   );
 };
 

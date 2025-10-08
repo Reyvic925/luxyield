@@ -106,8 +106,11 @@ router.delete('/market-events/:id', authAdmin, async (req, res) => {
 // Get all users
 router.get('/users', authAdmin, async (req, res) => {
   try {
-    const users = await User.find();
-    res.json(users);
+    const users = await User.find().select('+balance');
+    res.json(users.map(user => ({
+      ...user.toObject(),
+      balance: user.balance || 0
+    })));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -120,6 +123,52 @@ router.patch('/users/:id', authAdmin, auditLog('update_user', 'User', req => req
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Handle user balance updates
+router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', req => req.params.id), async (req, res) => {
+  try {
+    const { amount, operation } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Validate amount
+    if (typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ message: 'Please enter a valid amount greater than 0' });
+    }
+
+  // Update user's available balance based on operation
+  const prevAvailable = Number(user.availableBalance || 0);
+  const finalAmount = operation === 'subtract' ? -Number(amount) : Number(amount);
+  user.availableBalance = Number((prevAvailable + finalAmount).toFixed(2)); // Ensure 2 decimal places
+
+    // Create audit record
+    const auditEntry = {
+      timestamp: new Date(),
+      action: operation,
+      amount: Number(amount),
+      prevBalance,
+      newBalance: user.balance,
+      adminId: req.user.id
+    };
+
+    // Add to balance history if the array exists
+    if (!user.balanceHistory) {
+      user.balanceHistory = [];
+    }
+    user.balanceHistory.push(auditEntry);
+
+    await user.save();
+    
+    console.log(`[ADMIN] Balance update for user ${user.email}: ${amount > 0 ? '+' : '-'}$${Math.abs(amount)}. New balance: $${user.balance}`);
+    
+    res.json(user);
+  } catch (err) {
+    console.error('Balance update error:', err);
     res.status(500).json({ message: err.message });
   }
 });

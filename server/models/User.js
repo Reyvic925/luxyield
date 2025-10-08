@@ -38,6 +38,16 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  balance: {
+    type: Number,
+    default: 0,
+    get: v => Math.round(v * 100) / 100 // Ensures 2 decimal places
+  },
+  availableBalance: {
+    type: Number,
+    default: 0,
+    get: v => Math.round(v * 100) / 100 // Ensures 2 decimal places
+  },
   kyc: {
     idUrl: { type: String, default: '' },
     selfieUrl: { type: String, default: '' },
@@ -95,6 +105,10 @@ const UserSchema = new mongoose.Schema({
   securityAnswer: {
     type: String,
     required: true
+  },
+  balance: {
+    type: Number,
+    default: 0
   },
   withdrawal2faCode: {
     type: String,

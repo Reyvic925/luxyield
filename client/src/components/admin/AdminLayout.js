@@ -1,7 +1,11 @@
 // src/components/admin/AdminLayout.js
 import React, { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { FiUsers, FiDollarSign, FiDownload, FiSettings, FiHome, FiBell, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { 
+  FiUsers, FiDollarSign, FiDownload, FiSettings, FiHome, FiBell, 
+  FiChevronLeft, FiChevronRight, FiMail, FiPieChart,
+  FiMessageSquare, FiCpu, FiPercent
+} from 'react-icons/fi';
 import { useAdminAuth } from '../../auth/AdminAuthProvider';
 
 const AdminLayout = () => {
@@ -43,15 +47,21 @@ const AdminLayout = () => {
           </button>
           <button className="ml-auto md:hidden text-gray-400 hover:text-gold" onClick={() => setSidebarOpen(false)} style={{display: isMobile ? 'block' : 'none'}}>&times;</button>
         </div>
-        <nav className={`flex-1 py-8 ${sidebarOpen ? 'px-4' : 'px-1'} space-y-2 overflow-y-auto`}>
+        <nav className={`flex-1 py-8 ${sidebarOpen ? 'px-4' : 'px-1'} space-y-1 overflow-y-auto`}>
+          {/* Core Navigation */}
           <Link to="/admin" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
             <FiHome className="mr-3 text-lg" /> Dashboard
           </Link>
           <Link to="/admin/users" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
             <FiUsers className="mr-3 text-lg" /> Users
           </Link>
+
+          {/* Financial Section */}
+          <div className="pt-4 pb-2">
+            <div className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Financial</div>
+          </div>
           <Link to="/admin/funds" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiDollarSign className="mr-3 text-lg" /> Funds
+            <FiPieChart className="mr-3 text-lg" /> Funds
           </Link>
           <Link to="/admin/deposits" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
             <FiDollarSign className="mr-3 text-lg" /> Deposits
@@ -59,23 +69,33 @@ const AdminLayout = () => {
           <Link to="/admin/withdrawals" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
             <FiDownload className="mr-3 text-lg" /> Withdrawals
           </Link>
-          <Link to="/admin/settings" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiSettings className="mr-3 text-lg" /> Settings
+          <Link to="/admin/roi-approvals" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiPercent className="mr-3 text-lg" /> ROI Approvals
+          </Link>
+
+          {/* Communications */}
+          <div className="pt-4 pb-2">
+            <div className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Communications</div>
+          </div>
+          <Link to="/admin/support" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiMessageSquare className="mr-3 text-lg" /> Support Chat
           </Link>
           <Link to="/admin/send-email" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiSettings className="mr-3 text-lg" /> Send Email
+            <FiMail className="mr-3 text-lg" /> Send Email
           </Link>
           <Link to="/admin/announcements" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
             <FiBell className="mr-3 text-lg" /> Announcements
           </Link>
-          <Link to="/admin/support" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiBell className="mr-3 text-lg" /> Support Chat
-          </Link>
+
+          {/* Tools & Settings */}
+          <div className="pt-4 pb-2">
+            <div className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Tools</div>
+          </div>
           <Link to="/admin/mirror" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiUsers className="mr-3 text-lg" /> Mirror User
+            <FiCpu className="mr-3 text-lg" /> Mirror User
           </Link>
-          <Link to="/admin/roi-approvals" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
-            <FiSettings className="mr-3 text-lg" /> ROI Approvals
+          <Link to="/admin/settings" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiSettings className="mr-3 text-lg" /> Settings
           </Link>
         </nav>
         <div className={`px-4 py-6 border-t ${darkMode ? 'border-gray-800' : 'border-gray-200'} flex items-center transition-all duration-300 ${!sidebarOpen ? 'justify-center' : ''}`}>

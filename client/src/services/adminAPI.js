@@ -32,6 +32,24 @@ export const updateUser = async (userId, updates) => {
   }
 };
 
+export const updateUserBalance = async (userId, amount, operation) => {
+  try {
+    const response = await API.post(`/users/${userId}/balance`, {
+      amount: Number(amount),
+      operation
+    });
+    
+    // Ensure balance is properly formatted in the response
+    const userData = response.data;
+    return {
+      ...userData,
+      balance: Number(userData.balance || 0).toFixed(2)
+    };
+  } catch (error) {
+    throw error.response?.data?.message || 'Failed to update balance';
+  }
+};
+
 export const approveKYC = async (userId) => {
   try {
     const response = await API.post(`/users/${userId}/kyc/approve`);
