@@ -137,27 +137,28 @@ router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', 
     }
 
     // Validate amount
-    if (typeof amount !== 'number' || amount <= 0) {
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
       return res.status(400).json({ message: 'Please enter a valid amount greater than 0' });
     }
 
-    // Only update available balance for add/subtract operations
-  const prevAvailable = parseFloat(user.availableBalance || 0);
-  const finalAmount = operation === 'subtract' ? -parseFloat(amount) : parseFloat(amount);
-  
-  // Update only available balance with proper decimal handling
-  const newAvailable = parseFloat((prevAvailable + finalAmount).toFixed(2));
-  
-  // Ensure the value is not negative
-  if (newAvailable < 0) {
-    return res.status(400).json({ message: 'Insufficient available balance for this operation' });
-  }
-  
-  // Update only the available balance
-  user.availableBalance = newAvailable;  // Validate the result isn't negative
-  if (user.availableBalance < 0 || user.balance < 0) {
-    return res.status(400).json({ message: 'Insufficient balance for this operation' });
-  }
+    // Get current available balance
+    const currentBalance = parseFloat(user.availableBalance || 0);
+
+    // Calculate new balance based on operation
+    if (operation === 'add') {
+      user.availableBalance = currentBalance + numAmount;
+    } else if (operation === 'subtract') {
+      if (currentBalance < numAmount) {
+        return res.status(400).json({ message: 'Insufficient available balance' });
+      }
+      user.availableBalance = currentBalance - numAmount;
+    } else {
+      return res.status(400).json({ message: 'Invalid operation' });
+    }
+
+    // Format to 2 decimal places and ensure it's a number
+    user.availableBalance = parseFloat(user.availableBalance.toFixed(2));
 
     // Create audit record
   const auditEntry = {
@@ -175,11 +176,11 @@ router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', 
 
     await user.save();
     
-    console.log(`[ADMIN] Available balance update for user ${user.email}:
+    console.log(`[ADMIN] Dashboard balance update for user ${user.email}:
       Operation: ${operation}
-      Amount: ${amount > 0 ? '+' : '-'}$${Math.abs(amount)}
-      Previous Available Balance: $${prevAvailable.toFixed(2)}
-      New Available Balance: $${user.availableBalance.toFixed(2)}
+      Amount: $${numAmount}
+      Previous Balance: $${currentBalance.toFixed(2)}
+      Updated Balance: $${user.availableBalance.toFixed(2)}
     `);
     
     res.json({
