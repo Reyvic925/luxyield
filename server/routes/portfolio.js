@@ -7,6 +7,7 @@ const Withdrawal = require('../models/Withdrawal');
 const Deposit = require('../models/Deposit');
 const User = require('../models/User');
 const UserGainLog = require('../models/UserGainLog');
+const BalanceHistory = require('../models/BalanceHistory');
 const mongoose = require('mongoose');
 
 // Shared function to get portfolio data for any user
@@ -75,8 +76,20 @@ async function getPortfolioData(userId) {
   const totalConfirmedRoi = confirmedRoiWithdrawals.reduce((sum, w) => sum + w.amount, 0);
   // Calculate totalInvested based on investments
   const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
-  // Calculate availableBalance: depositBalance - totalInvested + totalConfirmedRoi
-  const availableBalance = depositBalance - totalInvested + totalConfirmedRoi;
+  
+  // Get admin adjustments from BalanceHistory
+  const adminAdjustments = await BalanceHistory.find({
+    userId,
+    type: { $in: ['admin_add', 'admin_subtract'] }
+  });
+  
+  // Calculate net admin adjustments
+  const netAdminAdjustments = adminAdjustments.reduce((sum, adjustment) => {
+    return sum + (adjustment.type === 'admin_add' ? adjustment.amount : -adjustment.amount);
+  }, 0);
+  
+  // Calculate availableBalance: depositBalance - totalInvested + totalConfirmedRoi + netAdminAdjustments
+  const availableBalance = depositBalance - totalInvested + totalConfirmedRoi + netAdminAdjustments;
   function calculateInvestmentROI(inv) {
     const roiTransactions = (inv.transactions || []).filter(t => t.type === 'roi');
     const roiSum = roiTransactions.reduce((sum, t) => sum + t.amount, 0);
