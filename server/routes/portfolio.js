@@ -20,7 +20,7 @@ async function getPortfolioData(userId) {
     const investments = await Investment.find({ user: userId }) || [];
     // Calculate totals
     const totalValue = investments.reduce((sum, inv) => sum + (inv.currentValue || 0), 0);
-    // totalInvested, totalROI, and totalROIPercent will be calculated after allInvestments is defined below
+    // totalInvested, totalROI, and totalROIPercent will be calculated after allInvestments is defined
     // Generate performance data (last 12 months)
     const performanceData = generatePerformanceData(investments);
     // Generate allocation data
@@ -200,9 +200,21 @@ async function getPortfolioData(userId) {
 
 // Get portfolio data
 router.get('/', auth, async (req, res) => {
+  console.log('[PORTFOLIO API] Starting portfolio data fetch...');
+  
   try {
     const userId = req.user.id;
+    console.log('[PORTFOLIO API] User ID:', userId);
+    
+    if (!userId) {
+      console.error('[PORTFOLIO API] No user ID found in request');
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    console.log('[PORTFOLIO API] Calling getPortfolioData...');
     const data = await getPortfolioData(userId);
+    console.log('[PORTFOLIO API] Portfolio data retrieved successfully');
+    
     // Debug log for availableBalance and related values
     if (data && data.userInfo) {
       console.log('[DEBUG] Portfolio API:', {
@@ -212,10 +224,16 @@ router.get('/', auth, async (req, res) => {
         lockedBalance: data.userInfo.lockedBalance
       });
     }
+    
     res.json(data);
-  } catch (err) {
-    console.error('Portfolio API error:', err.message, err.stack);
-    res.status(500).send('Server Error: ' + err.message);
+  } catch (error) {
+    console.error('[PORTFOLIO API] Error in main route:', error);
+    console.error('[PORTFOLIO API] Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
