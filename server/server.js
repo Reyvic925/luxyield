@@ -20,7 +20,12 @@ app.use('/socket.io', (req, res, next) => {
 });
 const server = http.createServer(app);
 
-const io = socketio(server, { cors: { origin: ['https://www.luxyield.com'], credentials: true } });
+const io = socketio(server, { 
+  cors: { 
+    origin: allowedOrigins,
+    credentials: true 
+  } 
+});
 
 // Basic Socket.IO connection handler
 io.on('connection', (socket) => {
@@ -31,20 +36,34 @@ io.on('connection', (socket) => {
 });
 
 // CORS Middleware
-app.use(cors({
-  origin: 'https://www.luxyield.com',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // Added PATCH
+
+// Allow both frontend and API subdomains in production
+const allowedOrigins = ['https://www.luxyield.com', 'https://api.luxyield.com'];
+if (process.env.NODE_ENV === 'development') {
+  allowedOrigins.push('http://localhost:3000');
+}
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Authorization']
-}));
+};
+
+app.use(cors(corsOptions));
 // Handle preflight requests for all routes
-app.options('*', cors({
-  origin: 'https://www.luxyield.com',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // Added PATCH
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-}));
+app.options('*', cors(corsOptions));
 // Ensure Authorization header is explicitly allowed for all responses (safety for proxies)
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');

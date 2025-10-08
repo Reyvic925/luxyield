@@ -169,7 +169,7 @@ router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', 
     timestamp: new Date(),
     action: operation,
     amount: Number(amount),
-    prevAvailable: prevAvailable,
+    prevAvailable: currentBalance,
     newAvailable: user.availableBalance,
     adminId: req.user.id
   };    // Add to balance history if the array exists
