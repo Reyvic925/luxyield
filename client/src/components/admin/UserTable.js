@@ -23,8 +23,8 @@ const UserTable = ({ users, onSelectUser, onUpdateUser, onManageBalance }) => {
 
   return (
     <>
-      <div className="mb-8 flex justify-between items-center">
-        <div className="w-80">
+      <div className="mb-6 md:mb-8 flex flex-col md:flex-row gap-4 md:gap-6 justify-between">
+        <div className="w-full md:w-80 relative">
           <input
             type="text"
             placeholder="Search users..."
@@ -34,20 +34,20 @@ const UserTable = ({ users, onSelectUser, onUpdateUser, onManageBalance }) => {
           />
           <FiSearch className="absolute top-[11px] left-0 text-gray-400" />
         </div>
-        <div className="flex items-center space-x-6">
+        <div className="flex flex-wrap items-center gap-4 md:gap-6">
           <button onClick={() => setViewMode('all')} 
-            className={viewMode === 'all' ? 'text-gold' : 'text-gray-400'}>
+            className={`${viewMode === 'all' ? 'text-gold' : 'text-gray-400'} text-sm md:text-base`}>
             All Users
           </button>
           <button onClick={() => setViewMode('verified')} 
-            className={viewMode === 'verified' ? 'text-green-400' : 'text-gray-400'}>
+            className={`${viewMode === 'verified' ? 'text-green-400' : 'text-gray-400'} text-sm md:text-base`}>
             Verified
           </button>
           <button onClick={() => setViewMode('pending')} 
-            className={viewMode === 'pending' ? 'text-yellow-400' : 'text-gray-400'}>
+            className={`${viewMode === 'pending' ? 'text-yellow-400' : 'text-gray-400'} text-sm md:text-base`}>
             Pending KYC
           </button>
-          <select className="bg-transparent text-white border-b border-gray-700 py-1">
+          <select className="bg-transparent text-white border-b border-gray-700 py-1 text-sm md:text-base">
             <option>Export</option>
             <option>CSV</option>
             <option>PDF</option>
@@ -55,67 +55,83 @@ const UserTable = ({ users, onSelectUser, onUpdateUser, onManageBalance }) => {
         </div>
       </div>
 
-      <table className="w-full">
-        <thead>
-          <tr>
-            <th className="text-left py-4 font-normal text-gray-400">User</th>
-            <th className="text-left py-4 font-normal text-gray-400">Email</th>
-            <th className="text-left py-4 font-normal text-gray-400">Tier</th>
-            <th className="text-left py-4 font-normal text-gray-400">KYC Status</th>
-            <th className="text-left py-4 font-normal text-gray-400">Available Balance</th>
-            <th className="text-left py-4 font-normal text-gray-400">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {uniqueUsers.map(user => (
-            <tr key={user.id} className="border-t border-gray-800">
-              <td className="py-4">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 flex items-center justify-center bg-gray-800 mr-3">
-                    {user.name?.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="text-white">{user.name}</div>
-                    <div className="text-sm text-gray-400">ID: {user.id}</div>
-                  </div>
-                </div>
-              </td>
-              <td className="py-4 text-white">{user.email}</td>
-              <td className="py-4">
-                <span className={
-                  user.tier === 'VIP' ? 'text-purple-400' :
-                  user.tier === 'Gold' ? 'text-gold' :
-                  'text-gray-400'
-                }>{user.tier}</span>
-              </td>
-              <td className="py-4">
-                <span className={
-                  user.kycStatus === 'verified' ? 'text-green-400' :
-                  user.kycStatus === 'pending' ? 'text-yellow-400' :
-                  'text-red-400'
-                }>{user.kycStatus || 'Not Started'}</span>
-              </td>
-              <td className="py-4 text-white">
-                {typeof user.availableBalance === 'number' ? `$${user.availableBalance.toLocaleString()}` : 
-                 typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : '$0.00'}
-              </td>
-              <td className="py-4">
-                <div className="flex gap-4">
-                  <button onClick={() => onSelectUser(user)} className="text-blue-400 hover:text-blue-300">
-                    <FiEye />
-                  </button>
-                  <button onClick={() => onUpdateUser(user)} className="text-purple-400 hover:text-purple-300">
-                    <FiEdit2 />
-                  </button>
-                  <button onClick={() => onManageBalance?.(user)} className="text-gold hover:text-gold/80">
-                    <FiDollarSign />
-                  </button>
-                </div>
-              </td>
+            <div className="overflow-x-auto -mx-4 md:mx-0">
+        <table className="w-full min-w-[800px]">
+          <thead>
+            <tr>
+              <th className="text-left font-medium text-gray-400 px-4">User</th>
+              <th className="text-left font-medium text-gray-400">Email</th>
+              <th className="text-left font-medium text-gray-400">KYC Status</th>
+              <th className="text-left font-medium text-gray-400">Role</th>
+              <th className="text-left font-medium text-gray-400">Balance</th>
+              <th className="text-left font-medium text-gray-400">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {uniqueUsers.map((user) => (
+              <tr key={user.id} className="border-t border-gray-800 hover:bg-gray-900/30">
+                <td className="py-4 px-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-white shrink-0">
+                      {user.name ? user.name[0].toUpperCase() : 'U'}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-white truncate">{user.name}</div>
+                      <div className="text-sm text-gray-400 truncate">Joined {new Date(user.createdAt).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-4 text-white">
+                  <div className="truncate max-w-[180px]">{user.email}</div>
+                </td>
+                <td className="py-4">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap
+                    ${user.kycStatus === 'verified' ? 'bg-green-100 text-green-800' : 
+                      user.kycStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                      'bg-gray-100 text-gray-800'}`}>
+                    {user.kycStatus || 'Not Started'}
+                  </span>
+                </td>
+                <td className="py-4">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap
+                    ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                    {user.role || 'user'}
+                  </span>
+                </td>
+                <td className="py-4 text-white whitespace-nowrap">
+                  {typeof user.availableBalance === 'number' ? `$${user.availableBalance.toLocaleString()}` : 
+                   typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : '$0.00'}
+                </td>
+                <td className="py-4 pr-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onSelectUser(user)}
+                      className="p-2 text-gray-400 hover:text-white transition-colors"
+                      aria-label="View user"
+                    >
+                      <FiEye className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => onManageBalance(user)}
+                      className="p-2 text-gray-400 hover:text-white transition-colors"
+                      aria-label="Manage balance"
+                    >
+                      <FiDollarSign className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => onSelectUser(user)}
+                      className="p-2 text-gray-400 hover:text-white transition-colors"
+                      aria-label="Edit user"
+                    >
+                      <FiEdit2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 };

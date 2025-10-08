@@ -10,17 +10,50 @@ import { useAdminAuth } from '../../auth/AdminAuthProvider';
 
 const AdminLayout = () => {
   const { admin, logout } = useAdminAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true); // default open on desktop
+  const [sidebarOpen, setSidebarOpen] = useState(false); // default closed on mobile
   const [darkMode, setDarkMode] = useState(true);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
+  
+  React.useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setSidebarOpen(true);
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  React.useEffect(() => {
+    document.body.classList.toggle('mobile-menu-open', sidebarOpen && isMobile);
+    
+    return () => {
+      document.body.classList.remove('mobile-menu-open');
+    };
+  }, [sidebarOpen, isMobile]);
 
   return (
     <div className={
       `flex h-screen font-sans text-base relative transition-colors duration-300 ${darkMode ? 'bg-black text-gray-100' : 'bg-white text-gray-900'}`
     }>
+      {/* Mobile Menu Toggle */}
+      <button
+        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-gray-900 bg-opacity-80 text-gold hover:bg-gray-800 transition md:hidden"
+        onClick={() => setSidebarOpen(true)}
+        aria-label="Open menu"
+      >
+        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
       {/* Theme Toggle Button */}
       <button
-        className="fixed top-6 right-6 z-50 bg-gray-900 bg-opacity-80 p-2 rounded-lg text-gold hover:bg-gray-800 transition md:right-8"
+        className="fixed top-4 right-4 z-50 bg-gray-900 bg-opacity-80 p-2 rounded-lg text-gold hover:bg-gray-800 transition md:right-8"
         onClick={() => setDarkMode((prev) => !prev)}
         aria-label="Toggle theme"
       >
@@ -36,9 +69,9 @@ const AdminLayout = () => {
       )}
       {/* Sidebar */}
       <aside
-        className={`fixed md:static top-0 left-0 h-full ${sidebarOpen ? 'w-64' : 'w-16'} ${darkMode ? 'bg-gradient-to-b from-gray-950 to-gray-900 border-gray-800' : 'bg-gradient-to-b from-gray-100 to-white border-gray-200'} border-r shadow-lg z-40 transform ${sidebarOpen || isMobile ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out flex flex-col`}
-        style={{ pointerEvents: sidebarOpen || isMobile ? 'auto' : 'none' }}
-        aria-hidden={!sidebarOpen && isMobile}
+        className={`fixed md:static top-0 left-0 h-full ${sidebarOpen ? 'w-[280px] md:w-64' : 'w-0 md:w-16'} ${darkMode ? 'bg-gradient-to-b from-gray-950 to-gray-900 border-gray-800' : 'bg-gradient-to-b from-gray-100 to-white border-gray-200'} border-r shadow-lg z-40 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} transition-all duration-300 ease-in-out flex flex-col overflow-hidden`}
+        style={{ pointerEvents: sidebarOpen ? 'auto' : 'none' }}
+        aria-hidden={!sidebarOpen}
       >
         <div className={`flex items-center h-20 px-4 border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
           <span className={`text-2xl font-extrabold tracking-widest ${darkMode ? 'text-gold' : 'text-yellow-700'} transition-all duration-300 ${!sidebarOpen ? 'opacity-0 w-0' : 'opacity-100 w-auto'}`}>LUXHEDGE</span>
