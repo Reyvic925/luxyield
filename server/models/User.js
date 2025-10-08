@@ -200,16 +200,6 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  // Monetary balances
-  availableBalance: {
-    type: Number,
-    default: 0
-  },
-  // Some routes still reference depositBalance; keep for compatibility
-  depositBalance: {
-    type: Number,
-    default: 0
-  },
   lockedBalance: {
     type: Number,
     default: 0

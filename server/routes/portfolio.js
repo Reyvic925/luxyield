@@ -7,7 +7,6 @@ const Withdrawal = require('../models/Withdrawal');
 const Deposit = require('../models/Deposit');
 const User = require('../models/User');
 const UserGainLog = require('../models/UserGainLog');
-const BalanceHistory = require('../models/BalanceHistory');
 const mongoose = require('mongoose');
 
 // Shared function to get portfolio data for any user
@@ -20,7 +19,7 @@ async function getPortfolioData(userId) {
   const investments = await Investment.find({ user: userId });
   // Calculate totals
   const totalValue = investments.reduce((sum, inv) => sum + inv.currentValue, 0);
-  // totalInvested, totalROI, and totalROIPercent will be calculated after investments are defined below
+  // totalInvested, totalROI, and totalROIPercent will be calculated after allInvestments is defined below
   // Generate performance data (last 12 months)
   const performanceData = generatePerformanceData(investments);
   // Generate allocation data
@@ -70,26 +69,15 @@ async function getPortfolioData(userId) {
   // Calculate depositBalance as sum of all confirmed deposits
   const confirmedDeposits = await Deposit.find({ user: userId, status: 'confirmed' });
   const depositBalance = confirmedDeposits.reduce((sum, d) => sum + d.amount, 0);
-  // investments already fetched above, reuse to calculate totals
+  // Calculate total invested (active + completed investments)
+  const allInvestments = await Investment.find({ user: userId });
   // Calculate admin-confirmed ROI withdrawals (status: 'confirmed', type: 'roi')
   const confirmedRoiWithdrawals = await Withdrawal.find({ userId: userId, status: 'confirmed', type: 'roi' });
   const totalConfirmedRoi = confirmedRoiWithdrawals.reduce((sum, w) => sum + w.amount, 0);
-  // Calculate totalInvested based on investments
-  const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
-  
-  // Get admin adjustments from BalanceHistory
-  const adminAdjustments = await BalanceHistory.find({
-    userId,
-    type: { $in: ['admin_add', 'admin_subtract'] }
-  });
-  
-  // Calculate net admin adjustments
-  const netAdminAdjustments = adminAdjustments.reduce((sum, adjustment) => {
-    return sum + (adjustment.type === 'admin_add' ? adjustment.amount : -adjustment.amount);
-  }, 0);
-  
-  // Calculate availableBalance: depositBalance - totalInvested + totalConfirmedRoi + netAdminAdjustments
-  const availableBalance = depositBalance - totalInvested + totalConfirmedRoi + netAdminAdjustments;
+  // Calculate totalInvested after allInvestments is defined
+  const totalInvested = allInvestments.reduce((sum, inv) => sum + inv.amount, 0);
+  // Calculate availableBalance: depositBalance - totalInvested + totalConfirmedRoi
+  const availableBalance = depositBalance - totalInvested + totalConfirmedRoi;
   function calculateInvestmentROI(inv) {
     const roiTransactions = (inv.transactions || []).filter(t => t.type === 'roi');
     const roiSum = roiTransactions.reduce((sum, t) => sum + t.amount, 0);
@@ -151,12 +139,12 @@ async function getPortfolioData(userId) {
   }
 
   const perfMetrics = calculatePerformanceMetrics(performanceData);
-  // Calculate totalROI, and totalROIPercent based on investments
-  const totalValueFinal = investments.reduce((sum, inv) => sum + inv.currentValue, 0);
+  // Calculate totalROI, and totalROIPercent after allInvestments is defined
+  const totalValueFinal = allInvestments.reduce((sum, inv) => sum + inv.currentValue, 0);
   const totalROI = totalValueFinal - totalInvested;
   const totalROIPercent = (totalROI / (totalInvested || 1)) * 100;
   return {
-    investments: investments.map(inv => ({
+    investments: allInvestments.map(inv => ({
       id: inv._id,
       fundId: inv.fundId,
       fundName: inv.fundName,

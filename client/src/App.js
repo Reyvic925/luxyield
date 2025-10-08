@@ -10,7 +10,6 @@ import { AdminAuthProvider } from './auth/AdminAuthProvider';
 import { UserDataRefreshProvider } from './contexts/UserDataRefreshContext';
 import Sidebar from './components/Sidebar';
 import './App.css';
-import './styles/animations.css';
 
 // Admin imports
 import AdminLayout from './components/admin/AdminLayout';

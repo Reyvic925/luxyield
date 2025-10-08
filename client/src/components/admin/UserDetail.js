@@ -1,6 +1,6 @@
 // src/components/admin/UserDetail.js
 import React, { useState } from 'react';
-import { X, Check, AlertTriangle, Download, Image, ZoomIn } from 'lucide-react';
+import { FiX, FiCheck, FiAlertTriangle, FiDownload } from 'react-icons/fi';
 import { approveKYC, rejectKYC, updateUserTier, updateUserRole, getUserKeys } from '../../services/adminAPI';
 
 const fetchKYCImage = async (filename, token) => {
@@ -103,7 +103,7 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
                 onClick={onClose}
                 className="p-2 rounded-full hover:bg-gray-700"
               >
-                <X className="h-6 w-6" />
+                <FiX size={24} />
               </button>
             </div>
             <div className="flex border-b border-gray-700 mb-6">
@@ -197,7 +197,7 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
                               className="text-gold hover:underline flex items-center"
                               onClick={() => handleViewKYCImage(user.kyc.idUrl.split('/').pop(), 'ID Document')}
                             >
-                              <Download className="mr-1 h-4 w-4" /> View
+                              <FiDownload className="mr-1" /> View
                             </button>
                           ) : <span className="text-gray-500">Not uploaded</span>}
                         </div>
@@ -208,7 +208,7 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
                               className="text-gold hover:underline flex items-center"
                               onClick={() => handleViewKYCImage(user.kyc.selfieUrl.split('/').pop(), 'Selfie')}
                             >
-                              <Download className="mr-1 h-4 w-4" /> View
+                              <FiDownload className="mr-1" /> View
                             </button>
                           ) : <span className="text-gray-500">Not uploaded</span>}
                         </div>
@@ -217,11 +217,11 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
                         kycStatus === 'verified' ? 'text-green-400' : kycStatus === 'rejected' ? 'text-red-400' : 'text-yellow-400'
                       }`}>
                         {kycStatus === 'verified' ? (
-                          <Check className="mr-2 h-4 w-4" />
+                          <FiCheck className="mr-2" />
                         ) : kycStatus === 'rejected' ? (
-                          <X className="mr-2 h-4 w-4" />
+                          <FiX className="mr-2" />
                         ) : (
-                          <AlertTriangle className="mr-2 h-4 w-4" />
+                          <FiAlertTriangle className="mr-2" />
                         )}
                         <span>KYC {kycStatus}</span>
                       </div>
@@ -295,53 +295,11 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
         </div>
       </div>
       {imageModal.open && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 modal-backdrop">
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-gray-700 max-w-4xl max-h-[90vh] overflow-hidden modal-content">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-                  <Image className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">{imageModal.label}</h3>
-                  <p className="text-sm text-gray-400">KYC Document Preview</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setImageModal({ open: false, url: '', label: '' })} 
-                className="p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 hover:border-red-400/50 transition-all duration-200 group"
-              >
-                <X className="h-5 w-5 group-hover:text-red-400" />
-              </button>
-            </div>
-            
-            {/* Image Container */}
-            <div className="relative bg-gray-700/30 rounded-xl p-4 border border-gray-600/30">
-              <div className="flex items-center justify-center">
-                <img 
-                  src={imageModal.url} 
-                  alt={imageModal.label} 
-                  className="max-w-full max-h-[60vh] rounded-lg shadow-lg border border-gray-600/50 object-contain" 
-                />
-              </div>
-              
-              {/* Zoom indicator */}
-              <div className="absolute top-6 right-6 p-2 bg-black/50 rounded-lg border border-white/10">
-                <ZoomIn className="h-4 w-4 text-white/70" />
-              </div>
-            </div>
-            
-            {/* Footer */}
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setImageModal({ open: false, url: '', label: '' })}
-                className="px-6 py-2 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-200 flex items-center gap-2"
-              >
-                <Check className="h-4 w-4" />
-                Close
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-xl p-6 relative max-w-lg w-full">
+            <button onClick={() => setImageModal({ open: false, url: '', label: '' })} className="absolute top-2 right-2 text-white"><FiX size={24} /></button>
+            <h3 className="text-lg font-bold mb-4 text-gold">{imageModal.label}</h3>
+            <img src={imageModal.url} alt={imageModal.label} className="max-w-full max-h-[60vh] rounded-lg border border-gold" />
           </div>
         </div>
       )}

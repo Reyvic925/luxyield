@@ -1,274 +1,120 @@
 // src/components/admin/AdminLayout.js
-import React, { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { 
-  FiUsers, FiDollarSign, FiDownload, FiSettings, FiHome, FiBell, 
-  FiChevronLeft, FiChevronRight, FiMail, FiUserCheck, FiCreditCard,
-  FiPieChart, FiLogOut, FiSun, FiMoon, FiMenu, FiX
-} from 'react-icons/fi';
+import React, { useState } from 'react';
+import { Outlet, Link } from 'react-router-dom';
+import { FiUsers, FiDollarSign, FiDownload, FiSettings, FiHome, FiBell, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useAdminAuth } from '../../auth/AdminAuthProvider';
 
 const AdminLayout = () => {
   const { admin, logout } = useAdminAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true); // default open on desktop
   const [darkMode, setDarkMode] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  const location = useLocation();
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth < 768) {
-        setSidebarOpen(false);
-      }
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const navigationItems = [
-    { path: '/admin', icon: FiHome, label: 'Dashboard', exact: true },
-    { path: '/admin/users', icon: FiUsers, label: 'User Management' },
-    { path: '/admin/funds', icon: FiPieChart, label: 'Investment Funds' },
-    { path: '/admin/deposits', icon: FiCreditCard, label: 'Deposits' },
-    { path: '/admin/withdrawals', icon: FiDownload, label: 'Withdrawals' },
-    { path: '/admin/announcements', icon: FiBell, label: 'Announcements' },
-    { path: '/admin/support', icon: FiBell, label: 'Support Chat' },
-    { path: '/admin/mirror', icon: FiUserCheck, label: 'Mirror User' },
-    { path: '/admin/roi-approvals', icon: FiDollarSign, label: 'ROI Approvals' },
-    { path: '/admin/send-email', icon: FiMail, label: 'Send Email' },
-    { path: '/admin/settings', icon: FiSettings, label: 'Settings' },
-  ];
-
-  const isActiveRoute = (path, exact = false) => {
-    if (exact) {
-      return location.pathname === path;
-    }
-    return location.pathname.startsWith(path);
-  };
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   return (
-    <div className={`flex h-screen font-inter antialiased ${
-      darkMode 
-        ? 'bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white' 
-        : 'bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900'
-    }`}>
-      
-      {/* Mobile Overlay */}
-      {sidebarOpen && isMobile && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden" 
-          onClick={() => setSidebarOpen(false)} 
-        />
+    <div className={
+      `flex h-screen font-sans text-base relative transition-colors duration-300 ${darkMode ? 'bg-black text-gray-100' : 'bg-white text-gray-900'}`
+    }>
+      {/* Theme Toggle Button */}
+      <button
+        className="fixed top-6 right-6 z-50 bg-gray-900 bg-opacity-80 p-2 rounded-lg text-gold hover:bg-gray-800 transition md:right-8"
+        onClick={() => setDarkMode((prev) => !prev)}
+        aria-label="Toggle theme"
+      >
+        {darkMode ? (
+          <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-sun"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        ) : (
+          <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-moon"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
+        )}
+      </button>
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
-
       {/* Sidebar */}
-      <aside className={`
-        fixed md:static top-0 left-0 h-full z-50 transition-all duration-300 ease-in-out animate-fade-in-left
-        ${sidebarOpen ? 'w-72' : 'w-20'}
-        ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
-        ${darkMode 
-          ? 'bg-gradient-to-b from-slate-800/95 via-gray-800/95 to-slate-900/95 border-slate-700/50' 
-          : 'bg-gradient-to-b from-white/95 via-gray-50/95 to-white/95 border-gray-200/50'
-        }
-        border-r backdrop-blur-xl shadow-2xl flex flex-col
-      `}>
-        
-        {/* Header */}
-        <div className={`
-          flex items-center justify-between h-20 px-6 
-          ${darkMode ? 'border-slate-700/50' : 'border-gray-200/50'} 
-          border-b backdrop-blur-sm
-        `}>
-          <div className={`flex items-center transition-all duration-300 ${!sidebarOpen ? 'opacity-0 w-0' : 'opacity-100'}`}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mr-3 shadow-lg">
-              <span className="text-white font-bold text-lg">L</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-                LUXHEDGE
-              </h1>
-              <p className={`text-xs ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                Admin Panel
-              </p>
-            </div>
+      <aside
+        className={`fixed md:static top-0 left-0 h-full ${sidebarOpen ? 'w-64' : 'w-16'} ${darkMode ? 'bg-gradient-to-b from-gray-950 to-gray-900 border-gray-800' : 'bg-gradient-to-b from-gray-100 to-white border-gray-200'} border-r shadow-lg z-40 transform ${sidebarOpen || isMobile ? 'translate-x-0' : '-translate-x-full'} transition-all duration-300 ease-in-out flex flex-col`}
+        style={{ pointerEvents: sidebarOpen || isMobile ? 'auto' : 'none' }}
+        aria-hidden={!sidebarOpen && isMobile}
+      >
+        <div className={`flex items-center h-20 px-4 border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+          <span className={`text-2xl font-extrabold tracking-widest ${darkMode ? 'text-gold' : 'text-yellow-700'} transition-all duration-300 ${!sidebarOpen ? 'opacity-0 w-0' : 'opacity-100 w-auto'}`}>LUXHEDGE</span>
+          <button className="ml-auto text-gray-400 hover:text-gold" onClick={() => setSidebarOpen(false)} style={{display: sidebarOpen && !isMobile ? 'block' : 'none'}} aria-label="Collapse sidebar">
+            <FiChevronLeft size={24} />
+          </button>
+          <button className="ml-auto md:hidden text-gray-400 hover:text-gold" onClick={() => setSidebarOpen(false)} style={{display: isMobile ? 'block' : 'none'}}>&times;</button>
+        </div>
+        <nav className={`flex-1 py-8 ${sidebarOpen ? 'px-4' : 'px-1'} space-y-2 overflow-y-auto`}>
+          <Link to="/admin" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiHome className="mr-3 text-lg" /> Dashboard
+          </Link>
+          <Link to="/admin/users" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiUsers className="mr-3 text-lg" /> Users
+          </Link>
+          <Link to="/admin/funds" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiDollarSign className="mr-3 text-lg" /> Funds
+          </Link>
+          <Link to="/admin/deposits" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiDollarSign className="mr-3 text-lg" /> Deposits
+          </Link>
+          <Link to="/admin/withdrawals" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiDownload className="mr-3 text-lg" /> Withdrawals
+          </Link>
+          <Link to="/admin/settings" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiSettings className="mr-3 text-lg" /> Settings
+          </Link>
+          <Link to="/admin/send-email" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiSettings className="mr-3 text-lg" /> Send Email
+          </Link>
+          <Link to="/admin/announcements" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiBell className="mr-3 text-lg" /> Announcements
+          </Link>
+          <Link to="/admin/support" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiBell className="mr-3 text-lg" /> Support Chat
+          </Link>
+          <Link to="/admin/mirror" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiUsers className="mr-3 text-lg" /> Mirror User
+          </Link>
+          <Link to="/admin/roi-approvals" className="flex items-center px-4 py-3 rounded-lg transition hover:bg-gray-800 text-gray-200 hover:text-gold font-medium">
+            <FiSettings className="mr-3 text-lg" /> ROI Approvals
+          </Link>
+        </nav>
+        <div className={`px-4 py-6 border-t ${darkMode ? 'border-gray-800' : 'border-gray-200'} flex items-center transition-all duration-300 ${!sidebarOpen ? 'justify-center' : ''}`}>
+          <div className={`w-10 h-10 rounded-full ${darkMode ? 'bg-gray-700 text-gold' : 'bg-gray-200 text-yellow-700'} flex items-center justify-center text-lg font-bold ${!sidebarOpen ? 'mx-auto' : 'mr-3'}`}>
+            {admin?.name?.charAt(0) || 'A'}
           </div>
-          
-          {/* Mobile Close Button */}
-          {isMobile && (
+          {sidebarOpen && (
+            <div className={`${darkMode ? 'text-gray-200' : 'text-gray-900'} flex-1`}>
+              <div className="font-semibold">{admin?.name || 'Admin'}</div>
+              <div className="text-xs text-gray-500">Administrator</div>
+            </div>
+          )}
+          {sidebarOpen && (
             <button
-              onClick={() => setSidebarOpen(false)}
-              className={`p-2 rounded-lg transition-colors ${
-                darkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-gray-100 text-gray-500'
-              }`}
+              onClick={logout}
+              className={`ml-4 px-4 py-2 rounded-lg font-semibold transition ${darkMode ? 'bg-gray-900 text-red-400 hover:bg-red-900 hover:text-white' : 'bg-gray-100 text-red-600 hover:bg-red-200 hover:text-white'}`}
             >
-              <FiX size={20} />
+              Logout
             </button>
           )}
         </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {navigationItems.map((item, index) => {
-            const Icon = item.icon;
-            const isActive = isActiveRoute(item.path, item.exact);
-            
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`
-                  flex items-center px-4 py-3 rounded-xl transition-all duration-200 group relative
-                  animate-fade-in-up animate-stagger-${Math.min(index + 1, 5)} hover-lift button-press
-                  ${isActive 
-                    ? darkMode 
-                      ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 shadow-lg shadow-amber-500/10' 
-                      : 'bg-gradient-to-r from-amber-50 to-orange-50 text-amber-600 shadow-lg shadow-amber-500/10'
-                    : darkMode
-                      ? 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }
-                `}
-                onClick={() => isMobile && setSidebarOpen(false)}
-              >
-                <Icon className={`
-                  ${sidebarOpen ? 'mr-3' : 'mx-auto'} 
-                  text-lg transition-all duration-200
-                  ${isActive ? 'scale-110' : 'group-hover:scale-105'}
-                `} />
-                
-                {sidebarOpen && (
-                  <span className="font-medium truncate">{item.label}</span>
-                )}
-                
-                {isActive && (
-                  <div className="absolute right-2 w-2 h-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500" />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Admin Profile & Controls */}
-        <div className={`
-          px-4 py-6 border-t ${darkMode ? 'border-slate-700/50' : 'border-gray-200/50'} 
-          space-y-4
-        `}>
-          {/* Theme Toggle */}
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className={`
-              w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200
-              ${darkMode 
-                ? 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-300' 
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-              }
-            `}
-          >
-            {darkMode ? <FiSun className="mr-3" /> : <FiMoon className="mr-3" />}
-            {sidebarOpen && (
-              <span className="font-medium">
-                {darkMode ? 'Light Mode' : 'Dark Mode'}
-              </span>
-            )}
-          </button>
-
-          {/* Admin Profile */}
-          <div className={`
-            flex items-center p-4 rounded-xl
-            ${darkMode 
-              ? 'bg-gradient-to-r from-slate-700/50 to-slate-600/50' 
-              : 'bg-gradient-to-r from-gray-100 to-gray-50'
-            }
-          `}>
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-              {admin?.name?.charAt(0) || 'A'}
-            </div>
-            
-            {sidebarOpen && (
-              <div className="ml-3 flex-1 min-w-0">
-                <p className="font-semibold truncate">
-                  {admin?.name || 'Administrator'}
-                </p>
-                <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                  Admin Access
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Logout Button */}
-          <button
-            onClick={logout}
-            className={`
-              w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200
-              animate-fade-in-up animate-stagger-5 hover-lift button-press
-              ${darkMode 
-                ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20' 
-                : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'
-              }
-            `}
-          >
-            <FiLogOut className={`${sidebarOpen ? 'mr-3' : 'mx-auto'}`} />
-            {sidebarOpen && <span className="font-medium">Logout</span>}
-          </button>
-        </div>
       </aside>
-
-      {/* Mobile Menu Button */}
-      {isMobile && !sidebarOpen && (
+      {/* Sidebar Toggle Button (Mobile & Desktop Collapsed) */}
+      {!sidebarOpen && (
         <button
+          className="fixed top-6 left-4 z-50 bg-gray-900 bg-opacity-80 p-2 rounded-lg text-gold hover:bg-gray-800 transition"
           onClick={() => setSidebarOpen(true)}
-          className={`
-            fixed top-6 left-6 z-40 p-3 rounded-xl shadow-lg transition-all duration-200
-            ${darkMode 
-              ? 'bg-slate-800/90 hover:bg-slate-700/90 text-white border border-slate-700/50' 
-              : 'bg-white/90 hover:bg-gray-50/90 text-gray-900 border border-gray-200/50'
-            }
-            backdrop-blur-sm
-          `}
+          aria-label="Expand sidebar"
         >
-          <FiMenu size={20} />
+          <FiChevronRight size={24} />
         </button>
       )}
-
-      {/* Sidebar Toggle (Desktop) */}
-      {!isMobile && (
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={`
-            fixed top-6 z-40 p-2 rounded-lg transition-all duration-200
-            ${sidebarOpen ? 'left-64' : 'left-6'}
-            ${darkMode 
-              ? 'bg-slate-800/90 hover:bg-slate-700/90 text-slate-300 border border-slate-700/50' 
-              : 'bg-white/90 hover:bg-gray-50/90 text-gray-600 border border-gray-200/50'
-            }
-            backdrop-blur-sm shadow-lg
-          `}
-        >
-          {sidebarOpen ? <FiChevronLeft size={16} /> : <FiChevronRight size={16} />}
-        </button>
-      )}
-
       {/* Main Content */}
-      <main className={`
-        flex-1 transition-all duration-300 overflow-hidden
-        ${!isMobile && sidebarOpen ? 'ml-72' : !isMobile ? 'ml-20' : 'ml-0'}
-      `}>
-        <div className={`
-          h-full overflow-y-auto
-          ${darkMode 
-            ? 'bg-gradient-to-br from-slate-900/50 via-gray-900/50 to-slate-800/50' 
-            : 'bg-gradient-to-br from-gray-50/50 via-white/50 to-gray-100/50'
-          }
-        `}>
-          <div className="min-h-full p-6 md:p-8 lg:p-12 animate-fade-in">
-            <div className="max-w-7xl mx-auto animate-fade-in-up">
-              <Outlet />
-            </div>
-          </div>
+      <main
+        className={`flex-1 h-screen ${darkMode ? 'bg-black text-gray-100' : 'bg-white text-gray-900'} overflow-y-auto p-0 flex flex-col transition-all duration-300`}
+        style={{ marginLeft: sidebarOpen ? '16rem' : '4rem', transition: 'margin-left 0.3s cubic-bezier(0.4,0,0.2,1)' }}
+      >
+        <div className="w-full max-w-6xl mx-auto flex-1 flex flex-col min-h-screen p-4 md:p-8 lg:p-12 xl:p-16 2xl:p-20">
+          <Outlet />
         </div>
       </main>
     </div>
