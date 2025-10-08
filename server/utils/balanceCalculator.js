@@ -1,3 +1,8 @@
+const Deposit = require('../models/Deposit');
+const Investment = require('../models/Investment');
+const Withdrawal = require('../models/Withdrawal');
+const BalanceHistory = require('../models/BalanceHistory');
+
 // Helper function to calculate available balance
 async function calculateAvailableBalance(userId) {
   // Get deposits
@@ -38,3 +43,7 @@ async function calculateAvailableBalance(userId) {
     calculatedAvailableBalance
   };
 }
+
+module.exports = {
+  calculateAvailableBalance
+};

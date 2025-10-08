@@ -8,7 +8,7 @@ const User = require('../models/User');
 const UserGainLog = require('../models/UserGainLog');
 const BalanceHistory = require('../models/BalanceHistory');
 const mongoose = require('mongoose');
-const { calculateAvailableBalance } = require('../utils/balanceCalculator');
+const balanceCalculator = require('../utils/balanceCalculator');
 
 // Shared function to get portfolio data for any user
 async function getPortfolioData(userId) {
@@ -69,7 +69,7 @@ async function getPortfolioData(userId) {
   const performancePercentile = 87; // TODO: Replace with real calculation
   
   // Get balance information using the centralized calculator
-  const balanceInfo = await calculateAvailableBalance(userId);
+  const balanceInfo = await balanceCalculator.calculateAvailableBalance(userId);
   
   // Update user's availableBalance if it has changed
   if (userDoc && userDoc.availableBalance !== balanceInfo.calculatedAvailableBalance) {
@@ -241,7 +241,7 @@ router.post('/invest', auth, async (req, res) => {
       return res.status(400).json({ error: 'You can only have one active investment at a time.' });
     }
     // Check available balance using centralized calculator
-    const balanceInfo = await calculateAvailableBalance(userId);
+    const balanceInfo = await balanceCalculator.calculateAvailableBalance(userId);
     const availableBalance = balanceInfo.calculatedAvailableBalance;
     if (amount > availableBalance) {
       return res.status(400).json({ error: 'Insufficient balance.' });
