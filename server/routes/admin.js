@@ -164,19 +164,17 @@ router.post('/users/:id/balance', authAdmin, auditLog('update_balance', 'User', 
     // Format to 2 decimal places and ensure it's a number
     user.availableBalance = parseFloat(user.availableBalance.toFixed(2));
 
-    // Create audit record
-  const auditEntry = {
-    timestamp: new Date(),
-    action: operation,
-    amount: Number(amount),
-    prevAvailable: currentBalance,
-    newAvailable: user.availableBalance,
-    adminId: req.user.id
-  };    // Add to balance history if the array exists
-    if (!user.balanceHistory) {
-      user.balanceHistory = [];
-    }
-    user.balanceHistory.push(auditEntry);
+    // Create balance history record
+    const BalanceHistory = require('../models/BalanceHistory');
+    await new BalanceHistory({
+      userId: user._id,
+      type: operation === 'add' ? 'admin_add' : 'admin_subtract',
+      amount: Number(amount),
+      previousBalance: currentBalance,
+      newBalance: user.availableBalance,
+      description: `Admin ${operation} adjustment`,
+      adminId: req.user.id
+    }).save();
 
     await user.save();
     

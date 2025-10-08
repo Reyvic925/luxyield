@@ -1,4 +1,3 @@
-// server/routes/portfolio.js
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
@@ -7,7 +6,9 @@ const Withdrawal = require('../models/Withdrawal');
 const Deposit = require('../models/Deposit');
 const User = require('../models/User');
 const UserGainLog = require('../models/UserGainLog');
+const BalanceHistory = require('../models/BalanceHistory');
 const mongoose = require('mongoose');
+const { calculateAvailableBalance } = require('../utils/balanceCalculator');
 
 // Shared function to get portfolio data for any user
 async function getPortfolioData(userId) {
@@ -67,36 +68,24 @@ async function getPortfolioData(userId) {
   // Calculate user's performance percentile (simulate for now)
   const performancePercentile = 87; // TODO: Replace with real calculation
   
-  // Calculate depositBalance as sum of all confirmed deposits
-  const confirmedDeposits = await Deposit.find({ user: userId, status: 'confirmed' });
-  const depositBalance = confirmedDeposits.reduce((sum, d) => sum + d.amount, 0);
-  
-  // Calculate total invested (active + completed investments)
-  const allInvestments = await Investment.find({ user: userId });
-  const totalInvested = allInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-  
-  // Calculate admin-confirmed ROI withdrawals (status: 'confirmed', type: 'roi')
-  const confirmedRoiWithdrawals = await Withdrawal.find({ userId: userId, status: 'confirmed', type: 'roi' });
-  const totalConfirmedRoi = confirmedRoiWithdrawals.reduce((sum, w) => sum + w.amount, 0);
-  
-  // Calculate availableBalance
-  const calculatedAvailableBalance = depositBalance - totalInvested + totalConfirmedRoi;
-  
-  // Debug log for balance calculation
-  console.log('[DEBUG] Balance calculation:', {
-    userId,
-    depositBalance,
-    totalInvested,
-    totalConfirmedRoi,
-    calculatedAvailableBalance,
-    currentAvailableBalance: userDoc?.availableBalance
-  });
+  // Get balance information using the centralized calculator
+  const balanceInfo = await calculateAvailableBalance(userId);
   
   // Update user's availableBalance if it has changed
-  if (userDoc && userDoc.availableBalance !== calculatedAvailableBalance) {
-    userDoc.availableBalance = calculatedAvailableBalance;
+  if (userDoc && userDoc.availableBalance !== balanceInfo.calculatedAvailableBalance) {
+    userDoc.availableBalance = balanceInfo.calculatedAvailableBalance;
     await userDoc.save();
-    console.log(`[DEBUG] Updated availableBalance for user ${userId} to ${calculatedAvailableBalance}`);
+    
+    // Detailed debug log for balance updates
+    console.log('[DEBUG] Balance update:', {
+      userId,
+      oldBalance: userDoc.availableBalance,
+      newBalance: balanceInfo.calculatedAvailableBalance,
+      deposits: balanceInfo.depositBalance,
+      investments: balanceInfo.totalInvested,
+      confirmedRoi: balanceInfo.totalConfirmedRoi,
+      adminAdjustments: balanceInfo.netAdminAdjustments
+    });
   }
   function calculateInvestmentROI(inv) {
     const roiTransactions = (inv.transactions || []).filter(t => t.type === 'roi');
@@ -192,9 +181,10 @@ async function getPortfolioData(userId) {
       name: userDoc?.name || 'Investor',
       tier: userDoc?.tier || 'Starter',
       performancePercentile,
-      depositBalance,
-      availableBalance: calculatedAvailableBalance,
-      lockedBalance: userDoc?.lockedBalance || 0
+      depositBalance: balanceInfo.depositBalance,
+      availableBalance: balanceInfo.calculatedAvailableBalance,
+      lockedBalance: userDoc?.lockedBalance || 0,
+      adminAdjustments: balanceInfo.netAdminAdjustments
     },
     performanceData,
     allocationData,
@@ -250,12 +240,9 @@ router.post('/invest', auth, async (req, res) => {
     if (active) {
       return res.status(400).json({ error: 'You can only have one active investment at a time.' });
     }
-    // Check available balance
-    const confirmedDeposits = await Deposit.find({ user: userId, status: 'confirmed' });
-    const totalDeposited = confirmedDeposits.reduce((sum, d) => sum + d.amount, 0);
-    const allInvestments = await Investment.find({ user: userId });
-    const totalInvested = allInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-    const availableBalance = totalDeposited - totalInvested;
+    // Check available balance using centralized calculator
+    const balanceInfo = await calculateAvailableBalance(userId);
+    const availableBalance = balanceInfo.calculatedAvailableBalance;
     if (amount > availableBalance) {
       return res.status(400).json({ error: 'Insufficient balance.' });
     }
