@@ -66,6 +66,26 @@ async function getPortfolioData(userId) {
   const userDoc = await User.findById(userId);
   // Calculate user's performance percentile (simulate for now)
   const performancePercentile = 87; // TODO: Replace with real calculation
+  
+  // Calculate availableBalance based on deposits, investments, and ROI
+  const calculatedAvailableBalance = depositBalance - totalInvested + totalConfirmedRoi;
+  
+  // Debug log for balance calculation
+  console.log('[DEBUG] Balance calculation:', {
+    userId,
+    depositBalance,
+    totalInvested,
+    totalConfirmedRoi,
+    calculatedAvailableBalance,
+    currentAvailableBalance: userDoc?.availableBalance
+  });
+  
+  // Update user's availableBalance if it has changed
+  if (userDoc && userDoc.availableBalance !== calculatedAvailableBalance) {
+    userDoc.availableBalance = calculatedAvailableBalance;
+    await userDoc.save();
+    console.log(`[DEBUG] Updated availableBalance for user ${userId} to ${calculatedAvailableBalance}`);
+  }
   // Calculate depositBalance as sum of all confirmed deposits
   const confirmedDeposits = await Deposit.find({ user: userId, status: 'confirmed' });
   const depositBalance = confirmedDeposits.reduce((sum, d) => sum + d.amount, 0);
@@ -179,7 +199,7 @@ async function getPortfolioData(userId) {
       tier: userDoc?.tier || 'Starter',
       performancePercentile,
       depositBalance,
-      availableBalance,
+      availableBalance: calculatedAvailableBalance,
       lockedBalance: userDoc?.lockedBalance || 0
     },
     performanceData,
