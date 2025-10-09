@@ -5,6 +5,7 @@ const Investment = require('../models/Investment');
 const mongoose = require('mongoose');
 const Plan = require('../models/Plan');
 const UserGainLog = require('../models/UserGainLog');
+const User = require('../models/User');
 
 // POST /api/portfolio/invest
 router.post('/invest', auth, async (req, res) => {
@@ -25,7 +26,6 @@ router.post('/invest', auth, async (req, res) => {
       return res.status(400).json({ error: 'Amount out of allowed range for this plan' });
     }
     // Use stored available balance from User model
-    const User = require('../models/User');
     const user = await User.findById(req.user.id);
     const availableBalance = user?.availableBalance || 0;
     if (amount > availableBalance) {
@@ -63,14 +63,13 @@ router.post('/invest', auth, async (req, res) => {
     // --- User Tier Upgrade Logic ---
     const tierOrder = ['Starter', 'Silver', 'Gold', 'Platinum', 'Diamond'];
     const planTier = planDoc.name;
-    const User = require('../models/User');
-    const user = await User.findById(req.user.id);
-    if (user) {
-      const currentTierIdx = tierOrder.indexOf(user.tier);
+    const userForTier = await User.findById(req.user.id);
+    if (userForTier) {
+      const currentTierIdx = tierOrder.indexOf(userForTier.tier);
       const newTierIdx = tierOrder.indexOf(planTier);
       if (newTierIdx > currentTierIdx) {
-        user.tier = planTier;
-        await user.save();
+        userForTier.tier = planTier;
+        await userForTier.save();
       }
     }
     // --- End Tier Upgrade Logic ---
