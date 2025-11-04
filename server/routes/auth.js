@@ -6,7 +6,6 @@ const User = require('../models/User');
 const PendingUser = require('../models/PendingUser');
 const multer = require('multer');
 const path = require('path');
-const nodemailer = require('nodemailer');
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 const axios = require('axios');

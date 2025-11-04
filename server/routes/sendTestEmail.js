@@ -1,15 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { transporter } = require('../utils/mailer');
+const { sendMail } = require('../utils/mailer');
 
 router.post('/api/send-test', async (req, res) => {
   const { to } = req.body;
   try {
-    const info = await transporter.sendMail({
-      from: `"LUXYIELD" <${process.env.EMAIL_USER}>`,
+    const info = await sendMail({
       to: to || 'your@email.com',
-      subject: '✅ LUXYIELD Email Test (via Brevo)',
-      html: '<h2>This email was sent using Brevo SMTP and Nodemailer!</h2>'
+      subject: '✅ LUXYIELD Email Test',
+      html: '<h2>This is a test email from LuxYield (via Resend API)</h2>'
     });
     res.json({ message: 'Email sent ✅', info });
   } catch (err) {
