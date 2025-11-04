@@ -1,6 +1,6 @@
 // server/utils/mailer.js
 // Resend-based mailer with small retry and timeout wrapper.
-const { Resend } = require('@resend/resend');
+const axios = require('axios');
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 if (!RESEND_API_KEY) {
@@ -13,34 +13,38 @@ if (!RESEND_API_KEY) {
   }
 }
 
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
-
 // Helper: simple sleep
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
-async function _sendWithResend({ from, to, subject, html, text, timeoutMs = 8000 }) {
-  if (!resend) throw new Error('Resend client not initialized');
-
-  // Timeout wrapper
-  const sendPromise = resend.emails.send({
+async function _sendWithResendApi({ from, to, subject, html, text, timeoutMs = 8000 }) {
+  const url = 'https://api.resend.com/emails';
+  const payload = {
     from,
-    to,
+    to: Array.isArray(to) ? to : [to],
     subject,
     html,
     text,
-  });
-
-  const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('Send timeout')), timeoutMs));
-  return Promise.race([sendPromise, timeoutPromise]);
+  };
+  try {
+    const resp = await axios.post(url, payload, {
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: timeoutMs
+    });
+    return resp.data;
+  } catch (err) {
+    throw err;
+  }
 }
 
 // Public sendMail with retries and exponential backoff
 async function sendMail({ to, subject, text, html }) {
   const from = process.env.EMAIL_FROM || 'noreply@luxyield.com';
-  const payload = { from, to, subject, html, text };
   console.log('[MAILER] Sending email (to=%s subject=%s)', to, subject);
 
-  if (!resend) {
+  if (!RESEND_API_KEY) {
     console.warn('[MAILER] Resend not configured; skipping send');
     return null;
   }
@@ -51,14 +55,14 @@ async function sendMail({ to, subject, text, html }) {
   while (attempt < maxAttempts) {
     try {
       attempt += 1;
-      const res = await _sendWithResend(payload, 8000);
+      const res = await _sendWithResendApi({ from, to, subject, html, text, timeoutMs: 8000 });
       console.log('[MAILER] Email sent (attempt=%d):', attempt, res);
       return res;
     } catch (err) {
       lastErr = err;
       console.warn('[MAILER] Send attempt %d failed: %s', attempt, err.message || err);
       if (attempt >= maxAttempts) break;
-      const backoff = 200 * Math.pow(2, attempt); // exponential backoff: 400,800,...ms
+      const backoff = 200 * Math.pow(2, attempt); // exponential backoff
       await sleep(backoff);
     }
   }
