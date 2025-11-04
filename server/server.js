@@ -1,9 +1,8 @@
 require('dotenv').config({ path: __dirname + '/.env' });
 console.log('==============================');
 console.log('LuxYield Backend Server Starting');
-console.log('[DEBUG] MONGO_URI:', process.env.MONGO_URI);
-console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV);
-console.log('==============================');
+console.log('[INFO] Environment:', process.env.NODE_ENV);
+console.log('==============================')
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
