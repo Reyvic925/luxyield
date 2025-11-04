@@ -1,33 +1,69 @@
 // server/utils/mailer.js
-const nodemailer = require('nodemailer');
+// Resend-based mailer with small retry and timeout wrapper.
+const { Resend } = require('@resend/resend');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: parseInt(process.env.EMAIL_PORT, 10),
-  secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
-async function sendMail({ to, subject, text, html }) {
-  const mailOptions = {
-    from: `"LUXYIELD" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    text,
-    html,
-  };
-  console.log('Sending email with options:', mailOptions);
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info);
-    return info;
-  } catch (err) {
-    console.error('Error sending email:', err);
-    throw err;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+if (!RESEND_API_KEY) {
+  const msg = 'RESEND_API_KEY is not set in environment. Email sending disabled.';
+  if (process.env.NODE_ENV === 'production') {
+    // Fail fast in production so ops notice misconfiguration early
+    throw new Error(msg);
+  } else {
+    console.warn(msg);
   }
 }
 
-module.exports = { sendMail, transporter };
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+
+// Helper: simple sleep
+const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+async function _sendWithResend({ from, to, subject, html, text, timeoutMs = 8000 }) {
+  if (!resend) throw new Error('Resend client not initialized');
+
+  // Timeout wrapper
+  const sendPromise = resend.emails.send({
+    from,
+    to,
+    subject,
+    html,
+    text,
+  });
+
+  const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('Send timeout')), timeoutMs));
+  return Promise.race([sendPromise, timeoutPromise]);
+}
+
+// Public sendMail with retries and exponential backoff
+async function sendMail({ to, subject, text, html }) {
+  const from = process.env.EMAIL_FROM || 'noreply@luxyield.com';
+  const payload = { from, to, subject, html, text };
+  console.log('[MAILER] Sending email (to=%s subject=%s)', to, subject);
+
+  if (!resend) {
+    console.warn('[MAILER] Resend not configured; skipping send');
+    return null;
+  }
+
+  const maxAttempts = 3;
+  let attempt = 0;
+  let lastErr;
+  while (attempt < maxAttempts) {
+    try {
+      attempt += 1;
+      const res = await _sendWithResend(payload, 8000);
+      console.log('[MAILER] Email sent (attempt=%d):', attempt, res);
+      return res;
+    } catch (err) {
+      lastErr = err;
+      console.warn('[MAILER] Send attempt %d failed: %s', attempt, err.message || err);
+      if (attempt >= maxAttempts) break;
+      const backoff = 200 * Math.pow(2, attempt); // exponential backoff: 400,800,...ms
+      await sleep(backoff);
+    }
+  }
+  console.error('[MAILER] All send attempts failed:', lastErr);
+  throw lastErr;
+}
+
+module.exports = { sendMail };

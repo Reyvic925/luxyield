@@ -209,11 +209,11 @@ router.post('/register', async (req, res) => {
     const verifyUrlBackend = `${backendBase}/api/auth/verify-email/${emailToken}`;
     const verifyUrlFrontend = `${process.env.FRONTEND_URL}/verify-email/${emailToken}`;
     console.log('[EMAIL VERIFICATION] Registration flow: email:', email, 'Token:', emailToken, 'Expiry:', new Date(expiry).toISOString(), 'Backend verify URL:', verifyUrlBackend, 'Frontend verify URL:', verifyUrlFrontend);
-    try {
-      await sendMail({
-        to: email,
-        subject: 'Verify Your Email',
-        html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#18181b;border-radius:16px;color:#fff;text-align:center;">
+    // Send verification email asynchronously so registration doesn't block on email delivery
+    sendMail({
+      to: email,
+      subject: 'Verify Your Email',
+      html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#18181b;border-radius:16px;color:#fff;text-align:center;">
           <h2 style="color:#FFD700;">Verify Your Email</h2>
           <p style="margin:24px 0;">Open the frontend verification page below to verify your email address and complete registration, or use the OTP code shown.</p>
           <!-- Removed direct backend verification button to avoid GET-side failures; user should use frontend SPA -->
@@ -221,10 +221,7 @@ router.post('/register', async (req, res) => {
           <p style="margin:24px 0;font-size:18px;">Or enter this OTP code: <span style="font-weight:bold;letter-spacing:2px;">${emailOtp}</span></p>
           <p style="margin-top:24px;font-size:13px;color:#aaa;">If you did not create an account, you can ignore this email.</p>
         </div>`
-      });
-    } catch (err) {
-      console.error('[EMAIL VERIFICATION] Error sending registration email:', err);
-    }
+    }).catch(err => console.error('[EMAIL VERIFICATION] Async send error:', err));
     res.status(200).json({ message: 'Registration successful. Please check your email to verify your account.' });
   } catch (err) {
     console.error('[REGISTER] Error:', err);
@@ -301,7 +298,8 @@ router.post('/forgot-password', async (req, res) => {
     user.passwordResetOtpExpiry = expiry;
     await user.save();
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
-    await sendMail({
+    // Send password reset email asynchronously so endpoint responds quickly
+    sendMail({
       to: user.email,
       subject: 'Password Reset Request',
       html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#18181b;border-radius:16px;color:#fff;text-align:center;">
@@ -311,7 +309,7 @@ router.post('/forgot-password', async (req, res) => {
         <p style="margin:24px 0;font-size:18px;">Or enter this OTP code: <span style="font-weight:bold;letter-spacing:2px;">${otp}</span></p>
         <p style="margin-top:32px;font-size:12px;color:#aaa;">If you did not request this, you can ignore this email.</p>
       </div>`
-    });
+    }).catch(err => console.error('[PASSWORD RESET] Async send error:', err));
     res.json({ message: 'If the email exists, a reset link and OTP have been sent.' });
   } catch (err) {
     console.error(err.message);
@@ -355,7 +353,8 @@ router.post('/send-verification', auth, async (req, res) => {
     console.log('Verification code generated:', code, 'for user:', user.email);
     await user.save();
     console.log('User after save:', await User.findById(user.id));
-    await sendMail({
+    // Fire-and-forget verification email
+    sendMail({
       to: user.email,
       subject: 'Verify Your Email',
       html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#18181b;border-radius:16px;color:#fff;text-align:center;">
@@ -367,7 +366,7 @@ router.post('/send-verification', auth, async (req, res) => {
         <div style="font-size:2rem;font-weight:bold;letter-spacing:8px;color:#FFD700;">${code}</div>
         <p style="margin-top:32px;font-size:12px;color:#aaa;">This code expires in 10 minutes.</p>
       </div>`
-    });
+    }).catch(err => console.error('[SEND VERIFICATION] Async send error:', err));
     res.json({ message: 'Verification code sent to your email.' });
   } catch (err) {
     console.error(err.message);
@@ -605,7 +604,8 @@ router.post('/request-change-email', async (req, res) => {
     user.changeEmailExpiry = expiry;
     user.changeEmailNew = newEmail;
     await user.save();
-    await sendMail({
+    // Send confirm email change asynchronously
+    sendMail({
       to: user.email,
       subject: 'Confirm Email Change',
       html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#18181b;border-radius:16px;color:#fff;text-align:center;">
@@ -614,7 +614,7 @@ router.post('/request-change-email', async (req, res) => {
         <div style="font-size:2rem;font-weight:bold;letter-spacing:8px;color:#FFD700;">${code}</div>
         <p style="margin-top:32px;font-size:12px;color:#aaa;">This code expires in 10 minutes.</p>
       </div>`
-    });
+    }).catch(err => console.error('[CHANGE EMAIL] Async send error:', err));
     res.json({ message: 'Confirmation code sent to your current email.' });
   } catch (err) {
     console.error(err.message);
@@ -662,7 +662,8 @@ router.post('/request-change-password', async (req, res) => {
     user.changePasswordExpiry = expiry;
     await user.save();
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
-    await sendMail({
+    // Send confirm password change asynchronously
+    sendMail({
       to: user.email,
       subject: 'Confirm Password Change',
       html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#18181b;border-radius:16px;color:#fff;text-align:center;">
@@ -673,7 +674,7 @@ router.post('/request-change-password', async (req, res) => {
         <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#FFD700;color:#18181b;border-radius:8px;text-decoration:none;font-weight:bold;">Reset Password</a>
         <p style="margin-top:32px;font-size:12px;color:#aaa;">This code and link expire in 10 minutes.</p>
       </div>`
-    });
+    }).catch(err => console.error('[CHANGE PASSWORD] Async send error:', err));
     res.json({ message: 'Confirmation code and link sent to your email.' });
   } catch (err) {
     console.error(err.message);
@@ -829,7 +830,8 @@ router.post('/resend-otp', async (req, res) => {
     const verifyUrlBackend = `${backendBase}/api/auth/verify-email/${pending.emailVerificationToken}`;
     const verifyUrlFrontend = `${process.env.FRONTEND_URL}/verify-email/${pending.emailVerificationToken}`;
     console.log('[RESEND OTP] Sending new OTP for', email, 'Backend URL:', verifyUrlBackend, 'Frontend URL:', verifyUrlFrontend);
-    await sendMail({
+    // Send resend OTP email asynchronously to avoid blocking
+    sendMail({
       to: email,
       subject: 'Verify Your Email',
       html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#18181b;border-radius:16px;color:#fff;text-align:center;">
@@ -840,7 +842,7 @@ router.post('/resend-otp', async (req, res) => {
         <p style="margin:24px 0;font-size:18px;">Or enter this OTP code: <span style="font-weight:bold;letter-spacing:2px;">${emailOtp}</span></p>
         <p style="margin-top:24px;font-size:13px;color:#aaa;">If you did not create an account, you can ignore this email.</p>
       </div>`
-    });
+    }).catch(err => console.error('[RESEND OTP] Async send error:', err));
     res.json({ message: 'A new OTP has been sent to your email.' });
   } catch (err) {
     console.error('Resend OTP error:', err);
