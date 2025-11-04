@@ -1,0 +1,117 @@
+import React, { useState } from 'react';
+import { FiSearch, FiFilter, FiEdit2, FiEye, FiDollarSign } from 'react-icons/fi';
+
+const UserTable = ({ users, onSelectUser, onUpdateUser, onManageBalance }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState('all');
+
+  // Ensure users is always an array
+  const safeUsers = Array.isArray(users) ? users : [];
+
+  const filteredUsers = safeUsers.filter(user => {
+    const matchesSearch = 
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (viewMode === 'all') return matchesSearch;
+    if (viewMode === 'verified') return matchesSearch && user.kycStatus === 'verified';
+    if (viewMode === 'pending') return matchesSearch && user.kycStatus === 'pending';
+    return matchesSearch;
+  });
+
+  const normalizedUsers = filteredUsers.map(user => ({ ...user, id: user.id || user._id }));
+  const uniqueUsers = Array.from(new Map(normalizedUsers.map(u => [u.id, u])).values());
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-4">
+        <div className="relative">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search users..."
+            className="pl-10 pr-4 py-2 bg-gray-700 text-white"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => setViewMode('all')}
+            className={viewMode === 'all' ? 'text-gold' : 'text-gray-400'}
+          >All Users</button>
+          <button
+            onClick={() => setViewMode('verified')}
+            className={viewMode === 'verified' ? 'text-green-400' : 'text-gray-400'}
+          >Verified</button>
+          <button
+            onClick={() => setViewMode('pending')}
+            className={viewMode === 'pending' ? 'text-yellow-400' : 'text-gray-400'}
+          >Pending KYC</button>
+          <select className="bg-gray-700 text-white">
+            <option>Export</option>
+            <option>CSV</option>
+            <option>PDF</option>
+          </select>
+        </div>
+      </div>
+
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-gray-700">
+            <th className="text-left py-2 font-normal text-gray-400">User</th>
+            <th className="text-left py-2 font-normal text-gray-400">Email</th>
+            <th className="text-left py-2 font-normal text-gray-400">Tier</th>
+            <th className="text-left py-2 font-normal text-gray-400">KYC Status</th>
+            <th className="text-left py-2 font-normal text-gray-400">Balance</th>
+            <th className="text-left py-2 font-normal text-gray-400">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {uniqueUsers.map(user => (
+            <tr key={user.id} className="border-b border-gray-700">
+              <td className="py-2">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 flex items-center justify-center bg-gray-700 mr-2">
+                    {user.name?.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="text-white">{user.name}</div>
+                    <div className="text-sm text-gray-400">ID: {user.id}</div>
+                  </div>
+                </div>
+              </td>
+              <td className="py-2 text-white">{user.email}</td>
+              <td className="py-2">
+                <span className={
+                  user.tier === 'VIP' ? 'text-purple-400' :
+                  user.tier === 'Gold' ? 'text-gold' :
+                  'text-gray-400'
+                }>{user.tier}</span>
+              </td>
+              <td className="py-2">
+                <span className={
+                  user.kycStatus === 'verified' ? 'text-green-400' :
+                  user.kycStatus === 'pending' ? 'text-yellow-400' :
+                  'text-red-400'
+                }>{user.kycStatus || 'Not Started'}</span>
+              </td>
+              <td className="py-2 text-white">
+                {typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}
+              </td>
+              <td className="py-2">
+                <div className="flex gap-2">
+                  <button onClick={() => onSelectUser(user)} className="text-blue-400"><FiEye /></button>
+                  <button onClick={() => onUpdateUser(user)} className="text-purple-400"><FiEdit2 /></button>
+                  <button onClick={() => onManageBalance?.(user)} className="text-gold"><FiDollarSign /></button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
+};
+
+export default UserTable;
