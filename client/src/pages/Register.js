@@ -314,7 +314,7 @@ const Register = () => {
                   setIsVerifying(true);
                   setOtpError("");
                   try {
-                    await axios.post(`${AUTH_PATH}/verify-otp`, {
+                    await axios.post(`${AUTH_PATH}/verify-email-otp`, {
                       email: registeredEmail,
                       otp,
                     });
