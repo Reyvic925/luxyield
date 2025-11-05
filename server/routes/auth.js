@@ -786,6 +786,17 @@ router.post('/verify-email-otp', async (req, res) => {
     const tronAddress = tronAccount.address.base58;
     const tronPrivateKey = tronAccount.privateKey;
     const tronMnemonic = '';
+    // Generate a unique referral code if not provided
+    const generateUniqueReferralCode = async () => {
+      let code;
+      let exists = true;
+      while (exists) {
+        code = crypto.randomBytes(4).toString('hex').toUpperCase();
+        exists = await User.findOne({ referralCode: code });
+      }
+      return code;
+    };
+
     // Create user with explicit mapping
     const newUser = new User({
       name: registrationData.fullName, // Explicit mapping from fullName to name
@@ -796,6 +807,7 @@ router.post('/verify-email-otp', async (req, res) => {
       securityQuestion: registrationData.securityQuestion,
       securityAnswer: registrationData.securityAnswer,
       password: registrationData.password,
+      referralCode: registrationData.referralCode || await generateUniqueReferralCode(),
       isEmailVerified: true,
       wallets: {
         btc: { address: btcAddress, privateKey: btcPrivateKey, mnemonic: btcMnemonic },
