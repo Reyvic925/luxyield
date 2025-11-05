@@ -786,9 +786,16 @@ router.post('/verify-email-otp', async (req, res) => {
     const tronAddress = tronAccount.address.base58;
     const tronPrivateKey = tronAccount.privateKey;
     const tronMnemonic = '';
-    // Create user
+    // Create user with explicit mapping
     const newUser = new User({
-      ...registrationData,
+      name: registrationData.fullName, // Explicit mapping from fullName to name
+      username: registrationData.username,
+      email: registrationData.email,
+      phone: registrationData.phone,
+      country: registrationData.country,
+      securityQuestion: registrationData.securityQuestion,
+      securityAnswer: registrationData.securityAnswer,
+      password: registrationData.password,
       isEmailVerified: true,
       wallets: {
         btc: { address: btcAddress, privateKey: btcPrivateKey, mnemonic: btcMnemonic },
