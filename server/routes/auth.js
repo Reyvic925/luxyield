@@ -44,34 +44,39 @@ router.get('/ping', (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     let { email, password } = req.body;
-    // Normalize email: trim and lowercase
-    email = (email || '').trim().toLowerCase();
+    // Normalize input: trim and lowercase
+    const searchTerm = (email || '').trim().toLowerCase();
     console.log('[LOGIN] POST /api/auth/login received', {
-      email,
+      searchTerm,
       time: new Date().toISOString(),
       ip: req.ip,
       headers: req.headers
     });
-    // Find user by normalized email (case-insensitive)
-    const user = await User.findOne({ email: { $regex: `^${email}$`, $options: 'i' } });
+    // Find user by normalized email or username (case-insensitive)
+    const user = await User.findOne({
+      $or: [
+        { email: { $regex: `^${searchTerm}$`, $options: 'i' } },
+        { username: { $regex: `^${searchTerm}$`, $options: 'i' } }
+      ]
+    });
     if (!user) {
-      console.log('[LOGIN] User not found', { email });
-      res.status(401).json({ message: 'User not found' });
+      console.log('[LOGIN] User not found', { searchTerm });
+      res.status(401).json({ message: 'Invalid username/email or password' });
       console.log('[LOGIN] Response sent: User not found');
       return;
     }
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log('[LOGIN] Password mismatch', { email });
-      res.status(401).json({ message: 'Incorrect password' });
-      console.log('[LOGIN] Response sent: Incorrect password');
+      console.log('[LOGIN] Password mismatch', { searchTerm });
+      res.status(401).json({ message: 'Invalid username/email or password' });
+      console.log('[LOGIN] Response sent: Invalid credentials');
       return;
     }
     // Check if email is verified
     if (!user.isEmailVerified) {
-      console.log('[LOGIN] Email not verified', { email });
-      res.status(403).json({ message: 'Email not verified. Please verify your email before logging in.' });
+      console.log('[LOGIN] Email not verified', { searchTerm });
+      res.status(403).json({ message: 'Please verify your email before logging in' });
       console.log('[LOGIN] Response sent: Email not verified');
       return;
     }
