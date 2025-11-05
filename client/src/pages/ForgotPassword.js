@@ -16,7 +16,7 @@ export default function ForgotPassword() {
     setMsg(''); setError('');
     if (!email) { setError('Enter your email.'); return; }
     try {
-      await axios.post('/api/auth/request-password-reset', { email });
+      await axios.post('/api/auth/forgot-password', { email });
       setStep(2);
       setMsg('Password reset code has been sent.');
     } catch (err) {
@@ -40,7 +40,7 @@ export default function ForgotPassword() {
     setResendLoading(true);
     setMsg(''); setError('');
     try {
-      await axios.post('/api/auth/request-password-reset', { email });
+      await axios.post('/api/auth/forgot-password', { email });
       setMsg('Password reset code has been sent.');
     } catch (err) {
       if (err.response) {
@@ -62,7 +62,7 @@ export default function ForgotPassword() {
     if (!otp || !newPass || !confirmPass) { setError('All fields are required.'); return; }
     if (newPass !== confirmPass) { setError('Passwords do not match.'); return; }
     try {
-      await axios.post('/api/auth/verify-password-reset', { email, otp, newPassword: newPass });
+      await axios.post('/api/auth/reset-password', { token: otp, password: newPass });
       setMsg('Password reset successful! You can now log in.');
       setStep(1); setEmail(''); setOtp(''); setNewPass(''); setConfirmPass('');
     } catch (err) {
