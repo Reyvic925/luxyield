@@ -52,17 +52,17 @@ const UserLogin = () => {
         )}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="w-full">
-            <label htmlFor="login-email" className="block text-gray-400 mb-2">Email</label>
+            <label htmlFor="login-email" className="block text-gray-400 mb-2">Email or Username</label>
             <input
               id="login-email"
               name="email"
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
-              placeholder="user@email.com"
+              placeholder="Email or Username"
               required
-              autoComplete="email"
+              autoComplete="username"
             />
           </div>
           <div className="w-full">
