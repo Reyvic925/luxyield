@@ -76,8 +76,8 @@ async function getPortfolioData(userId) {
   const totalConfirmedRoi = confirmedRoiWithdrawals.reduce((sum, w) => sum + w.amount, 0);
   // Calculate totalInvested after allInvestments is defined
   const totalInvested = allInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-  // Calculate available balance as confirmed deposits minus total invested
-  const availableBalance = depositBalance - totalInvested;
+  // Use user's availableBalance for display and validation
+  const availableBalance = userDoc.availableBalance || 0;
   const lockedBalance = userDoc.lockedBalance || 0;
   function calculateInvestmentROI(inv) {
     const roiTransactions = (inv.transactions || []).filter(t => t.type === 'roi');
@@ -231,15 +231,15 @@ router.post('/invest', auth, async (req, res) => {
     if (active) {
       return res.status(400).json({ error: 'You can only have one active investment at a time.' });
     }
-    // Check available balance
-    const confirmedDeposits = await Deposit.find({ user: userId, status: 'confirmed' });
-    const totalDeposited = confirmedDeposits.reduce((sum, d) => sum + d.amount, 0);
-    const allInvestments = await Investment.find({ user: userId });
-    const totalInvested = allInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-    const availableBalance = totalDeposited - totalInvested;
-    if (amount > availableBalance) {
+    // Check available balance using user.availableBalance
+    const user = await User.findById(userId);
+    if (!user) return res.status(400).json({ error: 'User not found.' });
+    if (amount > (user.availableBalance || 0)) {
       return res.status(400).json({ error: 'Insufficient balance.' });
     }
+    // Subtract from available balance
+    user.availableBalance = (user.availableBalance || 0) - amount;
+    await user.save();
     // Create investment
     const now = new Date();
     const durationDays = plan === 'Silver' ? 7 : plan === 'Gold' ? 10 : plan === 'Platinum' ? 15 : 21;
