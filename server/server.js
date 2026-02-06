@@ -98,6 +98,7 @@ app.use('/api/goals', require('./routes/goals'));
 app.use('/api/wallets', require('./routes/wallets'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/admin/plans', require('./routes/admin/plans'));
+app.use('/api/admin/deposits', require('./routes/admin/deposits'));
 app.use('/api/market-updates', require('./routes/market-updates'));
 app.use('/api/admin/roi-approvals', require('./routes/admin/roi-approvals'));
 app.use('/api/admin/user-investments', require('./routes/admin/userInvestments'));
