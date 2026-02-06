@@ -174,7 +174,7 @@ async function getPortfolioData(userId) {
       tier: userDoc?.tier || 'Starter',
       performancePercentile,
       depositBalance,
-      availableBalance,
+      availableBalance: availableBalance,
       lockedBalance: userDoc?.lockedBalance || 0
     },
     performanceData,
