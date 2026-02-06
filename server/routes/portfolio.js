@@ -156,7 +156,8 @@ async function getPortfolioData(userId) {
       startDate: inv.startDate,
       endDate: inv.endDate,
       status: inv.status,
-      roiWithdrawn: inv.roiWithdrawn || false
+      roiWithdrawn: inv.roiWithdrawn || false,
+      transactions: inv.transactions || []
     })),
     summary: {
       totalInvested: totalInvested,
