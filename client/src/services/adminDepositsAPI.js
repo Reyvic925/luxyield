@@ -5,8 +5,16 @@ const API = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL + '/api/admin/deposits',
 });
 
-// Add auth token to requests
-// ...existing code...
+
+// Attach admin token if present
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem('adminToken');
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => Promise.reject(error));
 
 export const getAdminDeposits = async () => {
   try {
