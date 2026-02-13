@@ -1,13 +1,4 @@
-// Global error handler: always return JSON
-app.use((err, req, res, next) => {
-  console.error('Global error:', err);
-  res.status(500).json({ success: false, message: 'Internal server error.' });
-});
-
-// Catch-all for unmatched routes: always return JSON
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found.' });
-});
+// (Removed: will be placed at the end)
 require('dotenv').config({ path: __dirname + '/.env' });
 console.log('==============================');
 console.log('LuxYield Backend Server Starting');
@@ -202,6 +193,17 @@ app.get('/api/health', async (req, res) => {
 // Root route for health check
 app.get('/', (req, res) => {
   res.send('API is running');
+});
+
+// Global error handler: always return JSON
+app.use((err, req, res, next) => {
+  console.error('Global error:', err);
+  res.status(500).json({ success: false, message: 'Internal server error.' });
+});
+
+// Catch-all for unmatched routes: always return JSON
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: 'Route not found.' });
 });
 
 server.listen(process.env.PORT || 5000, () => {
