@@ -81,21 +81,39 @@ async function runRoiSimulation() {
         fluctuation = -investment.currentValue + 0.01; // leave tiny positive balance
       }
 
-      // If matured, force final settling to expectedFinalValue (no further volatility)
+      // Do NOT stop updates when hitting the target before maturity.
+      // Allow continued up/down fluctuations until the actual end date.
+      // At maturity, apply a limited correction (not a forced full settle) to keep final value
+      // reasonably close to the chosen target.
+      const pn = investment.planName;
+      // Per-step maximum change (percent of original amount), default 5%
+      const maxStepPct = (configMap[`plan.${pn}.maxStepPct`] !== undefined) ? Number(configMap[`plan.${pn}.maxStepPct`]) : 0.05;
+      const maxStep = investment.amount * maxStepPct;
+
+      // If matured (past end date), apply a capped correction toward the target rather than forcing full settle
       if (minutesLeft <= 0) {
-        if (investment.currentValue < expectedFinalValue) {
-          fluctuation = expectedFinalValue - investment.currentValue;
+        const diff = expectedFinalValue - investment.currentValue;
+        // threshold under which we consider the difference negligible (default 2% of amount)
+        const settleThresholdPct = (configMap[`plan.${pn}.settleThresholdPct`] !== undefined) ? Number(configMap[`plan.${pn}.settleThresholdPct`]) : 0.02;
+        const settleThreshold = investment.amount * settleThresholdPct;
+        // maximum final correction we allow in one step (default 5% of amount)
+        const maxFinalCorrectionPct = (configMap[`plan.${pn}.finalCorrectionPct`] !== undefined) ? Number(configMap[`plan.${pn}.finalCorrectionPct`]) : 0.05;
+        const maxFinalCorrection = investment.amount * maxFinalCorrectionPct;
+
+        if (Math.abs(diff) <= settleThreshold) {
+          // small difference — don't force anything, allow final fluctuations
+          console.log(`[ROI SIM] Maturity: diff ${diff.toFixed(2)} within threshold ${settleThreshold.toFixed(2)}; no forced correction.`);
         } else {
-          // already at/above expected final value; finalize and skip noisy update
-          continue;
+          // apply a gentle correction capped by maxFinalCorrection
+          const correction = Math.max(Math.min(diff, maxFinalCorrection), -maxFinalCorrection);
+          fluctuation += correction;
+          console.log(`[ROI SIM] Maturity correction applied: ${correction.toFixed(2)} (diff ${diff.toFixed(2)})`);
         }
       }
 
-      // Prevent a single-step overshoot beyond expected final value by more than 1% of amount
-      const maxOvershoot = investment.amount * 0.01;
-      if (investment.currentValue + fluctuation > expectedFinalValue + maxOvershoot) {
-        fluctuation = expectedFinalValue - investment.currentValue;
-      }
+      // Cap single-step change so values don't jump wildly; this avoids forcing the value back to target.
+      if (fluctuation > maxStep) fluctuation = maxStep;
+      if (fluctuation < -maxStep) fluctuation = -maxStep;
       // Fetch the full investment doc for update
       const invDoc = await Investment.findById(investment._id);
       invDoc.currentValue += fluctuation;
