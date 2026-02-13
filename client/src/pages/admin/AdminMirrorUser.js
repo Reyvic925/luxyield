@@ -1,31 +1,3 @@
-  // State for admin gain/loss adjustment
-  const [adjustAmount, setAdjustAmount] = useState('');
-  const [adjustType, setAdjustType] = useState('gain');
-  const [adjustLoading, setAdjustLoading] = useState(false);
-
-  // Handler for admin gain/loss adjustment
-  const handleAdjustInvestment = async () => {
-    if (!userId || !investments.length) return;
-    const activeInvestment = investments.find(inv => inv.status === 'active');
-    if (!activeInvestment) return;
-    setAdjustLoading(true);
-    try {
-      await axios.post(
-        `/api/admin/investment/${activeInvestment.id}/adjust`,
-        { amount: Number(adjustAmount), type: adjustType },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }
-      );
-      // Refresh portfolio data after adjustment
-      const portfolioRes = await axios.get(`/api/admin/users/${userId}/portfolio`, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
-      setPortfolioData(portfolioRes.data);
-      alert(`Investment ${adjustType} added successfully.`);
-      setAdjustAmount('');
-    } catch (err) {
-      alert('Failed to adjust investment: ' + (err.response?.data?.error || err.message));
-    } finally {
-      setAdjustLoading(false);
-    }
-  };
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Portfolio from '../../pages/Portfolio';
