@@ -73,23 +73,43 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Global request logger for debugging
 app.use((req, res, next) => {
-  if (req.path.includes('/investment') || req.path.includes('/admin')) {
+  // Log ALL requests for admin endpoints
+  if (req.path.includes('/investment') || req.path.includes('/admin') || req.originalUrl.includes('set-gain-loss')) {
     console.log('[GLOBAL] Incoming request:', {
       method: req.method,
       path: req.path,
-      url: req.originalUrl,
+      originalUrl: req.originalUrl,
       body: req.method === 'POST' ? req.body : 'N/A'
     });
   }
   
   // Intercept response to log what's being sent back
   const originalJson = res.json.bind(res);
+  const originalEnd = res.end.bind(res);
+  const originalSend = res.send?.bind(res);
+  
   res.json = function(data) {
-    if (req.path.includes('/investment') || req.path.includes('/admin')) {
-      console.log('[GLOBAL RESPONSE] Sending JSON from path:', req.path, 'Data:', JSON.stringify(data).substring(0, 500));
+    if (req.path.includes('/investment') || req.path.includes('/admin') || req.originalUrl.includes('set-gain-loss')) {
+      console.log('[GLOBAL RESPONSE JSON] Path:', req.path, 'Data:', JSON.stringify(data).substring(0, 500));
     }
     return originalJson(data);
   };
+  
+  res.end = function(data) {
+    if (req.path.includes('/investment') || req.path.includes('/admin') || req.originalUrl.includes('set-gain-loss')) {
+      console.log('[GLOBAL RESPONSE END] Path:', req.path, 'Data length:', data ? String(data).length : 0);
+    }
+    return originalEnd(data);
+  };
+  
+  if (originalSend) {
+    res.send = function(data) {
+      if (req.path.includes('/investment') || req.path.includes('/admin') || req.originalUrl.includes('set-gain-loss')) {
+        console.log('[GLOBAL RESPONSE SEND] Path:', req.path, 'Data:', JSON.stringify(data).substring(0, 500));
+      }
+      return originalSend(data);
+    };
+  }
   
   next();
 });
