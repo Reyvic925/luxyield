@@ -1,22 +1,17 @@
-import axios from 'axios';
+import axios from '../utils/axios';
 
-const API = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL + '/api/admin/roi-approvals',
-});
-
-// ...existing code...
-
+// Use the configured axios instance so auth headers and baseURL are applied
 export const getRoiWithdrawals = async () => {
-  const res = await API.get('/');
+  const res = await axios.get('/api/admin/roi-approvals');
   return res.data;
 };
 
 export const approveRoiWithdrawal = async (id) => {
-  const res = await API.patch(`/${id}`, { status: 'completed', destination: 'available' });
+  const res = await axios.patch(`/api/admin/roi-approvals/${id}`, { status: 'completed', destination: 'available' });
   return res.data;
 };
 
 export const rejectRoiWithdrawal = async (id) => {
-  const res = await API.patch(`/${id}`, { status: 'rejected' });
+  const res = await axios.patch(`/api/admin/roi-approvals/${id}`, { status: 'rejected' });
   return res.data;
 };
