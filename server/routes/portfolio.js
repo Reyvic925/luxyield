@@ -1,3 +1,33 @@
+// Admin: Manually adjust gain/loss for a user's investment
+router.post('/admin/investment/:id/adjust', async (req, res) => {
+  try {
+    const { amount, type } = req.body; // type: 'gain' or 'loss'
+    if (typeof amount !== 'number' || !['gain', 'loss'].includes(type)) {
+      return res.status(400).json({ message: 'Invalid amount or type.' });
+    }
+    const investment = await Investment.findById(req.params.id);
+    if (!investment) {
+      return res.status(404).json({ message: 'Investment not found.' });
+    }
+    if (type === 'gain') {
+      investment.currentValue += amount;
+    } else {
+      investment.currentValue -= amount;
+    }
+    investment.transactions = investment.transactions || [];
+    investment.transactions.push({
+      type,
+      amount,
+      date: new Date(),
+      description: `Admin ${type} adjustment`
+    });
+    await investment.save();
+    return res.json({ success: true, investment });
+  } catch (err) {
+    console.error('Admin portfolio adjustment error:', err);
+    return res.status(500).json({ message: 'Server error.' });
+  }
+});
 // server/routes/portfolio.js
 const express = require('express');
 const router = express.Router();

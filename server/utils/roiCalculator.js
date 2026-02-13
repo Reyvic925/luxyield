@@ -24,14 +24,23 @@ async function runRoiSimulation() {
       const elapsedMinutes = Math.floor((now - start) / (1000 * 60));
       const expectedFinalValue = investment.amount + (investment.amount * plan.roi / 100);
       const minutesLeft = totalMinutes - elapsedMinutes;
-      let fluctuation = (Math.random() * 0.06 - 0.02) * investment.amount;
-      if (fluctuation === 0) fluctuation = (Math.random() < 0.5 ? -1 : 1) * 0.01 * investment.amount;
-      if (minutesLeft <= 5) {
-        // Only adjust up if below expected ROI
+      // Calculate remaining ROI to reach target
+      const remainingGain = expectedFinalValue - investment.currentValue;
+      // Calculate intervals left
+      const intervalsLeft = Math.max(Math.floor(minutesLeft / 5), 1);
+      // Per-interval average change
+      let baseChange = remainingGain / intervalsLeft;
+      // Add random fluctuation: -40% to +40% of baseChange
+      let fluctuation = baseChange * (1 + (Math.random() * 0.8 - 0.4));
+      // Prevent overshooting or undershooting
+      if (fluctuation + investment.currentValue > expectedFinalValue) {
+        fluctuation = expectedFinalValue - investment.currentValue;
+      }
+      // If matured, only adjust up if below expected ROI
+      if (minutesLeft <= 0) {
         if (investment.currentValue < expectedFinalValue) {
           fluctuation = expectedFinalValue - investment.currentValue;
         } else {
-          // No adjustment if already at or above expected ROI
           continue;
         }
       }

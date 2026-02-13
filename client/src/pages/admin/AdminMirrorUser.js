@@ -1,3 +1,31 @@
+  // State for admin gain/loss adjustment
+  const [adjustAmount, setAdjustAmount] = useState('');
+  const [adjustType, setAdjustType] = useState('gain');
+  const [adjustLoading, setAdjustLoading] = useState(false);
+
+  // Handler for admin gain/loss adjustment
+  const handleAdjustInvestment = async () => {
+    if (!userId || !investments.length) return;
+    const activeInvestment = investments.find(inv => inv.status === 'active');
+    if (!activeInvestment) return;
+    setAdjustLoading(true);
+    try {
+      await axios.post(
+        `/api/admin/investment/${activeInvestment.id}/adjust`,
+        { amount: Number(adjustAmount), type: adjustType },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }
+      );
+      // Refresh portfolio data after adjustment
+      const portfolioRes = await axios.get(`/api/admin/users/${userId}/portfolio`, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
+      setPortfolioData(portfolioRes.data);
+      alert(`Investment ${adjustType} added successfully.`);
+      setAdjustAmount('');
+    } catch (err) {
+      alert('Failed to adjust investment: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setAdjustLoading(false);
+    }
+  };
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Portfolio from '../../pages/Portfolio';
@@ -120,6 +148,34 @@ const AdminMirrorUser = ({ userId, onBack }) => {
             >
               Continue Completed Investment
             </button>
+            {/* Admin gain/loss adjustment UI */}
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="0"
+                value={adjustAmount}
+                onChange={e => setAdjustAmount(e.target.value)}
+                placeholder="Amount"
+                className="px-2 py-1 rounded border"
+                disabled={adjustLoading}
+              />
+              <select
+                value={adjustType}
+                onChange={e => setAdjustType(e.target.value)}
+                className="px-2 py-1 rounded border"
+                disabled={adjustLoading}
+              >
+                <option value="gain">Gain</option>
+                <option value="loss">Loss</option>
+              </select>
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-bold"
+                onClick={handleAdjustInvestment}
+                disabled={adjustLoading || !adjustAmount || !portfolioData?.investments?.some(inv => inv.status === 'active')}
+              >
+                Add Gain/Loss
+              </button>
+            </div>
           </div>
           <Portfolio adminView portfolioData={portfolioData} />
         </>
