@@ -1,3 +1,13 @@
+// Global error handler: always return JSON
+app.use((err, req, res, next) => {
+  console.error('Global error:', err);
+  res.status(500).json({ success: false, message: 'Internal server error.' });
+});
+
+// Catch-all for unmatched routes: always return JSON
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: 'Route not found.' });
+});
 require('dotenv').config({ path: __dirname + '/.env' });
 console.log('==============================');
 console.log('LuxYield Backend Server Starting');
