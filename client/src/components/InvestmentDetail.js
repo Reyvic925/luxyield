@@ -180,20 +180,20 @@ const InvestmentDetail = ({ investment, onClose }) => {
                           value={adjustAmount}
                           onChange={e => setAdjustAmount(e.target.value)}
                           placeholder="Amount"
-                          className="px-2 py-1 rounded border"
+                          className="px-2 py-1 rounded border text-black"
                           disabled={adjustLoading}
                         />
                         <select
                           value={adjustType}
                           onChange={e => setAdjustType(e.target.value)}
-                          className="px-2 py-1 rounded border"
+                          className="px-2 py-1 rounded border text-black"
                           disabled={adjustLoading}
                         >
                           <option value="gain">Gain</option>
                           <option value="loss">Loss</option>
                         </select>
                         <button
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-bold"
+                          className="bg-blue-600 hover:bg-blue-700 text-black px-3 py-1 rounded font-bold"
                           onClick={handleAdjustInvestment}
                           disabled={adjustLoading || !adjustAmount}
                         >

@@ -73,7 +73,7 @@ const UserInvestmentsAdmin = () => {
                 <td className="py-3 px-4 flex flex-wrap gap-2 items-center">
                   <button className="text-blue-600 font-semibold hover:underline" onClick={() => handleEdit(inv)}>Edit</button>
                   <button className="text-green-600 font-semibold hover:underline" onClick={() => handleComplete(inv._id)}>Complete</button>
-                  <input className="p-1 border rounded w-20 bg-gray-800 text-white border-gray-700 focus:border-gold outline-none" type="number" placeholder="Gain/Loss $" value={gainLossAmount} onChange={e => setGainLossAmount(e.target.value)} />
+                  <input className="p-1 border rounded w-20 bg-gray-800 text-black border-gray-700 focus:border-gold outline-none" type="number" placeholder="Gain/Loss $" value={gainLossAmount} onChange={e => setGainLossAmount(e.target.value)} />
                   <select className="p-1 border rounded bg-gray-800 text-white border-gray-700 focus:border-gold outline-none" value={gainLossType} onChange={e => setGainLossType(e.target.value)}>
                     <option value="gain">Gain</option>
                     <option value="loss">Loss</option>

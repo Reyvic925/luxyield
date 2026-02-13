@@ -92,7 +92,7 @@ const InvestmentGainLossModal = ({ user, onClose, onUpdate }) => {
                 min="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full pl-8 pr-4 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                className="w-full pl-8 pr-4 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="Amount"
               />
             </div>
@@ -108,7 +108,7 @@ const InvestmentGainLossModal = ({ user, onClose, onUpdate }) => {
                 max="100"
                 value={percentage}
                 onChange={(e) => setPercentage(e.target.value)}
-                className="w-full pl-4 pr-8 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                className="w-full pl-4 pr-8 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                 placeholder="Percentage"
               />
               <FiPercent className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
