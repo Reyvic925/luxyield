@@ -10,19 +10,26 @@ async function runRoiSimulation() {
     const investments = await Investment.find({ status: 'active' }).lean().exec();
     for (const investment of investments) {
       const now = new Date();
-      // Simulate random fluctuation: -2% to +4% of initial amount per 5 min
+      // Simulate random fluctuation: deterministic drift + stochastic noise
+      // Plan config now includes a `maxVariationPercent` allowing the final target ROI
+      // to be randomized between `roi` and `roi + maxVariationPercent`.
       const PLAN_CONFIG = {
-        Silver: { roi: 350, duration: 7 },
-        Gold: { roi: 450, duration: 10 },
-        Platinum: { roi: 550, duration: 15 },
-        Diamond: { roi: 650, duration: 21 },
+        Silver: { roi: 350, duration: 7, maxVariationPercent: 10 },
+        Gold: { roi: 450, duration: 10, maxVariationPercent: 20.99 },
+        Platinum: { roi: 550, duration: 15, maxVariationPercent: 25 },
+        Diamond: { roi: 650, duration: 21, maxVariationPercent: 30 },
       };
       const plan = PLAN_CONFIG[investment.planName] || PLAN_CONFIG[investment.fundName];
       if (!plan) continue;
       const totalMinutes = plan.duration * 24 * 60;
       const start = new Date(investment.startDate);
       const elapsedMinutes = Math.floor((now - start) / (1000 * 60));
-      const expectedFinalValue = investment.amount + (investment.amount * plan.roi / 100);
+      // Choose a randomized final ROI target within the plan's variation range
+      const variation = plan.maxVariationPercent || 0;
+      const chosenTargetRoi = plan.roi + (Math.random() * variation);
+      const expectedFinalValue = investment.amount + (investment.amount * chosenTargetRoi / 100);
+      // Log chosen target for observability
+      console.log(`[ROI SIM] Plan ${investment.planName} chosenTargetRoi: ${chosenTargetRoi.toFixed(2)}% (base ${plan.roi}%, +${variation}%)`);
       const minutesLeft = totalMinutes - elapsedMinutes;
       // Calculate remaining ROI to reach target
       const remainingGain = expectedFinalValue - investment.currentValue;
