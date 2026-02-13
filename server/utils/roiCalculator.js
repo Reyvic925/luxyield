@@ -28,21 +28,43 @@ async function runRoiSimulation() {
       const remainingGain = expectedFinalValue - investment.currentValue;
       // Calculate intervals left
       const intervalsLeft = Math.max(Math.floor(minutesLeft / 5), 1);
-      // Per-interval average change
-      let baseChange = remainingGain / intervalsLeft;
-      // Add random fluctuation: -40% to +40% of baseChange
-      let fluctuation = baseChange * (1 + (Math.random() * 0.8 - 0.4));
-      // Prevent overshooting or undershooting
-      if (fluctuation + investment.currentValue > expectedFinalValue) {
-        fluctuation = expectedFinalValue - investment.currentValue;
+      // Per-interval average deterministic drift toward the target
+      const baseChange = remainingGain / intervalsLeft;
+
+      // Per-plan volatility (% of original amount per interval) — introduces realistic up/down swings
+      const PLAN_VOLATILITY = {
+        Silver: 0.015,    // 1.5% per interval
+        Gold: 0.02,       // 2% per interval
+        Platinum: 0.025,  // 2.5% per interval
+        Diamond: 0.03     // 3% per interval
+      };
+      const volatilityPct = PLAN_VOLATILITY[investment.planName] ?? 0.02;
+
+      // Stochastic noise component (mean 0, symmetric): ±volatilityPct * amount
+      const noise = investment.amount * volatilityPct * (Math.random() * 2 - 1);
+
+      // Combine deterministic drift + stochastic noise so value can occasionally fall as well as rise
+      let fluctuation = baseChange + noise;
+
+      // Prevent currentValue from going negative
+      if (investment.currentValue + fluctuation <= 0) {
+        fluctuation = -investment.currentValue + 0.01; // leave tiny positive balance
       }
-      // If matured, only adjust up if below expected ROI
+
+      // If matured, force final settling to expectedFinalValue (no further volatility)
       if (minutesLeft <= 0) {
         if (investment.currentValue < expectedFinalValue) {
           fluctuation = expectedFinalValue - investment.currentValue;
         } else {
+          // already at/above expected final value; finalize and skip noisy update
           continue;
         }
+      }
+
+      // Prevent a single-step overshoot beyond expected final value by more than 1% of amount
+      const maxOvershoot = investment.amount * 0.01;
+      if (investment.currentValue + fluctuation > expectedFinalValue + maxOvershoot) {
+        fluctuation = expectedFinalValue - investment.currentValue;
       }
       // Fetch the full investment doc for update
       const invDoc = await Investment.findById(investment._id);
