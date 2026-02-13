@@ -49,7 +49,13 @@ const InvestmentDetail = ({ investment, onClose }) => {
         if (data.success) {
           toast.success(`Investment ${adjustType} added successfully.`);
           setAdjustAmount('');
-          setLiveInvestment(data.investment);
+          // Update local investment with the new currentValue
+          if (data.investment) {
+            setLiveInvestment({
+              ...investment,
+              currentValue: data.investment.currentValue
+            });
+          }
         } else {
           toast.error(data.message || 'Failed to adjust investment');
         }

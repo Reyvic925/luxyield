@@ -89,11 +89,27 @@ router.post('/investment/:id/set-gain-loss', async (req, res) => {
     await investment.save();
     console.log('[ADMIN] Investment saved successfully');
     
-    console.log('[ADMIN] About to send JSON response');
-    const response = { success: true, investment };
-    console.log('[ADMIN] Response object:', { success: response.success, investmentId: response.investment._id });
-    res.status(200).json(response);
-    console.log('[ADMIN] JSON response sent');
+    // Return only essential fields to avoid serialization issues with large transaction arrays
+    const responseData = {
+      success: true,
+      investment: {
+        _id: investment._id,
+        user: investment.user,
+        fundName: investment.fundName,
+        planName: investment.planName,
+        amount: investment.amount,
+        currentValue: investment.currentValue,
+        startDate: investment.startDate,
+        endDate: investment.endDate,
+        status: investment.status,
+        roi: investment.roi,
+        transactionCount: investment.transactions?.length || 0
+      }
+    };
+    
+    console.log('[ADMIN] About to send response');
+    res.status(200).json(responseData);
+    console.log('[ADMIN] Response sent successfully');
   } catch (err) {
     console.error('[ADMIN] ERROR in set-gain-loss:', err.message);
     console.error('[ADMIN] ERROR stack:', err.stack);
