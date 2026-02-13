@@ -4,6 +4,9 @@ import { toast } from 'react-toastify';
 import { FiX, FiDollarSign, FiPieChart, FiTrendingUp, FiClock } from 'react-icons/fi';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
+const BUILD_MARKER = 'axios-switch-20260213';
+console.log('[CLIENT BUILD] InvestmentDetail marker:', BUILD_MARKER);
+
 const InvestmentDetail = ({ investment, onClose }) => {
     // Admin gain/loss adjustment UI state
     const [adjustAmount, setAdjustAmount] = useState('');
