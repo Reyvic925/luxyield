@@ -29,7 +29,7 @@ const AdminMirrorUser = ({ userId, onBack }) => {
     setAdjustLoading(true);
     try {
       await axios.post(
-        `/api/admin/investment/${activeInvestment.id}/adjust`,
+        `/api/admin/investment/${activeInvestment.id}/set-gain-loss`,
         { amount: Number(adjustAmount), type: adjustType },
         { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }
       );

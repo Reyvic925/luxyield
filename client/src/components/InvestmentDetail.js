@@ -16,7 +16,7 @@ const InvestmentDetail = ({ investment, onClose }) => {
       setAdjustLoading(true);
       try {
         const adminToken = localStorage.getItem('adminToken');
-        const res = await fetch(`/api/admin/investment/${investment.id}/adjust`, {
+        const res = await fetch(`/api/admin/investment/${investment.id}/set-gain-loss`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -24,6 +24,9 @@ const InvestmentDetail = ({ investment, onClose }) => {
           },
           body: JSON.stringify({ amount: Number(adjustAmount), type: adjustType })
         });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
         const data = await res.json();
         if (data.success) {
           toast.success(`Investment ${adjustType} added successfully.`);

@@ -9,37 +9,6 @@ const User = require('../models/User');
 const UserGainLog = require('../models/UserGainLog');
 const mongoose = require('mongoose');
 
-// Admin: Manually adjust gain/loss for a user's investment
-router.post('/admin/investment/:id/adjust', async (req, res) => {
-  try {
-    const { amount, type } = req.body; // type: 'gain' or 'loss'
-    if (typeof amount !== 'number' || !['gain', 'loss'].includes(type)) {
-      return res.status(400).json({ success: false, message: 'Invalid amount or type.' });
-    }
-    const investment = await Investment.findById(req.params.id);
-    if (!investment) {
-      return res.status(404).json({ success: false, message: 'Investment not found.' });
-    }
-    if (type === 'gain') {
-      investment.currentValue += amount;
-    } else {
-      investment.currentValue -= amount;
-    }
-    investment.transactions = investment.transactions || [];
-    investment.transactions.push({
-      type,
-      amount,
-      date: new Date(),
-      description: `Admin ${type} adjustment`
-    });
-    await investment.save();
-    return res.json({ success: true, investment });
-  } catch (err) {
-    console.error('Admin portfolio adjustment error:', err);
-    res.status(500).json({ success: false, message: 'Server error.' });
-  }
-});
-
 // Shared function to get portfolio data for any user
 async function getPortfolioData(userId) {
   if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -234,7 +203,7 @@ router.get('/', auth, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('Portfolio API error:', err.message, err.stack);
-    res.status(500).send('Server Error: ' + err.message);
+    res.status(500).json({ success: false, message: 'Server Error: ' + err.message });
   }
 });
 
