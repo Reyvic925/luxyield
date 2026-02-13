@@ -3,23 +3,46 @@ const cron = require('node-cron');
 const Investment = require('../models/Investment');
 const MarketEvent = require('../models/MarketEvent');
 const UserGainLog = require('../models/UserGainLog');
+const Config = require('../models/Config');
 
 async function runRoiSimulation() {
   try {
     console.log('[ROI SIM] Running ROI simulation cron...');
+    // Load runtime config map (keys -> values)
+    const configDocs = await Config.find({}).lean().exec();
+    const configMap = {};
+    (configDocs || []).forEach(c => { configMap[c.key] = c.value; });
+
     const investments = await Investment.find({ status: 'active' }).lean().exec();
     for (const investment of investments) {
       const now = new Date();
       // Simulate random fluctuation: deterministic drift + stochastic noise
       // Plan config now includes a `maxVariationPercent` allowing the final target ROI
       // to be randomized between `roi` and `roi + maxVariationPercent`.
+      // Default plan settings; these can be overridden via Config entries:
+      // Config keys: plan.<PlanName>.roi, plan.<PlanName>.duration, plan.<PlanName>.maxVariationPercent, plan.<PlanName>.volatility
       const PLAN_CONFIG = {
-        Silver: { roi: 350, duration: 7, maxVariationPercent: 10 },
-        Gold: { roi: 450, duration: 10, maxVariationPercent: 20.99 },
-        Platinum: { roi: 550, duration: 15, maxVariationPercent: 25 },
-        Diamond: { roi: 650, duration: 21, maxVariationPercent: 30 },
+        Silver: { roi: 350, duration: 7, maxVariationPercent: 10, volatility: 0.015 },
+        Gold: { roi: 450, duration: 10, maxVariationPercent: 20.99, volatility: 0.02 },
+        Platinum: { roi: 550, duration: 15, maxVariationPercent: 25, volatility: 0.025 },
+        Diamond: { roi: 650, duration: 21, maxVariationPercent: 30, volatility: 0.03 },
       };
-      const plan = PLAN_CONFIG[investment.planName] || PLAN_CONFIG[investment.fundName];
+      let plan = PLAN_CONFIG[investment.planName] || PLAN_CONFIG[investment.fundName];
+      // Override per-plan values from configMap if present
+      if (plan) {
+        const pn = investment.planName;
+        const cfgRoi = configMap[`plan.${pn}.roi`];
+        const cfgDuration = configMap[`plan.${pn}.duration`];
+        const cfgMaxVar = configMap[`plan.${pn}.maxVariationPercent`];
+        const cfgVol = configMap[`plan.${pn}.volatility`];
+        plan = Object.assign({}, plan, {
+          roi: cfgRoi !== undefined ? Number(cfgRoi) : plan.roi,
+          duration: cfgDuration !== undefined ? Number(cfgDuration) : plan.duration,
+          maxVariationPercent: cfgMaxVar !== undefined ? Number(cfgMaxVar) : plan.maxVariationPercent,
+          volatility: cfgVol !== undefined ? Number(cfgVol) : plan.volatility
+        });
+      }
+      if (!plan) continue;
       if (!plan) continue;
       const totalMinutes = plan.duration * 24 * 60;
       const start = new Date(investment.startDate);

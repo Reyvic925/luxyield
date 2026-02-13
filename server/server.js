@@ -116,6 +116,8 @@ app.use((req, res, next) => {
 
 // Register /api/plans route after app is initialized and after all require statements
 app.use('/api/plans', require('./routes/plans'));
+// Admin config API (runtime editable settings)
+app.use('/api/admin/config', require('./routes/admin/config'));
 
 // Database connection
 mongoose.connect(process.env.MONGO_URI)
