@@ -149,34 +149,6 @@ const AdminMirrorUser = ({ userId, onBack }) => {
             >
               Continue Completed Investment
             </button>
-            {/* Admin gain/loss adjustment UI */}
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min="0"
-                value={adjustAmount}
-                onChange={e => setAdjustAmount(e.target.value)}
-                placeholder="Amount"
-                className="px-2 py-1 rounded border"
-                disabled={adjustLoading}
-              />
-              <select
-                value={adjustType}
-                onChange={e => setAdjustType(e.target.value)}
-                className="px-2 py-1 rounded border"
-                disabled={adjustLoading}
-              >
-                <option value="gain">Gain</option>
-                <option value="loss">Loss</option>
-              </select>
-              <button
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-bold"
-                onClick={handleAdjustInvestment}
-                disabled={adjustLoading || !adjustAmount || !portfolioData?.investments?.some(inv => inv.status === 'active')}
-              >
-                Add Gain/Loss
-              </button>
-            </div>
           </div>
           <Portfolio adminView portfolioData={portfolioData} />
         </>

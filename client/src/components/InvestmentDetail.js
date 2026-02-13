@@ -5,6 +5,39 @@ import { FiX, FiDollarSign, FiPieChart, FiTrendingUp, FiClock } from 'react-icon
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const InvestmentDetail = ({ investment, onClose }) => {
+    // Admin gain/loss adjustment UI state
+    const [adjustAmount, setAdjustAmount] = useState('');
+    const [adjustType, setAdjustType] = useState('gain');
+    const [adjustLoading, setAdjustLoading] = useState(false);
+
+    // Handler for admin gain/loss adjustment
+    const handleAdjustInvestment = async () => {
+      if (!investment || investment.status !== 'active') return;
+      setAdjustLoading(true);
+      try {
+        const adminToken = localStorage.getItem('adminToken');
+        const res = await fetch(`/api/admin/investment/${investment.id}/adjust`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({ amount: Number(adjustAmount), type: adjustType })
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast.success(`Investment ${adjustType} added successfully.`);
+          setAdjustAmount('');
+          setLiveInvestment(data.investment);
+        } else {
+          toast.error(data.message || 'Failed to adjust investment');
+        }
+      } catch (err) {
+        toast.error('Failed to adjust investment: ' + (err.message || 'Network Error'));
+      } finally {
+        setAdjustLoading(false);
+      }
+    };
   const [timeLeft, setTimeLeft] = useState('');
   const [tab, setTab] = useState('gains');
   const [liveInvestment, setLiveInvestment] = useState(investment);
@@ -108,6 +141,36 @@ const InvestmentDetail = ({ investment, onClose }) => {
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
       <div className="glassmorphic rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
         <div className="p-6">
+                    {/* Admin gain/loss adjustment UI for active investments */}
+                    {liveInvestment.status === 'active' && localStorage.getItem('adminToken') && (
+                      <div className="mb-6 flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          value={adjustAmount}
+                          onChange={e => setAdjustAmount(e.target.value)}
+                          placeholder="Amount"
+                          className="px-2 py-1 rounded border"
+                          disabled={adjustLoading}
+                        />
+                        <select
+                          value={adjustType}
+                          onChange={e => setAdjustType(e.target.value)}
+                          className="px-2 py-1 rounded border"
+                          disabled={adjustLoading}
+                        >
+                          <option value="gain">Gain</option>
+                          <option value="loss">Loss</option>
+                        </select>
+                        <button
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-bold"
+                          onClick={handleAdjustInvestment}
+                          disabled={adjustLoading || !adjustAmount}
+                        >
+                          Add Gain/Loss
+                        </button>
+                      </div>
+                    )}
           <div className="flex justify-between items-start mb-6">
             <h2 className="text-2xl font-bold">{liveInvestment.fundName}</h2>
             <button
