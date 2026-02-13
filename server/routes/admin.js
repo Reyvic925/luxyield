@@ -21,6 +21,7 @@ const fs = require('fs');
 
 // JWT decode middleware for admin routes
 router.use((req, res, next) => {
+  console.log('[ADMIN ROUTER] Incoming request:', { method: req.method, path: req.path, url: req.originalUrl });
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     try {
       const token = req.headers.authorization.replace('Bearer ', '');
@@ -39,17 +40,21 @@ router.use((req, res, next) => {
 
 // Admin: Set gain/loss for a user's active investment
 router.post('/investment/:id/set-gain-loss', async (req, res) => {
+  console.log('[ADMIN ENDPOINT] set-gain-loss called with:', { id: req.params.id, body: req.body });
   try {
     console.log('[ADMIN] Set gain/loss request:', { id: req.params.id, body: req.body });
     
     const { amount, type } = req.body; // type: 'gain' or 'loss'
+    console.log('[ADMIN] Parsed params:', { amount, type });
+    
     if (typeof amount !== 'number' || !['gain', 'loss'].includes(type)) {
-      console.log('[ADMIN] Invalid parameters:', { amount, type });
+      console.log('[ADMIN] Invalid parameters:', { amount, type, amountType: typeof amount });
       return res.status(400).json({ success: false, message: 'Invalid amount or type.' });
     }
     
+    console.log('[ADMIN] Looking up investment with ID:', req.params.id);
     const investment = await Investment.findById(req.params.id);
-    console.log('[ADMIN] Found investment:', { id: req.params.id, status: investment?.status });
+    console.log('[ADMIN] Found investment:', { id: req.params.id, status: investment?.status, found: !!investment });
     
     if (!investment || investment.status !== 'active') {
       console.log('[ADMIN] Investment not found or not active');
@@ -74,9 +79,11 @@ router.post('/investment/:id/set-gain-loss', async (req, res) => {
       description: `Admin ${type} adjustment`
     });
     
+    console.log('[ADMIN] Saving investment...');
     await investment.save();
     console.log('[ADMIN] Saved investment successfully');
     
+    console.log('[ADMIN] Sending response with success: true');
     return res.status(200).json({ success: true, investment });
   } catch (err) {
     console.error('Admin set gain/loss error:', err.message, err.stack);
@@ -87,6 +94,12 @@ router.post('/investment/:id/set-gain-loss', async (req, res) => {
 // Register the new admin_complete_investment and admin_continue_investment routes
 router.use(adminCompleteInvestment);
 router.use(adminContinueInvestment);
+
+// Test endpoint to verify admin routes are working
+router.get('/test', (req, res) => {
+  console.log('[ADMIN] Test endpoint hit');
+  res.json({ success: true, message: 'Admin routes are working' });
+});
 
 // Register balance management routes
 router.use(require('./admin/balanceManagement'));
