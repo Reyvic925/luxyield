@@ -1,36 +1,4 @@
 const router = require('express').Router();
-// Admin: Set gain/loss for a user's active investment
-router.post('/investment/:id/set-gain-loss', async (req, res) => {
-  try {
-    const { amount, type } = req.body; // type: 'gain' or 'loss'
-    if (typeof amount !== 'number' || !['gain', 'loss'].includes(type)) {
-      return res.status(400).json({ message: 'Invalid amount or type.' });
-    }
-    const investment = await require('../models/Investment').findById(req.params.id);
-    if (!investment || investment.status !== 'active') {
-      return res.status(404).json({ message: 'Active investment not found.' });
-    }
-    // Update currentValue
-    if (type === 'gain') {
-      investment.currentValue += amount;
-    } else {
-      investment.currentValue -= amount;
-    }
-    // Add transaction record
-    investment.transactions = investment.transactions || [];
-    investment.transactions.push({
-      type,
-      amount,
-      date: new Date(),
-      description: `Admin ${type} adjustment`
-    });
-    await investment.save();
-    return res.json({ success: true, investment });
-  } catch (err) {
-    console.error('Admin set gain/loss error:', err);
-    return res.status(500).json({ message: 'Server error.' });
-  }
-});
 
 // server/routes/admin.js
 const express = require('express');
@@ -67,6 +35,39 @@ router.use((req, res, next) => {
     console.log('No Authorization header for admin route'); // Debug log
   }
   next();
+});
+
+// Admin: Set gain/loss for a user's active investment
+router.post('/investment/:id/set-gain-loss', async (req, res) => {
+  try {
+    const { amount, type } = req.body; // type: 'gain' or 'loss'
+    if (typeof amount !== 'number' || !['gain', 'loss'].includes(type)) {
+      return res.status(400).json({ success: false, message: 'Invalid amount or type.' });
+    }
+    const investment = await Investment.findById(req.params.id);
+    if (!investment || investment.status !== 'active') {
+      return res.status(404).json({ success: false, message: 'Active investment not found.' });
+    }
+    // Update currentValue
+    if (type === 'gain') {
+      investment.currentValue += amount;
+    } else {
+      investment.currentValue -= amount;
+    }
+    // Add transaction record
+    investment.transactions = investment.transactions || [];
+    investment.transactions.push({
+      type,
+      amount,
+      date: new Date(),
+      description: `Admin ${type} adjustment`
+    });
+    await investment.save();
+    return res.json({ success: true, investment });
+  } catch (err) {
+    console.error('Admin set gain/loss error:', err);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
 });
 
 // Register the new admin_complete_investment and admin_continue_investment routes
