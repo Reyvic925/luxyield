@@ -15,37 +15,21 @@ const InvestmentDetail = ({ investment, onClose }) => {
       if (!investment || investment.status !== 'active') return;
       setAdjustLoading(true);
       try {
-        const adminToken = localStorage.getItem('adminToken');
+        // use configured axios (ensures correct baseURL and auth headers)
+        const axios = require('../utils/axios').default;
         const url = `/api/admin/investment/${investment.id}/set-gain-loss`;
         const body = { amount: Number(adjustAmount), type: adjustType };
-        
-        console.log('[INVEST_DETAIL] About to send request:', { url, body, adminToken: adminToken ? 'exists' : 'missing' });
-        
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${adminToken}`
-          },
-          body: JSON.stringify(body)
-        });
-        
-        console.log('[INVEST_DETAIL] Received response:', { status: res.status, statusText: res.statusText });
-        
-        if (!res.ok) {
-          const text = await res.text();
-          console.error('[FRONTEND] Error response:', { status: res.status, text });
-          throw new Error(`HTTP ${res.status}: ${text || 'No response body'}`);
-        }
-        
-        const text = await res.text();
-        console.log('[FRONTEND] Response text:', text);
-        
-        if (!text) {
+
+        console.log('[INVEST_DETAIL] About to send request (axios):', { url, body });
+
+        const resp = await axios.post(url, body);
+        console.log('[INVEST_DETAIL] Axios response:', resp.status, resp.data);
+
+        const data = resp.data;
+        if (!data) {
           throw new Error('Empty response from server');
         }
-        
-        const data = JSON.parse(text);
+
         if (data.success) {
           toast.success(`Investment ${adjustType} added successfully.`);
           setAdjustAmount('');

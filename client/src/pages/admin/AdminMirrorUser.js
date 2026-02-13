@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../utils/axios';
 import Portfolio from '../../pages/Portfolio';
 import Dashboard from '../../pages/Dashboard';
 import Settings from '../../pages/Settings';
@@ -28,26 +28,17 @@ const AdminMirrorUser = ({ userId, onBack }) => {
     if (!activeInvestment) return;
     setAdjustLoading(true);
     try {
-      const res = await fetch(`/api/admin/investment/${activeInvestment.id}/set-gain-loss`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify({ amount: Number(adjustAmount), type: adjustType })
-      });
-      
-      const text = await res.text();
-      console.log('[ADMIN UI] Response:', { status: res.status, text });
-      
-      if (!text) {
+      // use configured axios so baseURL + auth header are applied consistently
+      const resp = await axios.post(`/api/admin/investment/${activeInvestment.id}/set-gain-loss`, { amount: Number(adjustAmount), type: adjustType });
+      console.log('[ADMIN UI] Axios response:', resp.status, resp.data);
+
+      const data = resp.data;
+      if (!data) {
         throw new Error('Empty response from server');
       }
-      
-      const data = JSON.parse(text);
       if (data.success) {
         // Refresh portfolio data after adjustment
-        const portfolioRes = await axios.get(`/api/admin/users/${userId}/portfolio`, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
+        const portfolioRes = await axios.get(`/api/admin/users/${userId}/portfolio`);
         setPortfolioData(portfolioRes.data);
         alert(`Investment ${adjustType} added successfully.`);
         setAdjustAmount('');

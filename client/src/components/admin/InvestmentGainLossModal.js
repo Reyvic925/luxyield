@@ -20,25 +20,15 @@ const InvestmentGainLossModal = ({ user, onClose, onUpdate }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/admin/users/${user.id}/investment-adjustment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-        },
-        body: JSON.stringify({
-          amount: parseFloat(amount || 0),
-          percentage: parseFloat(percentage || 0),
-          operation: type,
-          reason,
-        }),
+      const axios = require('../../utils/axios').default;
+      const response = await axios.post(`/api/admin/users/${user.id}/investment-adjustment`, {
+        amount: parseFloat(amount || 0),
+        percentage: parseFloat(percentage || 0),
+        operation: type,
+        reason,
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update investment');
-      }
-
-      const data = await response.json();
+      const data = response.data;
       onUpdate(data);
       onClose();
     } catch (err) {
