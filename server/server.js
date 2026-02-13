@@ -81,6 +81,16 @@ app.use((req, res, next) => {
       body: req.method === 'POST' ? req.body : 'N/A'
     });
   }
+  
+  // Intercept response to log what's being sent back
+  const originalJson = res.json.bind(res);
+  res.json = function(data) {
+    if (req.path.includes('/investment') || req.path.includes('/admin')) {
+      console.log('[GLOBAL RESPONSE] Sending JSON from path:', req.path, 'Data:', JSON.stringify(data).substring(0, 500));
+    }
+    return originalJson(data);
+  };
+  
   next();
 });
 
