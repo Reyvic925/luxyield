@@ -40,37 +40,39 @@ router.use((req, res, next) => {
 
 // Admin: Set gain/loss for a user's active investment
 router.post('/investment/:id/set-gain-loss', async (req, res) => {
-  console.log('[ADMIN ENDPOINT] set-gain-loss called with:', { id: req.params.id, body: req.body });
+  console.log('[ADMIN ENDPOINT HIT] /investment/:id/set-gain-loss');
+  console.log('[ADMIN ENDPOINT] Request details:', { 
+    id: req.params.id, 
+    body: req.body,
+    headers: { 'content-type': req.get('content-type') }
+  });
+  
   try {
-    console.log('[ADMIN] Set gain/loss request:', { id: req.params.id, body: req.body });
-    
-    const { amount, type } = req.body; // type: 'gain' or 'loss'
-    console.log('[ADMIN] Parsed params:', { amount, type });
+    const { amount, type } = req.body;
+    console.log('[ADMIN] Parsed body:', { amount, type });
     
     if (typeof amount !== 'number' || !['gain', 'loss'].includes(type)) {
-      console.log('[ADMIN] Invalid parameters:', { amount, type, amountType: typeof amount });
+      console.log('[ADMIN] Invalid params - returning 400');
       return res.status(400).json({ success: false, message: 'Invalid amount or type.' });
     }
     
-    console.log('[ADMIN] Looking up investment with ID:', req.params.id);
+    console.log('[ADMIN] Finding investment:', req.params.id);
     const investment = await Investment.findById(req.params.id);
-    console.log('[ADMIN] Found investment:', { id: req.params.id, status: investment?.status, found: !!investment });
+    console.log('[ADMIN] Investment found:', !!investment, investment?.status);
     
     if (!investment || investment.status !== 'active') {
-      console.log('[ADMIN] Investment not found or not active');
+      console.log('[ADMIN] Investment not found or not active - returning 404');
       return res.status(404).json({ success: false, message: 'Active investment not found.' });
     }
     
-    // Update currentValue
     const oldValue = investment.currentValue;
     if (type === 'gain') {
       investment.currentValue += amount;
     } else {
       investment.currentValue -= amount;
     }
-    console.log('[ADMIN] Updated value:', { oldValue, newValue: investment.currentValue });
+    console.log('[ADMIN] Updated currentValue:', { oldValue, newValue: investment.currentValue });
     
-    // Add transaction record
     investment.transactions = investment.transactions || [];
     investment.transactions.push({
       type,
@@ -79,14 +81,17 @@ router.post('/investment/:id/set-gain-loss', async (req, res) => {
       description: `Admin ${type} adjustment`
     });
     
-    console.log('[ADMIN] Saving investment...');
     await investment.save();
-    console.log('[ADMIN] Saved investment successfully');
+    console.log('[ADMIN] Investment saved successfully');
     
-    console.log('[ADMIN] Sending response with success: true');
-    return res.status(200).json({ success: true, investment });
+    console.log('[ADMIN] About to send JSON response');
+    const response = { success: true, investment };
+    console.log('[ADMIN] Response object:', { success: response.success, investmentId: response.investment._id });
+    res.status(200).json(response);
+    console.log('[ADMIN] JSON response sent');
   } catch (err) {
-    console.error('Admin set gain/loss error:', err.message, err.stack);
+    console.error('[ADMIN] ERROR in set-gain-loss:', err.message);
+    console.error('[ADMIN] ERROR stack:', err.stack);
     return res.status(500).json({ success: false, message: 'Server error: ' + err.message });
   }
 });
@@ -96,6 +101,11 @@ router.use(adminCompleteInvestment);
 router.use(adminContinueInvestment);
 
 // Test endpoint to verify admin routes are working
+router.post('/test-post', (req, res) => {
+  console.log('[ADMIN] POST /test-post endpoint hit with body:', req.body);
+  res.json({ success: true, message: 'POST test endpoint works', receivedBody: req.body });
+});
+
 router.get('/test', (req, res) => {
   console.log('[ADMIN] Test endpoint hit');
   res.json({ success: true, message: 'Admin routes are working' });
