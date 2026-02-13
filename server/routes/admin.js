@@ -40,20 +40,31 @@ router.use((req, res, next) => {
 // Admin: Set gain/loss for a user's active investment
 router.post('/investment/:id/set-gain-loss', async (req, res) => {
   try {
+    console.log('[ADMIN] Set gain/loss request:', { id: req.params.id, body: req.body });
+    
     const { amount, type } = req.body; // type: 'gain' or 'loss'
     if (typeof amount !== 'number' || !['gain', 'loss'].includes(type)) {
+      console.log('[ADMIN] Invalid parameters:', { amount, type });
       return res.status(400).json({ success: false, message: 'Invalid amount or type.' });
     }
+    
     const investment = await Investment.findById(req.params.id);
+    console.log('[ADMIN] Found investment:', { id: req.params.id, status: investment?.status });
+    
     if (!investment || investment.status !== 'active') {
+      console.log('[ADMIN] Investment not found or not active');
       return res.status(404).json({ success: false, message: 'Active investment not found.' });
     }
+    
     // Update currentValue
+    const oldValue = investment.currentValue;
     if (type === 'gain') {
       investment.currentValue += amount;
     } else {
       investment.currentValue -= amount;
     }
+    console.log('[ADMIN] Updated value:', { oldValue, newValue: investment.currentValue });
+    
     // Add transaction record
     investment.transactions = investment.transactions || [];
     investment.transactions.push({
@@ -62,11 +73,14 @@ router.post('/investment/:id/set-gain-loss', async (req, res) => {
       date: new Date(),
       description: `Admin ${type} adjustment`
     });
+    
     await investment.save();
-    return res.json({ success: true, investment });
+    console.log('[ADMIN] Saved investment successfully');
+    
+    return res.status(200).json({ success: true, investment });
   } catch (err) {
-    console.error('Admin set gain/loss error:', err);
-    return res.status(500).json({ success: false, message: 'Server error.' });
+    console.error('Admin set gain/loss error:', err.message, err.stack);
+    return res.status(500).json({ success: false, message: 'Server error: ' + err.message });
   }
 });
 

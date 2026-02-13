@@ -24,10 +24,21 @@ const InvestmentDetail = ({ investment, onClose }) => {
           },
           body: JSON.stringify({ amount: Number(adjustAmount), type: adjustType })
         });
+        
         if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
+          const text = await res.text();
+          console.error('[FRONTEND] Error response:', { status: res.status, text });
+          throw new Error(`HTTP ${res.status}: ${text || 'No response body'}`);
         }
-        const data = await res.json();
+        
+        const text = await res.text();
+        console.log('[FRONTEND] Response text:', text);
+        
+        if (!text) {
+          throw new Error('Empty response from server');
+        }
+        
+        const data = JSON.parse(text);
         if (data.success) {
           toast.success(`Investment ${adjustType} added successfully.`);
           setAdjustAmount('');

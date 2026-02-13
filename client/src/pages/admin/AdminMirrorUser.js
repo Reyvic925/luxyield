@@ -28,18 +28,35 @@ const AdminMirrorUser = ({ userId, onBack }) => {
     if (!activeInvestment) return;
     setAdjustLoading(true);
     try {
-      await axios.post(
-        `/api/admin/investment/${activeInvestment.id}/set-gain-loss`,
-        { amount: Number(adjustAmount), type: adjustType },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }
-      );
-      // Refresh portfolio data after adjustment
-      const portfolioRes = await axios.get(`/api/admin/users/${userId}/portfolio`, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
-      setPortfolioData(portfolioRes.data);
-      alert(`Investment ${adjustType} added successfully.`);
-      setAdjustAmount('');
+      const res = await fetch(`/api/admin/investment/${activeInvestment.id}/set-gain-loss`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
+        body: JSON.stringify({ amount: Number(adjustAmount), type: adjustType })
+      });
+      
+      const text = await res.text();
+      console.log('[ADMIN UI] Response:', { status: res.status, text });
+      
+      if (!text) {
+        throw new Error('Empty response from server');
+      }
+      
+      const data = JSON.parse(text);
+      if (data.success) {
+        // Refresh portfolio data after adjustment
+        const portfolioRes = await axios.get(`/api/admin/users/${userId}/portfolio`, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
+        setPortfolioData(portfolioRes.data);
+        alert(`Investment ${adjustType} added successfully.`);
+        setAdjustAmount('');
+      } else {
+        alert('Failed to adjust investment: ' + (data.message || 'Unknown error'));
+      }
     } catch (err) {
-      alert('Failed to adjust investment: ' + (err.response?.data?.error || err.message));
+      alert('Failed to adjust investment: ' + (err.message || 'Network Error'));
+      console.error('[ADMIN UI] Error:', err);
     } finally {
       setAdjustLoading(false);
     }
