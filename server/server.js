@@ -70,6 +70,20 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Global request logger for debugging
+app.use((req, res, next) => {
+  if (req.path.includes('/investment') || req.path.includes('/admin')) {
+    console.log('[GLOBAL] Incoming request:', {
+      method: req.method,
+      path: req.path,
+      url: req.originalUrl,
+      body: req.method === 'POST' ? req.body : 'N/A'
+    });
+  }
+  next();
+});
+
 // Register /api/plans route after app is initialized and after all require statements
 app.use('/api/plans', require('./routes/plans'));
 

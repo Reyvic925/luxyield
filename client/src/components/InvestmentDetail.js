@@ -16,14 +16,21 @@ const InvestmentDetail = ({ investment, onClose }) => {
       setAdjustLoading(true);
       try {
         const adminToken = localStorage.getItem('adminToken');
-        const res = await fetch(`/api/admin/investment/${investment.id}/set-gain-loss`, {
+        const url = `/api/admin/investment/${investment.id}/set-gain-loss`;
+        const body = { amount: Number(adjustAmount), type: adjustType };
+        
+        console.log('[INVEST_DETAIL] About to send request:', { url, body, adminToken: adminToken ? 'exists' : 'missing' });
+        
+        const res = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${adminToken}`
           },
-          body: JSON.stringify({ amount: Number(adjustAmount), type: adjustType })
+          body: JSON.stringify(body)
         });
+        
+        console.log('[INVEST_DETAIL] Received response:', { status: res.status, statusText: res.statusText });
         
         if (!res.ok) {
           const text = await res.text();
@@ -47,7 +54,9 @@ const InvestmentDetail = ({ investment, onClose }) => {
           toast.error(data.message || 'Failed to adjust investment');
         }
       } catch (err) {
+        console.error('[INVEST_DETAIL] Error caught:', err);
         toast.error('Failed to adjust investment: ' + (err.message || 'Network Error'));
+
       } finally {
         setAdjustLoading(false);
       }
