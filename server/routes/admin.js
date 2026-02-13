@@ -107,13 +107,27 @@ router.post('/investment/:id/set-gain-loss', async (req, res) => {
       }
     };
     
-    console.log('[ADMIN] About to send response');
-    res.status(200).json(responseData);
-    console.log('[ADMIN] Response sent successfully');
+    console.log('[ADMIN] About to send response:', JSON.stringify(responseData));
+    if (!res.headersSent) {
+      res.status(200).json(responseData);
+      console.log('[ADMIN] Response sent successfully');
+    } else {
+      console.warn('[ADMIN] Response already sent, skipping duplicate send.');
+    }
   } catch (err) {
     console.error('[ADMIN] ERROR in set-gain-loss:', err.message);
     console.error('[ADMIN] ERROR stack:', err.stack);
-    return res.status(500).json({ success: false, message: 'Server error: ' + err.message });
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: 'Server error: ' + err.message });
+      console.log('[ADMIN] Sent 500 error JSON response');
+    } else {
+      console.warn('[ADMIN] Could not send error response, headers already sent.');
+    }
+  }
+  // Final safeguard: if no response was sent, send a generic error
+  if (!res.headersSent) {
+    console.error('[ADMIN] No response sent by end of handler, sending fallback error JSON.');
+    res.status(500).json({ success: false, message: 'Unknown server error (fallback).' });
   }
 });
 
