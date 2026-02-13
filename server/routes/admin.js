@@ -1,3 +1,4 @@
+const router = require('express').Router();
 // Admin: Set gain/loss for a user's active investment
 router.post('/investment/:id/set-gain-loss', async (req, res) => {
   try {
@@ -30,7 +31,6 @@ router.post('/investment/:id/set-gain-loss', async (req, res) => {
     return res.status(500).json({ message: 'Server error.' });
   }
 });
-const router = require('express').Router();
 // Admin: Set gain/loss for a user's active investment
 router.post('/investment/:id/set-gain-loss', async (req, res) => {
   try {
