@@ -1,3 +1,14 @@
+// server/routes/portfolio.js
+const express = require('express');
+const router = express.Router();
+const auth = require('../middleware/auth');
+const Investment = require('../models/Investment');
+const Withdrawal = require('../models/Withdrawal');
+const Deposit = require('../models/Deposit');
+const User = require('../models/User');
+const UserGainLog = require('../models/UserGainLog');
+const mongoose = require('mongoose');
+
 // Admin: Manually adjust gain/loss for a user's investment
 router.post('/admin/investment/:id/adjust', async (req, res) => {
   try {
@@ -28,16 +39,6 @@ router.post('/admin/investment/:id/adjust', async (req, res) => {
     return res.status(500).json({ message: 'Server error.' });
   }
 });
-// server/routes/portfolio.js
-const express = require('express');
-const router = express.Router();
-const auth = require('../middleware/auth');
-const Investment = require('../models/Investment');
-const Withdrawal = require('../models/Withdrawal');
-const Deposit = require('../models/Deposit');
-const User = require('../models/User');
-const UserGainLog = require('../models/UserGainLog');
-const mongoose = require('mongoose');
 
 // Shared function to get portfolio data for any user
 async function getPortfolioData(userId) {
