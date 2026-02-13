@@ -35,13 +35,27 @@ const InvestmentDetail = ({ investment, onClose }) => {
 
         if (data.success) {
           toast.success(`Investment ${adjustType} added successfully.`);
+          // Build a new transaction and append locally so UI updates immediately
+          const newTx = {
+            type: adjustType,
+            amount: Number(adjustAmount),
+            date: new Date().toISOString(),
+            description: `Admin ${adjustType} adjustment`
+          };
           setAdjustAmount('');
-          // Update local investment with the new currentValue
+          // Update local investment with the new currentValue and transactions
           if (data.investment) {
-            setLiveInvestment({
-              ...investment,
-              currentValue: data.investment.currentValue
-            });
+            setLiveInvestment(prev => ({
+              ...prev,
+              currentValue: data.investment.currentValue,
+              transactions: [newTx, ...(prev.transactions || [])]
+            }));
+          } else {
+            // Fallback: at least update transactions locally
+            setLiveInvestment(prev => ({
+              ...prev,
+              transactions: [newTx, ...(prev.transactions || [])]
+            }));
           }
         } else {
           toast.error(data.message || 'Failed to adjust investment');
