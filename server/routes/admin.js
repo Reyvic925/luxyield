@@ -38,7 +38,12 @@ router.use((req, res, next) => {
   next();
 });
 
-// Admin: Set gain/loss for a user's active investment
+// Admin: Set gain/loss for a user's active investment  
+router.options('/investment/:id/set-gain-loss', (req, res) => {
+  console.log('[ADMIN] OPTIONS /investment/:id/set-gain-loss preflight received');
+  res.sendStatus(200);
+});
+
 router.post('/investment/:id/set-gain-loss', async (req, res) => {
   console.log('[ADMIN ENDPOINT HIT] /investment/:id/set-gain-loss');
   console.log('[ADMIN ENDPOINT] Request details:', { 
