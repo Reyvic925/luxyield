@@ -14,11 +14,11 @@ router.post('/admin/investment/:id/adjust', async (req, res) => {
   try {
     const { amount, type } = req.body; // type: 'gain' or 'loss'
     if (typeof amount !== 'number' || !['gain', 'loss'].includes(type)) {
-      return res.status(400).json({ message: 'Invalid amount or type.' });
+      return res.status(400).json({ success: false, message: 'Invalid amount or type.' });
     }
     const investment = await Investment.findById(req.params.id);
     if (!investment) {
-      return res.status(404).json({ message: 'Investment not found.' });
+      return res.status(404).json({ success: false, message: 'Investment not found.' });
     }
     if (type === 'gain') {
       investment.currentValue += amount;
@@ -36,7 +36,7 @@ router.post('/admin/investment/:id/adjust', async (req, res) => {
     return res.json({ success: true, investment });
   } catch (err) {
     console.error('Admin portfolio adjustment error:', err);
-    return res.status(500).json({ message: 'Server error.' });
+    res.status(500).json({ success: false, message: 'Server error.' });
   }
 });
 
