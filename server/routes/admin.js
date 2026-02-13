@@ -21,7 +21,7 @@ const fs = require('fs');
 
 // JWT decode middleware for admin routes
 router.use((req, res, next) => {
-  console.log('[ADMIN ROUTER] Incoming request:', { method: req.method, path: req.path, url: req.originalUrl });
+  console.log('[ADMIN ROUTER] Incoming request:', { method: req.method, path: req.path, url: req.originalUrl, body: req.method === 'POST' ? req.body : 'N/A' });
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     try {
       const token = req.headers.authorization.replace('Bearer ', '');
