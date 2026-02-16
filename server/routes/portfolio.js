@@ -81,8 +81,9 @@ async function getPortfolioData(userId) {
   // Calculate total invested (active + completed investments)
   const allInvestments = await Investment.find({ user: userId });
   // Calculate admin-confirmed ROI withdrawals (status: 'confirmed', type: 'roi')
-  const confirmedRoiWithdrawals = await Withdrawal.find({ userId: userId, status: 'confirmed', type: 'roi' });
-  const totalConfirmedRoi = confirmedRoiWithdrawals.reduce((sum, w) => sum + w.amount, 0);
+  // Use the already fetched confirmedRoiWithdrawals, filter for status 'confirmed' only
+  const confirmedOnlyRoiWithdrawals = confirmedRoiWithdrawals.filter(w => w.status === 'confirmed');
+  const totalConfirmedRoi = confirmedOnlyRoiWithdrawals.reduce((sum, w) => sum + w.amount, 0);
   // Calculate totalInvested after allInvestments is defined
   const totalInvested = allInvestments.reduce((sum, inv) => sum + inv.amount, 0);
   // Use user's availableBalance for display and validation
