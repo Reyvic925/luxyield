@@ -36,6 +36,18 @@ const Withdraw = () => {
     { id: 'BEP20', name: 'BEP20 (Binance Smart Chain)', currencies: ['USDT', 'BNB'] },
   ];
 
+  // Function to refresh user balances
+  const refreshBalances = async () => {
+    try {
+      const safeFetch = require('../utils/safeFetch').default;
+      const { ok, data } = await safeFetch('/api/portfolio');
+      setAvailableBalance(data.userInfo?.availableBalance ?? 0);
+      setLockedBalance(data.userInfo?.lockedBalance ?? 0);
+    } catch (err) {
+      console.error('Failed to refresh balances:', err);
+    }
+  };
+
   // Fetch user balances
   useEffect(() => {
     // Fetch user withdrawals from backend
@@ -134,6 +146,8 @@ const Withdraw = () => {
       setTransactionId(fakeId);
       setStep(3);
       refreshUserData(); // Trigger global refresh
+      // Also refresh local balances
+      await refreshBalances();
     } catch (error) {
       setPinError(error?.msg || 'Withdrawal error.');
     } finally {

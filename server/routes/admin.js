@@ -710,13 +710,8 @@ router.patch('/roi-approvals/:id', authAdmin, async (req, res) => {
         type: withdrawal.type
       }});
     } else if (status === 'rejected' && withdrawal.status === 'pending') {
-      // If rejected, unlock the ROI back to available
-      const user = await User.findById(withdrawal.userId);
-      if (user && user.lockedBalance >= withdrawal.amount) {
-        user.lockedBalance -= withdrawal.amount;
-        user.availableBalance = (user.availableBalance || 0) + withdrawal.amount;
-        await user.save();
-      }
+      // If rejected, keep the ROI in lockedBalance so user can retry withdrawal
+      // Do NOT move it back to availableBalance - it should remain locked until successfully withdrawn
       withdrawal.status = 'rejected';
       await withdrawal.save();
       // Return only essential fields
