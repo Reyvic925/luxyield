@@ -96,15 +96,19 @@ router.post('/deposit', auth, async (req, res) => {
 // Withdraw ROI from a completed investment
 router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
   try {
+    console.log('[WITHDRAW ROI] Request started for investmentId:', req.params.investmentId, 'userId:', req.user.id);
     const { investmentId } = req.params;
     const userId = req.user.id;
+    
     const investment = await Investment.findOne({ _id: investmentId, user: userId });
     if (!investment) {
       console.error('[WITHDRAW ROI] Investment not found:', investmentId, 'for user:', userId);
       return res.status(404).json({ success: false, error: 'Investment not found.' });
     }
+    console.log('[WITHDRAW ROI] Investment found, status:', investment.status);
+    
     if (investment.status !== 'completed') {
-      console.error('[WITHDRAW ROI] Investment not completed:', investmentId);
+      console.error('[WITHDRAW ROI] Investment not completed:', investmentId, 'status:', investment.status);
       return res.status(400).json({ success: false, error: 'ROI can only be withdrawn from completed investments.' });
     }
     // Prevent double withdrawal
@@ -114,15 +118,17 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     }
     // Calculate withdrawable ROI (currentValue - amount)
     const roi = investment.currentValue - investment.amount;
+    console.log('[WITHDRAW ROI] Calculated ROI:', roi, 'currentValue:', investment.currentValue, 'amount:', investment.amount);
+    
     if (roi <= 0) {
-      console.error('[WITHDRAW ROI] No ROI available to withdraw for investment:', investmentId);
+      console.error('[WITHDRAW ROI] No ROI available to withdraw for investment:', investmentId, 'roi:', roi);
       return res.status(400).json({ success: false, error: 'No ROI available to withdraw.' });
     }
     // Get wallet info from user or use defaults
     let { walletAddress, network, currency } = req.body;
-    // If not provided, use the user's first wallet or fallback defaults
-    const User = require('../models/User');
     const user = await User.findById(userId);
+    console.log('[WITHDRAW ROI] User found:', !!user);
+    
     if (!user) {
       console.error('[WITHDRAW ROI] User not found:', userId);
       return res.status(404).json({ success: false, error: 'User not found.' });
@@ -148,17 +154,23 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    console.log('[WITHDRAW ROI] About to save withdrawal:', withdrawal);
+    console.log('[WITHDRAW ROI] About to save withdrawal');
+    await withdrawal.save();
+    console.log('[WITHDRAW ROI] Withdrawal saved, now updating investment');
+    
     // Mark ROI as withdrawn
     investment.roiWithdrawn = true;
-    console.log('[WITHDRAW ROI] About to save investment:', investment);
+    await investment.save();
+    console.log('[WITHDRAW ROI] Investment updated');
+    
     // Add ROI to lockedBalance
     user.lockedBalance = (user.lockedBalance || 0) + roi;
-    await withdrawal.save();
-    await investment.save();
     await user.save();
+    console.log('[WITHDRAW ROI] User balance updated');
+    
     // Fetch updated locked balance
     const newLockedBalance = user.lockedBalance;
+    console.log('[WITHDRAW ROI] Sending success response');
     res.json({ 
       success: true, 
       withdrawal, 
@@ -167,8 +179,8 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       user: { id: user._id, lockedBalance: newLockedBalance } 
     });
   } catch (err) {
-    console.error('[WITHDRAW ROI] Internal error:', err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error('[WITHDRAW ROI] Internal error:', err.message, err.stack);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
