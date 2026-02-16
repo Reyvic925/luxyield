@@ -281,7 +281,7 @@ router.get('/kyc/status', auth, async (req, res) => {
     res.json({ kyc: user.kyc, isEmailVerified: user.isEmailVerified });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -317,7 +317,7 @@ router.post('/forgot-password', async (req, res) => {
     res.json({ message: 'If the email exists, a reset link and OTP have been sent.' });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -341,7 +341,7 @@ router.post('/reset-password', async (req, res) => {
     res.json({ message: 'Password reset successful.' });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -374,7 +374,7 @@ router.post('/send-verification', auth, async (req, res) => {
     res.json({ message: 'Verification code sent to your email.' });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -622,7 +622,7 @@ router.post('/request-change-email', async (req, res) => {
     res.json({ message: 'Confirmation code sent to your current email.' });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -648,7 +648,7 @@ router.post('/confirm-change-email', async (req, res) => {
     res.json({ message: 'Email changed successfully.' });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -682,7 +682,7 @@ router.post('/request-change-password', async (req, res) => {
     res.json({ message: 'Confirmation code and link sent to your email.' });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
