@@ -388,9 +388,9 @@ const InvestmentDetail = ({ investment, onClose }) => {
 
                   if (data && data.success) {
 const roiAmount = typeof data.roi === 'number' ? data.roi.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.roi || '0';
-const lockedBalance = typeof data.lockedBalance === 'number' ? data.lockedBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.lockedBalance || '0';
+const availableBalance = typeof data.availableBalance === 'number' ? data.availableBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.availableBalance || '0';
 console.log('[INVEST_DETAIL] Withdrawal successful!');
-toast.success(`ROI of $${roiAmount} withdrawn! Locked balance: $${lockedBalance}`, {
+toast.success(`ROI of $${roiAmount} withdrawn! Available balance: $${availableBalance}`, {
   position: 'top-center',
   autoClose: 5000,
   hideProgressBar: false,

@@ -149,6 +149,9 @@ router.get('/test', (req, res) => {
 // Register balance management routes
 router.use(require('./admin/balanceManagement'));
 
+// Register withdrawal management routes
+router.use('/withdrawals', require('./admin/withdrawalManagement'));
+
 // Create market event
 router.post('/market-events', authAdmin, async (req, res) => {
   try {
@@ -829,6 +832,129 @@ router.patch('/support/uploads/:id/reassign', authAdmin, async (req, res) => {
   } catch (e) {
     console.error('Reassign upload error:', e && e.message);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin: Get all pending ROI withdrawals
+router.get('/roi-withdrawals/pending', authAdmin, async (req, res) => {
+  try {
+    console.log('[ADMIN] Fetching pending ROI withdrawals');
+    const withdrawals = await Withdrawal.find({ 
+      type: 'roi', 
+      status: 'pending' 
+    }).populate('userId', 'name email').lean();
+    
+    res.json({ 
+      success: true, 
+      withdrawals,
+      count: withdrawals.length 
+    });
+  } catch (err) {
+    console.error('[ADMIN] Error fetching ROI withdrawals:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Reject ROI withdrawal (ROI stays in lockedBalance)
+router.post('/roi-withdrawals/:withdrawalId/reject', authAdmin, async (req, res) => {
+  try {
+    console.log('[ADMIN] Rejecting ROI withdrawal:', req.params.withdrawalId);
+    const { reason } = req.body;
+    
+    const withdrawal = await Withdrawal.findById(req.params.withdrawalId);
+    if (!withdrawal) {
+      return res.status(404).json({ success: false, error: 'Withdrawal not found' });
+    }
+    
+    if (withdrawal.type !== 'roi') {
+      return res.status(400).json({ success: false, error: 'Not an ROI withdrawal' });
+    }
+    
+    // Update withdrawal status to rejected
+    withdrawal.status = 'rejected';
+    withdrawal.rejectedAt = new Date();
+    withdrawal.rejectionReason = reason || 'Rejected by admin';
+    await withdrawal.save();
+    
+    console.log('[ADMIN] ROI withdrawal rejected. Amount stays in user lockedBalance:', withdrawal.amount);
+    
+    res.json({ 
+      success: true, 
+      message: 'ROI withdrawal rejected. Amount remains in user\'s locked balance.',
+      withdrawal 
+    });
+  } catch (err) {
+    console.error('[ADMIN] Error rejecting ROI withdrawal:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin: Accept ROI withdrawal with fee (move from lockedBalance to availableBalance)
+router.post('/roi-withdrawals/:withdrawalId/accept', authAdmin, async (req, res) => {
+  try {
+    console.log('[ADMIN] Accepting ROI withdrawal:', req.params.withdrawalId);
+    const { feePercent = 0 } = req.body; // Fee as percentage (e.g., 5 for 5%)
+    
+    const withdrawal = await Withdrawal.findById(req.params.withdrawalId);
+    if (!withdrawal) {
+      return res.status(404).json({ success: false, error: 'Withdrawal not found' });
+    }
+    
+    if (withdrawal.type !== 'roi') {
+      return res.status(400).json({ success: false, error: 'Not an ROI withdrawal' });
+    }
+    
+    if (withdrawal.status !== 'pending') {
+      return res.status(400).json({ success: false, error: `Cannot accept withdrawal with status: ${withdrawal.status}` });
+    }
+    
+    // Calculate fee and amount after fee
+    const totalAmount = withdrawal.amount;
+    const feeAmount = (totalAmount * feePercent) / 100;
+    const amountAfterFee = totalAmount - feeAmount;
+    
+    console.log('[ADMIN] Processing ROI withdrawal: total=$' + totalAmount.toFixed(2) + ', fee=$' + feeAmount.toFixed(2) + ', afterFee=$' + amountAfterFee.toFixed(2));
+    
+    // Get user and update balances
+    const user = await User.findById(withdrawal.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
+    // Move from lockedBalance to availableBalance (after fee)
+    user.lockedBalance = (user.lockedBalance || 0) - totalAmount; // Remove full amount from locked
+    user.availableBalance = (user.availableBalance || 0) + amountAfterFee; // Add net amount to available
+    await user.save();
+    
+    console.log('[ADMIN] User balances updated. lockedBalance reduced by $' + totalAmount.toFixed(2) + ', availableBalance increased by $' + amountAfterFee.toFixed(2));
+    
+    // Update withdrawal status
+    withdrawal.status = 'confirmed';
+    withdrawal.approvedAt = new Date();
+    withdrawal.feeApplied = feeAmount;
+    withdrawal.amountAfterFee = amountAfterFee;
+    await withdrawal.save();
+    
+    // Mark investment as roiWithdrawn
+    if (withdrawal.investmentId) {
+      await Investment.findByIdAndUpdate(withdrawal.investmentId, { roiWithdrawn: true });
+      console.log('[ADMIN] Investment marked as ROI withdrawn');
+    }
+    
+    console.log('[ADMIN] ROI withdrawal accepted and confirmed');
+    
+    res.json({ 
+      success: true, 
+      message: `ROI withdrawal accepted! Fee: $${feeAmount.toFixed(2)}, Amount moved to available: $${amountAfterFee.toFixed(2)}`,
+      withdrawal,
+      userBalances: {
+        lockedBalance: user.lockedBalance,
+        availableBalance: user.availableBalance
+      }
+    });
+  } catch (err) {
+    console.error('[ADMIN] Error accepting ROI withdrawal:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

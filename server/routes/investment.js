@@ -182,15 +182,15 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     console.log('[WITHDRAW ROI] Withdrawal saved with ID:', savedWithdrawal._id);
     console.log('[WITHDRAW ROI] Withdrawal saved, now updating investment');
     
-    // Mark ROI as withdrawn
-    investment.roiWithdrawn = true;
+    // Mark ROI as pending withdrawal
+    investment.roiWithdrawn = false; // Will be marked true only after admin accepts
     await investment.save();
-    console.log('[WITHDRAW ROI] Investment updated');
+    console.log('[WITHDRAW ROI] Investment marked as pending withdrawal');
     
-    // Add ROI to lockedBalance
+    // Add ROI to lockedBalance (pending admin approval)
     user.lockedBalance = (user.lockedBalance || 0) + roi;
     await user.save();
-    console.log('[WITHDRAW ROI] User balance updated');
+    console.log('[WITHDRAW ROI] ROI amount added to lockedBalance pending admin review');
     
     // Fetch updated locked balance
     const newLockedBalance = user.lockedBalance;
@@ -207,7 +207,8 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       success: true, 
       withdrawalId: savedWithdrawal._id.toString(),
       roi: Number(roi), 
-      lockedBalance: Number(newLockedBalance)
+      lockedBalance: Number(newLockedBalance),
+      message: 'ROI withdrawal submitted for admin review'
     };
     console.log('[WITHDRAW ROI] About to send response:', JSON.stringify(responseData));
     res.status(200).json(responseData);
