@@ -359,21 +359,30 @@ const InvestmentDetail = ({ investment, onClose }) => {
                   });
                   console.log('[INVEST_DETAIL] Response received. Status:', res.status, 'OK:', res.ok);
                   let data = null;
+                  let text = null;
                   try {
-                    const text = await res.text();
+                    text = await res.text();
                     console.log('[INVEST_DETAIL] Response text:', text ? text.substring(0, 200) : '(empty)');
                     if (text) {
-                      try { data = JSON.parse(text); } catch { data = text; }
+                      try {
+                        data = JSON.parse(text);
+                      } catch (parseErr) {
+                        console.warn('[INVEST_DETAIL] Response is not valid JSON:', parseErr);
+                        // keep raw text as fallback
+                        data = text;
+                      }
+                    } else {
+                      // Empty body returned — build a safe fallback object so UI has useful info
+                      console.warn('[INVEST_DETAIL] Empty response body received from server');
+                      data = { success: false, error: 'Empty response from server' };
                     }
-                  } catch (jsonErr) {
-                    // If response is empty or not readable, handle gracefully
-                    console.error('[INVEST_DETAIL] Invalid response body:', jsonErr);
-                    toast.error('Server error: Invalid response format', {
-                      position: 'top-center',
-                      autoClose: 5000
-                    });
-                    return;
+                  } catch (readErr) {
+                    console.error('[INVEST_DETAIL] Error reading response body:', readErr);
+                    data = { success: false, error: 'Failed to read server response' };
                   }
+
+                  // Log headers for debugging when response body is unexpected
+                  try { console.debug('[INVEST_DETAIL] Response headers:', Object.fromEntries(res.headers.entries())); } catch (hErr) { /* ignore */ }
 
                   // Check HTTP response status first
                   if (!res.ok) {

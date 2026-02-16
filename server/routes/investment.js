@@ -211,8 +211,17 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       message: 'ROI withdrawal submitted for admin review'
     };
     console.log('[WITHDRAW ROI] About to send response:', JSON.stringify(responseData));
-    res.status(200).json(responseData);
-    console.log('[WITHDRAW ROI] Response sent');
+    // Ensure we explicitly set JSON content-type and always send a JSON body so clients never receive an empty response
+    try {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      // use send with stringified JSON to avoid any middleware altering the body
+      res.status(200).send(JSON.stringify(responseData));
+      console.log('[WITHDRAW ROI] Response sent (stringified)');
+    } catch (sendErr) {
+      console.error('[WITHDRAW ROI] Error while sending response:', sendErr);
+      // Fallback: attempt res.json
+      try { res.status(200).json(responseData); } catch (jsonErr) { console.error('[WITHDRAW ROI] Fallback res.json also failed:', jsonErr); }
+    }
   } catch (err) {
     console.error('[WITHDRAW ROI] ===== EXCEPTION CAUGHT =====');
     console.error('[WITHDRAW ROI] Error message:', err.message);
