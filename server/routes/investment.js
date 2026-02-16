@@ -155,7 +155,7 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       updatedAt: new Date(),
     });
     console.log('[WITHDRAW ROI] About to save withdrawal');
-    await withdrawal.save();
+    const savedWithdrawal = await withdrawal.save();
     console.log('[WITHDRAW ROI] Withdrawal saved, now updating investment');
     
     // Mark ROI as withdrawn
@@ -171,16 +171,25 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     // Fetch updated locked balance
     const newLockedBalance = user.lockedBalance;
     console.log('[WITHDRAW ROI] Sending success response');
+    
+    // Convert to plain objects to avoid Mongoose serialization issues
+    const withdrawalData = savedWithdrawal.toObject ? savedWithdrawal.toObject() : savedWithdrawal;
+    
     res.json({ 
       success: true, 
-      withdrawal, 
+      withdrawal: withdrawalData, 
       roi, 
       lockedBalance: newLockedBalance, 
-      user: { id: user._id, lockedBalance: newLockedBalance } 
+      user: { id: user._id.toString(), lockedBalance: newLockedBalance } 
     });
   } catch (err) {
     console.error('[WITHDRAW ROI] Internal error:', err.message, err.stack);
-    return res.status(500).json({ success: false, error: err.message });
+    try {
+      return res.status(500).json({ success: false, error: err.message });
+    } catch (resErr) {
+      console.error('[WITHDRAW ROI] Failed to send error response:', resErr.message);
+      return res.status(500).send('Internal server error');
+    }
   }
 });
 
