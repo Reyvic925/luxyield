@@ -1,7 +1,7 @@
 // Smoke test for ROI withdrawal
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:3001';
+const BASE_URL = process.argv[2] || 'https://api.luxyield.com';
 
 // Test credentials
 const testUser = {

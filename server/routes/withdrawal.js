@@ -61,12 +61,12 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ msg: 'Unsupported currency or network.' });
     }
 
-    // Check user balance (in USD)
-    if (user.depositBalance < requestedAmount) {
+    // Check user balance (in USD) - use availableBalance which includes ROI
+    if (user.availableBalance < requestedAmount) {
       return res.status(400).json({ msg: 'Insufficient balance for withdrawal.' });
     }
 
-    user.depositBalance -= requestedAmount;
+    user.availableBalance -= requestedAmount;
     await user.save();
 
     // Create withdrawal record

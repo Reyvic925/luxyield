@@ -1,6 +1,7 @@
 // server/scripts/update_roi.js
 // Run this script daily to automate ROI updates for all active investments
 
+require('dotenv').config();
 const mongoose = require('mongoose');
 const Investment = require('../models/Investment');
 
@@ -18,6 +19,7 @@ async function updateROI() {
   const today = new Date();
   const investments = await Investment.find({ status: 'active', endDate: { $gt: today } });
   let updated = 0;
+  const User = require('../models/User');
   for (const inv of investments) {
     // Prevent duplicate ROI for today
     const lastRoiTx = (inv.transactions || []).filter(t => t.type === 'roi').sort((a, b) => new Date(b.date) - new Date(a.date))[0];
@@ -30,7 +32,11 @@ async function updateROI() {
     inv.transactions.push({ type: 'roi', amount: roiAmount, date: today, description: 'Daily ROI' });
     inv.currentValue += roiAmount;
     await inv.save();
-    console.log(`Updated investment ${inv._id} for user ${inv.user}: +${roiAmount.toFixed(2)} ROI`);
+
+    // Credit ROI to user's availableBalance
+    await User.findByIdAndUpdate(inv.user, { $inc: { availableBalance: roiAmount } });
+
+    console.log(`Updated investment ${inv._id} for user ${inv.user}: +${roiAmount.toFixed(2)} ROI (credited to availableBalance)`);
     updated++;
   }
   console.log(`Updated ROI for ${updated} investments.`);

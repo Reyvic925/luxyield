@@ -4,6 +4,7 @@ const Investment = require('../models/Investment');
 const MarketEvent = require('../models/MarketEvent');
 const UserGainLog = require('../models/UserGainLog');
 const Config = require('../models/Config');
+const User = require('../models/User');
 
 async function runRoiSimulation() {
   try {
@@ -132,6 +133,12 @@ async function runRoiSimulation() {
         message: fluctuation >= 0 ? `Gain of $${fluctuation.toFixed(2)}` : `Loss of $${Math.abs(fluctuation).toFixed(2)}`,
         logged_at: now
       });
+      
+      // Credit ROI to user's availableBalance (positive gains only)
+      if (fluctuation > 0) {
+        await User.findByIdAndUpdate(invDoc.user, { $inc: { availableBalance: fluctuation } });
+      }
+      
       if (fluctuation >= 0) {
         console.log(`[ROI SIM][GAIN] Investment ${invDoc._id} (${invDoc.planName}): +$${fluctuation.toFixed(2)} | Current Value: $${invDoc.currentValue.toFixed(2)}`);
       } else {
