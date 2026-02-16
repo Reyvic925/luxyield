@@ -247,7 +247,8 @@ router.post('/withdraw', auth, async (req, res) => {
       return res.status(404).json({ message: 'Investment not found' });
     }
     // Only allow ROI withdrawal from completed investments and only once
-    if (investment.status !== 'completed') {
+    const normalizedStatus = investment.status ? investment.status.toLowerCase() : '';
+    if (normalizedStatus !== 'completed') {
       return res.status(400).json({ message: 'Investment is not completed yet.' });
     }
     if (investment.roiWithdrawn) {
@@ -308,7 +309,7 @@ router.get('/investment/:id', auth, async (req, res) => {
     
     // Update status if completed
     if (investment.daysInvested >= investment.simulationDays) {
-      investment.status = 'Completed';
+      investment.status = 'completed';
     }
     
     await investment.save();

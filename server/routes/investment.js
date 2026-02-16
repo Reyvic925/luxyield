@@ -120,7 +120,9 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     }
     console.log('[WITHDRAW ROI] Investment found, status:', investment.status, 'currentValue:', investment.currentValue, 'amount:', investment.amount, 'transactions:', (investment.transactions && investment.transactions.length) || investment.transactionCount || 0);
     
-    if (investment.status !== 'completed') {
+    // Normalize status to lowercase for comparison
+    const normalizedStatus = investment.status ? investment.status.toLowerCase() : '';
+    if (normalizedStatus !== 'completed') {
       // If the investment endDate has already passed, auto-mark it completed so user can withdraw ROI
       const now = new Date();
       if (investment.endDate && new Date(investment.endDate) <= now) {
