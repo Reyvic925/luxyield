@@ -261,7 +261,20 @@ router.post('/invest', auth, async (req, res) => {
     await newInvestment.save();
     // Update user tier to match the plan
     await User.findByIdAndUpdate(userId, { tier: plan });
-    res.json({ message: 'Investment successful', investment: newInvestment });
+    // Return only essential fields to avoid serialization issues
+    res.json({ 
+      message: 'Investment successful', 
+      investment: {
+        _id: newInvestment._id,
+        fundId: newInvestment.fundId,
+        fundName: newInvestment.fundName,
+        amount: newInvestment.amount,
+        currentValue: newInvestment.currentValue,
+        startDate: newInvestment.startDate,
+        endDate: newInvestment.endDate,
+        status: newInvestment.status
+      }
+    });
   } catch (err) {
     console.error('Invest error:', err);
     res.status(500).json({ error: 'Server error' });

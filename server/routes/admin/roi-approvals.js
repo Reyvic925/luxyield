@@ -13,7 +13,18 @@ router.get('/', auth, async (req, res) => {
     })
       .sort('-createdAt')
       .populate('userId', 'email name');
-    res.json(withdrawals);
+    // Return only essential fields to avoid serialization issues
+    const cleanedWithdrawals = withdrawals.map(w => ({
+      id: w._id.toString(),
+      userId: w.userId?._id?.toString() || w.userId?.toString() || '',
+      userEmail: w.userId?.email || '',
+      userName: w.userId?.name || '',
+      amount: w.amount,
+      status: w.status,
+      type: w.type,
+      createdAt: w.createdAt
+    }));
+    res.json(cleanedWithdrawals);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -32,7 +43,13 @@ router.patch('/:id', auth, async (req, res) => {
       withdrawal.status = 'rejected';
     }
     await withdrawal.save();
-    res.json(withdrawal);
+    // Return only essential fields
+    res.json({
+      id: withdrawal._id.toString(),
+      amount: withdrawal.amount,
+      status: withdrawal.status,
+      type: withdrawal.type
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

@@ -205,7 +205,21 @@ router.patch('/users/:id', authAdmin, auditLog('update_user', 'User', req => req
 router.get('/withdrawals', authAdmin, async (req, res) => {
   try {
     const withdrawals = await Withdrawal.find().sort('-createdAt');
-    res.json(withdrawals);
+    // Return only essential fields to avoid serialization issues with nested structures
+    const cleanedWithdrawals = withdrawals.map(w => ({
+      _id: w._id,
+      userId: w.userId,
+      investmentId: w.investmentId,
+      amount: w.amount,
+      status: w.status,
+      type: w.type,
+      walletAddress: w.walletAddress,
+      network: w.network,
+      currency: w.currency,
+      createdAt: w.createdAt,
+      updatedAt: w.updatedAt
+    }));
+    res.json(cleanedWithdrawals);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -229,12 +243,24 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       withdrawal.destination = destination;
       await user.save();
       await withdrawal.save();
-      return res.json({ success: true, withdrawal });
+      // Return only essential fields
+      return res.json({ success: true, withdrawal: {
+        _id: withdrawal._id,
+        amount: withdrawal.amount,
+        status: withdrawal.status,
+        type: withdrawal.type
+      }});
     } else {
       // For reject or other status updates
       withdrawal.status = status;
       await withdrawal.save();
-      return res.json({ success: true, withdrawal });
+      // Return only essential fields
+      return res.json({ success: true, withdrawal: {
+        _id: withdrawal._id,
+        amount: withdrawal.amount,
+        status: withdrawal.status,
+        type: withdrawal.type
+      }});
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -638,7 +664,20 @@ router.get('/users/:id/kyc', authAdmin, async (req, res) => {
 router.get('/roi-approvals', authAdmin, async (req, res) => {
   try {
     const withdrawals = await Withdrawal.find({ type: 'roi', status: 'pending' }).populate('userId', 'email');
-    res.json(withdrawals);
+    // Return only essential fields to avoid serialization issues
+    const cleanedWithdrawals = withdrawals.map(w => ({
+      _id: w._id,
+      userId: w.userId,
+      investmentId: w.investmentId,
+      amount: w.amount,
+      status: w.status,
+      type: w.type,
+      walletAddress: w.walletAddress,
+      network: w.network,
+      currency: w.currency,
+      createdAt: w.createdAt
+    }));
+    res.json(cleanedWithdrawals);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -663,7 +702,13 @@ router.patch('/roi-approvals/:id', authAdmin, async (req, res) => {
       withdrawal.destination = destination;
       await user.save();
       await withdrawal.save();
-      return res.json({ success: true, withdrawal });
+      // Return only essential fields
+      return res.json({ success: true, withdrawal: {
+        _id: withdrawal._id,
+        amount: withdrawal.amount,
+        status: withdrawal.status,
+        type: withdrawal.type
+      }});
     } else if (status === 'rejected' && withdrawal.status === 'pending') {
       // If rejected, unlock the ROI back to available
       const user = await User.findById(withdrawal.userId);
@@ -674,11 +719,23 @@ router.patch('/roi-approvals/:id', authAdmin, async (req, res) => {
       }
       withdrawal.status = 'rejected';
       await withdrawal.save();
-      return res.json({ success: true, withdrawal });
+      // Return only essential fields
+      return res.json({ success: true, withdrawal: {
+        _id: withdrawal._id,
+        amount: withdrawal.amount,
+        status: withdrawal.status,
+        type: withdrawal.type
+      }});
     } else {
       withdrawal.status = status;
       await withdrawal.save();
-      return res.json({ success: true, withdrawal });
+      // Return only essential fields
+      return res.json({ success: true, withdrawal: {
+        _id: withdrawal._id,
+        amount: withdrawal.amount,
+        status: withdrawal.status,
+        type: withdrawal.type
+      }});
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
