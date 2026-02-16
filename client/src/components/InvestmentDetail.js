@@ -359,7 +359,9 @@ const InvestmentDetail = ({ investment, onClose }) => {
                   let data = null;
                   try {
                     const text = await res.text();
-                    try { data = JSON.parse(text); } catch { data = text; }
+                    if (text) {
+                      try { data = JSON.parse(text); } catch { data = text; }
+                    }
                   } catch (jsonErr) {
                     // If response is empty or not readable, handle gracefully
                     console.error('[INVEST_DETAIL] Invalid response body:', jsonErr);
@@ -369,6 +371,18 @@ const InvestmentDetail = ({ investment, onClose }) => {
                     });
                     return;
                   }
+
+                  // Check HTTP response status first
+                  if (!res.ok) {
+                    const errorMsg = (data && (data.error || data.message)) || `HTTP ${res.status}`;
+                    console.error('[INVEST_DETAIL] Withdrawal failed with status', res.status, ':', errorMsg);
+                    toast.error(`Failed to withdraw ROI: ${errorMsg}`, {
+                      position: 'top-center',
+                      autoClose: 5000
+                    });
+                    return;
+                  }
+
                   if (data && data.success) {
 const roiAmount = typeof data.roi === 'number' ? data.roi.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.roi || '0';
 const lockedBalance = typeof data.lockedBalance === 'number' ? data.lockedBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.lockedBalance || '0';
@@ -391,7 +405,7 @@ toast.success(`ROI of $${roiAmount} withdrawn! Locked balance: $${lockedBalance}
 });
                   setTimeout(() => window.location.reload(), 5200);
                   } else {
-                    const errorMsg = data.error || data.message || 'Withdrawal failed';
+                    const errorMsg = (data && (data.error || data.message)) || 'Withdrawal failed';
                     toast.error(`Failed to withdraw ROI: ${errorMsg}`, {
                       position: 'top-center',
                       autoClose: 5000

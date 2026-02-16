@@ -197,12 +197,14 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     console.log('[WITHDRAW ROI] Sending success response with roi:', roi, 'lockedBalance:', newLockedBalance);
     
     // Only return essential fields to avoid serialization issues with large transaction arrays
+    console.log('[WITHDRAW ROI] Success! Sending response with roi:', roi, 'lockedBalance:', newLockedBalance);
     res.json({ 
       success: true, 
       withdrawalId: savedWithdrawal._id.toString(),
       roi, 
       lockedBalance: newLockedBalance
     });
+    console.log('[WITHDRAW ROI] Response sent successfully');
   } catch (err) {
     console.error('[WITHDRAW ROI] ===== EXCEPTION CAUGHT =====');
     console.error('[WITHDRAW ROI] Error message:', err.message);
