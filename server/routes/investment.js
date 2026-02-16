@@ -116,7 +116,8 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     const investment = await Investment.findOne({ _id: investmentId, user: userId });
     if (!investment) {
       console.error('[WITHDRAW ROI] Investment not found:', investmentId, 'for user:', userId);
-      return res.status(404).json({ success: false, error: 'Investment not found.' });
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(404).end(JSON.stringify({ success: false, error: 'Investment not found.' }));
     }
     console.log('[WITHDRAW ROI] Investment found, status:', investment.status, 'currentValue:', investment.currentValue, 'amount:', investment.amount, 'transactions:', (investment.transactions && investment.transactions.length) || investment.transactionCount || 0);
     
@@ -131,13 +132,15 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
         await investment.save();
       } else {
         console.error('[WITHDRAW ROI] Investment not completed:', investmentId, 'status:', investment.status);
-        return res.status(400).json({ success: false, error: 'ROI can only be withdrawn from completed investments.' });
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(400).end(JSON.stringify({ success: false, error: 'ROI can only be withdrawn from completed investments.' }));
       }
     }
     // Prevent double withdrawal
     if (investment.roiWithdrawn) {
       console.error('[WITHDRAW ROI] ROI already withdrawn for investment:', investmentId);
-      return res.status(400).json({ success: false, error: 'ROI already withdrawn for this investment.' });
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).end(JSON.stringify({ success: false, error: 'ROI already withdrawn for this investment.' }));
     }
     // Calculate withdrawable ROI (currentValue - amount)
     const roi = investment.currentValue - investment.amount;
@@ -145,7 +148,8 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     
     if (roi <= 0) {
       console.error('[WITHDRAW ROI] No ROI available to withdraw for investment:', investmentId, 'roi:', roi);
-      return res.status(400).json({ success: false, error: 'No ROI available to withdraw.' });
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).end(JSON.stringify({ success: false, error: 'No ROI available to withdraw.' }));
     }
     // Get wallet info from user or use defaults
     let { walletAddress, network, currency } = req.body;
@@ -154,7 +158,8 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     
     if (!user) {
       console.error('[WITHDRAW ROI] User not found:', userId);
-      return res.status(404).json({ success: false, error: 'User not found.' });
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(404).end(JSON.stringify({ success: false, error: 'User not found.' }));
     }
     let wallet = null;
     if (user.wallets && user.wallets.length > 0) {
@@ -199,7 +204,8 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     // Ensure roi and lockedBalance are valid numbers
     if (typeof roi !== 'number' || typeof newLockedBalance !== 'number') {
       console.error('[WITHDRAW ROI] Invalid response data types. roi:', typeof roi, 'lockedBalance:', typeof newLockedBalance);
-      return res.status(500).json({ success: false, error: 'Invalid ROI or balance calculation' });
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).end(JSON.stringify({ success: false, error: 'Invalid ROI or balance calculation' }));
     }
 
     // Only return essential fields to avoid serialization issues with large transaction arrays
@@ -210,7 +216,10 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       lockedBalance: Number(newLockedBalance)
     };
     console.log('[WITHDRAW ROI] About to send response:', JSON.stringify(responseData));
-    return res.json(responseData);
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200);
+    res.end(JSON.stringify(responseData));
+    console.log('[WITHDRAW ROI] Response ended');
   } catch (err) {
     console.error('[WITHDRAW ROI] ===== EXCEPTION CAUGHT =====');
     console.error('[WITHDRAW ROI] Error message:', err.message);
@@ -221,12 +230,8 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     const errorResponse = { success: false, error: errorMessage };
     console.error('[WITHDRAW ROI] Sending error response:', JSON.stringify(errorResponse));
     
-    try {
-      return res.status(500).json(errorResponse);
-    } catch (resErr) {
-      console.error('[WITHDRAW ROI] Failed to send error response:', resErr.message);
-      return res.status(500).send('Internal server error');
-    }
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(500).end(JSON.stringify(errorResponse));
   }
 });
 
