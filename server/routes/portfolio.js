@@ -155,7 +155,7 @@ async function getPortfolioData(userId) {
       roi: calculateInvestmentROI(inv),
       startDate: inv.startDate,
       endDate: inv.endDate,
-      status: inv.status,
+      status: ((inv.status === 'active' && inv.endDate && new Date(inv.endDate) <= new Date()) ? 'completed' : inv.status),
       roiWithdrawn: inv.roiWithdrawn || false,
       // Avoid returning full transaction arrays in portfolio summary responses
       transactionCount: (inv.transactions || []).length,

@@ -109,8 +109,16 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     console.log('[WITHDRAW ROI] Investment found, status:', investment.status, 'currentValue:', investment.currentValue, 'amount:', investment.amount, 'transactions:', (investment.transactions && investment.transactions.length) || investment.transactionCount || 0);
     
     if (investment.status !== 'completed') {
-      console.error('[WITHDRAW ROI] Investment not completed:', investmentId, 'status:', investment.status);
-      return res.status(400).json({ success: false, error: 'ROI can only be withdrawn from completed investments.' });
+      // If the investment endDate has already passed, auto-mark it completed so user can withdraw ROI
+      const now = new Date();
+      if (investment.endDate && new Date(investment.endDate) <= now) {
+        console.log('[WITHDRAW ROI] endDate passed but status not updated; auto-setting status=completed for', investmentId);
+        investment.status = 'completed';
+        await investment.save();
+      } else {
+        console.error('[WITHDRAW ROI] Investment not completed:', investmentId, 'status:', investment.status);
+        return res.status(400).json({ success: false, error: 'ROI can only be withdrawn from completed investments.' });
+      }
     }
     // Prevent double withdrawal
     if (investment.roiWithdrawn) {
