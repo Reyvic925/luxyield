@@ -356,7 +356,9 @@ const InvestmentDetail = ({ investment, onClose }) => {
                   });
                   const data = await res.json();
                   if (data.success) {
-toast.success(`ROI of $${data.roi?.toLocaleString?.() || ''} withdrawn! Locked balance: $${data.user?.lockedBalance?.toLocaleString?.() || ''}`, {
+const roiAmount = typeof data.roi === 'number' ? data.roi.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.roi || '0';
+const lockedBalance = typeof data.lockedBalance === 'number' ? data.lockedBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.lockedBalance || '0';
+toast.success(`ROI of $${roiAmount} withdrawn! Locked balance: $${lockedBalance}`, {
   position: 'top-center',
   autoClose: 5000,
   hideProgressBar: false,

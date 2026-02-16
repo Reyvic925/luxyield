@@ -155,7 +155,13 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     await user.save();
     // Fetch updated locked balance
     const newLockedBalance = user.lockedBalance;
-    res.json({ success: true, withdrawal, roi, newLockedBalance, user });
+    res.json({ 
+      success: true, 
+      withdrawal, 
+      roi, 
+      lockedBalance: newLockedBalance, 
+      user: { id: user._id, lockedBalance: newLockedBalance } 
+    });
   } catch (err) {
     console.error('[WITHDRAW ROI] Internal error:', err);
     res.status(500).json({ error: err.message });
