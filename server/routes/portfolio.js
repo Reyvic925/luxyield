@@ -157,7 +157,9 @@ async function getPortfolioData(userId) {
       endDate: inv.endDate,
       status: inv.status,
       roiWithdrawn: inv.roiWithdrawn || false,
-      transactions: inv.transactions || []
+      // Avoid returning full transaction arrays in portfolio summary responses
+      transactionCount: (inv.transactions || []).length,
+      lastTransactions: (inv.transactions || []).slice(-5).map(t => ({ type: t.type, amount: t.amount, date: t.date }))
     })),
     summary: {
       totalInvested: totalInvested,
@@ -286,6 +288,16 @@ router.get('/investment/:id', auth, async (req, res) => {
   try {
     const investment = await Investment.findById(req.params.id).lean();
     if (!investment) return res.status(404).json({ error: 'Investment not found' });
+    // Limit transactions returned to avoid extremely large payloads
+    const MAX_TX = 200;
+    const txCount = (investment.transactions || []).length;
+    if (txCount > MAX_TX) {
+      investment.lastTransactions = investment.transactions.slice(-MAX_TX).map(t => ({ type: t.type, amount: t.amount, date: t.date, description: t.description }));
+      investment.transactionCount = txCount;
+      delete investment.transactions;
+    } else {
+      investment.transactionCount = txCount;
+    }
     res.json({ investment });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -352,12 +364,13 @@ function generatePerformanceData(investments) {
   if (results.length > 0) {
     const latest = results[results.length - 1];
     console.log('[PERF DEBUG] Latest day:', latest);
-    console.log('[PERF DEBUG] Investments:', investments.map(inv => ({
+    // Avoid logging full transaction arrays (may be very large)
+    console.log('[PERF DEBUG] Investments summary:', investments.map(inv => ({
       amount: inv.amount,
       currentValue: inv.currentValue,
       startDate: inv.startDate,
       endDate: inv.endDate,
-      transactions: inv.transactions
+      transactionCount: (inv.transactions || []).length
     })));
   }
   return results;
