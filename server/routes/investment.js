@@ -97,6 +97,7 @@ router.post('/deposit', auth, async (req, res) => {
 router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
   try {
     console.log('[WITHDRAW ROI] Request started for investmentId:', req.params.investmentId, 'userId:', req.user.id);
+    console.log('[WITHDRAW ROI] Request body:', req.body || {});
     const { investmentId } = req.params;
     const userId = req.user.id;
     
@@ -105,7 +106,7 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       console.error('[WITHDRAW ROI] Investment not found:', investmentId, 'for user:', userId);
       return res.status(404).json({ success: false, error: 'Investment not found.' });
     }
-    console.log('[WITHDRAW ROI] Investment found, status:', investment.status);
+    console.log('[WITHDRAW ROI] Investment found, status:', investment.status, 'currentValue:', investment.currentValue, 'amount:', investment.amount, 'transactions:', (investment.transactions && investment.transactions.length) || investment.transactionCount || 0);
     
     if (investment.status !== 'completed') {
       console.error('[WITHDRAW ROI] Investment not completed:', investmentId, 'status:', investment.status);
@@ -127,7 +128,7 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     // Get wallet info from user or use defaults
     let { walletAddress, network, currency } = req.body;
     const user = await User.findById(userId);
-    console.log('[WITHDRAW ROI] User found:', !!user);
+    console.log('[WITHDRAW ROI] User found:', !!user, 'wallets:', (user && user.wallets && user.wallets.length) || 0);
     
     if (!user) {
       console.error('[WITHDRAW ROI] User not found:', userId);
