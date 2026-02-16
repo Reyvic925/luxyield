@@ -154,8 +154,9 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    console.log('[WITHDRAW ROI] About to save withdrawal');
+    console.log('[WITHDRAW ROI] About to save withdrawal with amount:', roi);
     const savedWithdrawal = await withdrawal.save();
+    console.log('[WITHDRAW ROI] Withdrawal saved with ID:', savedWithdrawal._id);
     console.log('[WITHDRAW ROI] Withdrawal saved, now updating investment');
     
     // Mark ROI as withdrawn
@@ -170,17 +171,14 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     
     // Fetch updated locked balance
     const newLockedBalance = user.lockedBalance;
-    console.log('[WITHDRAW ROI] Sending success response');
+    console.log('[WITHDRAW ROI] Sending success response with roi:', roi, 'lockedBalance:', newLockedBalance);
     
-    // Convert to plain objects to avoid Mongoose serialization issues
-    const withdrawalData = savedWithdrawal.toObject ? savedWithdrawal.toObject() : savedWithdrawal;
-    
+    // Only return essential fields to avoid serialization issues with large transaction arrays
     res.json({ 
       success: true, 
-      withdrawal: withdrawalData, 
+      withdrawalId: savedWithdrawal._id.toString(),
       roi, 
-      lockedBalance: newLockedBalance, 
-      user: { id: user._id.toString(), lockedBalance: newLockedBalance } 
+      lockedBalance: newLockedBalance
     });
   } catch (err) {
     console.error('[WITHDRAW ROI] Internal error:', err.message, err.stack);
