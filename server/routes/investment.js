@@ -7,6 +7,12 @@ const Plan = require('../models/Plan');
 const User = require('../models/User');
 const Withdrawal = require('../models/Withdrawal');
 
+// Test endpoint to verify route is accessible
+router.get('/health-check', (req, res) => {
+  console.log('[INVESTMENT ROUTE] Health check called');
+  res.json({ ok: true, timestamp: new Date().toISOString() });
+});
+
 // Simulate deposit
 router.post('/deposit', auth, async (req, res) => {
   try {
@@ -95,6 +101,12 @@ router.post('/deposit', auth, async (req, res) => {
 
 // Withdraw ROI from a completed investment
 router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
+  console.log('[WITHDRAW ROI] ===== REQUEST RECEIVED =====');
+  console.log('[WITHDRAW ROI] investmentId:', req.params.investmentId);
+  console.log('[WITHDRAW ROI] userId:', req.user?.id);
+  console.log('[WITHDRAW ROI] auth middleware passed:', !!req.user);
+  console.log('[WITHDRAW ROI] body:', JSON.stringify(req.body || {}));
+  
   try {
     console.log('[WITHDRAW ROI] Request started for investmentId:', req.params.investmentId, 'userId:', req.user.id);
     console.log('[WITHDRAW ROI] Request body:', req.body || {});
@@ -190,7 +202,10 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       lockedBalance: newLockedBalance
     });
   } catch (err) {
-    console.error('[WITHDRAW ROI] Internal error:', err.message, err.stack);
+    console.error('[WITHDRAW ROI] ===== EXCEPTION CAUGHT =====');
+    console.error('[WITHDRAW ROI] Error message:', err.message);
+    console.error('[WITHDRAW ROI] Error stack:', err.stack);
+    console.error('[WITHDRAW ROI] Full error object:', err);
     try {
       return res.status(500).json({ success: false, error: err.message });
     } catch (resErr) {
