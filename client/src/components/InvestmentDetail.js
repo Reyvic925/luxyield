@@ -352,13 +352,16 @@ const InvestmentDetail = ({ investment, onClose }) => {
                 }
                 try {
                   const token = localStorage.getItem('token');
+                  console.log('[INVEST_DETAIL] Starting ROI withdrawal for investment:', investment.id);
                   const res = await fetch(`/api/investment/withdraw-roi/${investment.id}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                   });
+                  console.log('[INVEST_DETAIL] Response received. Status:', res.status, 'OK:', res.ok);
                   let data = null;
                   try {
                     const text = await res.text();
+                    console.log('[INVEST_DETAIL] Response text:', text ? text.substring(0, 200) : '(empty)');
                     if (text) {
                       try { data = JSON.parse(text); } catch { data = text; }
                     }
@@ -405,7 +408,8 @@ toast.success(`ROI of $${roiAmount} withdrawn! Locked balance: $${lockedBalance}
 });
                   setTimeout(() => window.location.reload(), 5200);
                   } else {
-                    const errorMsg = (data && (data.error || data.message)) || 'Withdrawal failed';
+                    console.error('[INVEST_DETAIL] Withdrawal request failed. Response data:', JSON.stringify(data));
+                    const errorMsg = (data && (data.error || data.message)) || 'Withdrawal failed - please check the server logs';
                     toast.error(`Failed to withdraw ROI: ${errorMsg}`, {
                       position: 'top-center',
                       autoClose: 5000
