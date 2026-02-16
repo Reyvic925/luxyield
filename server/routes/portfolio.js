@@ -17,6 +17,15 @@ async function getPortfolioData(userId) {
 
   // Get all investments for the user
   const investments = await Investment.find({ user: userId });
+  
+  // Check which investments have confirmed ROI withdrawals
+  const confirmedRoiWithdrawals = await Withdrawal.find({
+    userId: userId,
+    type: 'roi',
+    status: { $in: ['confirmed', 'completed'] }
+  }).lean();
+  const confirmedWithdrawalIds = new Set(confirmedRoiWithdrawals.map(w => w.investmentId?.toString()));
+  
   // Calculate totals
   const totalValue = investments.reduce((sum, inv) => sum + inv.currentValue, 0);
   // totalInvested, totalROI, and totalROIPercent will be calculated after allInvestments is defined below
@@ -156,7 +165,7 @@ async function getPortfolioData(userId) {
       startDate: inv.startDate,
       endDate: inv.endDate,
       status: ((inv.status === 'active' && inv.endDate && new Date(inv.endDate) <= new Date()) ? 'completed' : inv.status),
-      roiWithdrawn: inv.roiWithdrawn || false,
+      roiWithdrawn: confirmedWithdrawalIds.has(inv._id.toString()),
       // Avoid returning full transaction arrays in portfolio summary responses
       transactionCount: (inv.transactions || []).length,
       lastTransactions: (inv.transactions || []).slice(-5).map(t => ({ type: t.type, amount: t.amount, date: t.date }))
@@ -288,6 +297,17 @@ router.get('/investment/:id', auth, async (req, res) => {
   try {
     const investment = await Investment.findById(req.params.id).lean();
     if (!investment) return res.status(404).json({ error: 'Investment not found' });
+    
+    // Check if there's a confirmed ROI withdrawal
+    const confirmedWithdrawal = await Withdrawal.findOne({
+      investmentId: investment._id,
+      type: 'roi',
+      status: { $in: ['confirmed', 'completed'] }
+    }).lean();
+    
+    // Only show roiWithdrawn=true if withdrawal was actually confirmed
+    const roiActuallyWithdrawn = !!confirmedWithdrawal;
+    
     // Limit transactions returned to avoid extremely large payloads
     const MAX_TX = 200;
     const txCount = (investment.transactions || []).length;
@@ -298,7 +318,8 @@ router.get('/investment/:id', auth, async (req, res) => {
     } else {
       investment.transactionCount = txCount;
     }
-    res.json({ investment });
+    
+    res.json({ investment: { ...investment, roiWithdrawn: roiActuallyWithdrawn } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
