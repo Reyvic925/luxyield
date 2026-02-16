@@ -196,22 +196,34 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     const newLockedBalance = user.lockedBalance;
     console.log('[WITHDRAW ROI] Sending success response with roi:', roi, 'lockedBalance:', newLockedBalance);
     
+    // Ensure roi and lockedBalance are valid numbers
+    if (typeof roi !== 'number' || typeof newLockedBalance !== 'number') {
+      console.error('[WITHDRAW ROI] Invalid response data types. roi:', typeof roi, 'lockedBalance:', typeof newLockedBalance);
+      return res.status(500).json({ success: false, error: 'Invalid ROI or balance calculation' });
+    }
+
     // Only return essential fields to avoid serialization issues with large transaction arrays
-    console.log('[WITHDRAW ROI] Success! Sending response with roi:', roi, 'lockedBalance:', newLockedBalance);
-    res.json({ 
+    const responseData = { 
       success: true, 
       withdrawalId: savedWithdrawal._id.toString(),
-      roi, 
-      lockedBalance: newLockedBalance
-    });
+      roi: Number(roi), 
+      lockedBalance: Number(newLockedBalance)
+    };
+    console.log('[WITHDRAW ROI] About to send response:', JSON.stringify(responseData));
+    res.json(responseData);
     console.log('[WITHDRAW ROI] Response sent successfully');
   } catch (err) {
     console.error('[WITHDRAW ROI] ===== EXCEPTION CAUGHT =====');
     console.error('[WITHDRAW ROI] Error message:', err.message);
     console.error('[WITHDRAW ROI] Error stack:', err.stack);
-    console.error('[WITHDRAW ROI] Full error object:', err);
+    console.error('[WITHDRAW ROI] Full error object:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+    
+    const errorMessage = err.message || 'Unknown error occurred';
+    const errorResponse = { success: false, error: errorMessage };
+    console.error('[WITHDRAW ROI] Sending error response:', JSON.stringify(errorResponse));
+    
     try {
-      return res.status(500).json({ success: false, error: err.message });
+      return res.status(500).json(errorResponse);
     } catch (resErr) {
       console.error('[WITHDRAW ROI] Failed to send error response:', resErr.message);
       return res.status(500).send('Internal server error');

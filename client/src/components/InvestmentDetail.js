@@ -389,6 +389,7 @@ const InvestmentDetail = ({ investment, onClose }) => {
                   if (data && data.success) {
 const roiAmount = typeof data.roi === 'number' ? data.roi.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.roi || '0';
 const lockedBalance = typeof data.lockedBalance === 'number' ? data.lockedBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.lockedBalance || '0';
+console.log('[INVEST_DETAIL] Withdrawal successful!');
 toast.success(`ROI of $${roiAmount} withdrawn! Locked balance: $${lockedBalance}`, {
   position: 'top-center',
   autoClose: 5000,
@@ -408,8 +409,11 @@ toast.success(`ROI of $${roiAmount} withdrawn! Locked balance: $${lockedBalance}
 });
                   setTimeout(() => window.location.reload(), 5200);
                   } else {
-                    console.error('[INVEST_DETAIL] Withdrawal request failed. Response data:', JSON.stringify(data));
-                    const errorMsg = (data && (data.error || data.message)) || 'Withdrawal failed - please check the server logs';
+                    console.log('[INVEST_DETAIL] Response object:', JSON.stringify(data, null, 2));
+                    console.log('[INVEST_DETAIL] data.success:', data?.success);
+                    console.log('[INVEST_DETAIL] data.error:', data?.error);
+                    console.log('[INVEST_DETAIL] data.message:', data?.message);
+                    const errorMsg = (data && (data.error || data.message)) || 'Withdrawal failed - no error details returned from server';
                     toast.error(`Failed to withdraw ROI: ${errorMsg}`, {
                       position: 'top-center',
                       autoClose: 5000
