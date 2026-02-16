@@ -101,30 +101,34 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     const investment = await Investment.findOne({ _id: investmentId, user: userId });
     if (!investment) {
       console.error('[WITHDRAW ROI] Investment not found:', investmentId, 'for user:', userId);
-      return res.status(404).json({ error: 'Investment not found.' });
+      return res.status(404).json({ success: false, error: 'Investment not found.' });
     }
     if (investment.status !== 'completed') {
       console.error('[WITHDRAW ROI] Investment not completed:', investmentId);
-      return res.status(400).json({ error: 'ROI can only be withdrawn from completed investments.' });
+      return res.status(400).json({ success: false, error: 'ROI can only be withdrawn from completed investments.' });
     }
     // Prevent double withdrawal
     if (investment.roiWithdrawn) {
       console.error('[WITHDRAW ROI] ROI already withdrawn for investment:', investmentId);
-      return res.status(400).json({ error: 'ROI already withdrawn for this investment.' });
+      return res.status(400).json({ success: false, error: 'ROI already withdrawn for this investment.' });
     }
     // Calculate withdrawable ROI (currentValue - amount)
     const roi = investment.currentValue - investment.amount;
     if (roi <= 0) {
       console.error('[WITHDRAW ROI] No ROI available to withdraw for investment:', investmentId);
-      return res.status(400).json({ error: 'No ROI available to withdraw.' });
+      return res.status(400).json({ success: false, error: 'No ROI available to withdraw.' });
     }
     // Get wallet info from user or use defaults
     let { walletAddress, network, currency } = req.body;
     // If not provided, use the user's first wallet or fallback defaults
     const User = require('../models/User');
     const user = await User.findById(userId);
+    if (!user) {
+      console.error('[WITHDRAW ROI] User not found:', userId);
+      return res.status(404).json({ success: false, error: 'User not found.' });
+    }
     let wallet = null;
-    if (user && user.wallets && user.wallets.length > 0) {
+    if (user.wallets && user.wallets.length > 0) {
       wallet = user.wallets[0];
     }
     walletAddress = walletAddress || wallet?.address || 'DEFAULT_ADDRESS';
@@ -164,7 +168,7 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     });
   } catch (err) {
     console.error('[WITHDRAW ROI] Internal error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

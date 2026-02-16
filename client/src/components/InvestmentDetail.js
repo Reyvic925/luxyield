@@ -377,10 +377,18 @@ toast.success(`ROI of $${roiAmount} withdrawn! Locked balance: $${lockedBalance}
 });
                   setTimeout(() => window.location.reload(), 5200);
                   } else {
-                    alert(data.message || 'Withdrawal failed');
+                    const errorMsg = data.error || data.message || 'Withdrawal failed';
+                    toast.error(`Failed to withdraw ROI: ${errorMsg}`, {
+                      position: 'top-center',
+                      autoClose: 5000
+                    });
                   }
                 } catch (err) {
-                  alert('Error withdrawing ROI');
+                  console.error('[INVEST_DETAIL] Withdraw ROI error:', err);
+                  toast.error(`Error withdrawing ROI: ${err.message || 'Network error'}`, {
+                    position: 'top-center',
+                    autoClose: 5000
+                  });
                 }
               }}
               disabled={investment.roiWithdrawn}
