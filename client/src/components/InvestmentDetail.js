@@ -295,9 +295,9 @@ const InvestmentDetail = ({ investment, onClose }) => {
                 <div className="flex justify-between">
                   <span className="text-gray-400">Status</span>
                   <span className={`${
-                    liveInvestment.status === 'active' ? 'text-green-500' : 'text-gray-400'
+                    (liveInvestment?.status === 'active') ? 'text-green-500' : 'text-gray-400'
                   }`}>
-                    {liveInvestment.status.charAt(0).toUpperCase() + liveInvestment.status.slice(1)}
+                    {(liveInvestment?.status ? (liveInvestment.status.charAt(0).toUpperCase() + liveInvestment.status.slice(1)) : 'N/A')}
                   </span>
                 </div>
               </div>
