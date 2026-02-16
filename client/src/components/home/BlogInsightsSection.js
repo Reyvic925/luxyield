@@ -12,7 +12,10 @@ export default function BlogInsightsSection() {
   useEffect(() => {
     setLoading(true);
     fetch(`/api/blogs?page=${page}&limit=${pageSize}`)
-      .then(res => res.json())
+      .then(async res => {
+        const text = await res.text();
+        try { return JSON.parse(text); } catch { return text; }
+      })
       .then(data => {
         setPosts(data.blogs || data); // fallback for old API
         setTotalPages(data.totalPages || 1);

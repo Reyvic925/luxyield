@@ -10,7 +10,9 @@ const PerformanceMetrics = () => {
     try {
       const res = await fetch('/api/performance');
       if (!res.ok) throw new Error('Failed to fetch metrics');
-      const data = await res.json();
+      const text = await res.text();
+      let data = null;
+      try { data = JSON.parse(text); } catch { data = null; }
       setMetrics(data);
       setError(null);
     } catch (err) {

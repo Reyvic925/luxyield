@@ -55,23 +55,25 @@ export function getBtcWallet({ mnemonic, privateKey, network = 'mainnet' }) {
 export async function getBtcBalance(address) {
   // Uses Blockstream public API
   const url = `https://blockstream.info/api/address/${address}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Failed to fetch BTC balance');
-  const data = await res.json();
+  const safeFetch = require('./safeFetch').default;
+  const { ok, data, error } = await safeFetch(url);
+  if (!ok) throw new Error(error || 'Failed to fetch BTC balance');
   // Balance is in sats
   return data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
 }
 
 // --- Tron/USDT TRC20 (browser: use TronGrid REST API) ---
 export async function getTrxBalance(address) {
-  const res = await fetch(`https://api.trongrid.io/v1/accounts/${address}`);
-  const data = await res.json();
+  const safeFetch = require('./safeFetch').default;
+  const { ok, data, error } = await safeFetch(`https://api.trongrid.io/v1/accounts/${address}`);
+  if (!ok) throw new Error(error || 'Failed to fetch TRX balance');
   return data.data && data.data[0] ? data.data[0].balance / 1e6 : 0;
 }
 
 export async function getTrc20Balance(address, contract = 'TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj') {
-  const res = await fetch(`https://api.trongrid.io/v1/accounts/${address}`);
-  const data = await res.json();
+  const safeFetch = require('./safeFetch').default;
+  const { ok, data, error } = await safeFetch(`https://api.trongrid.io/v1/accounts/${address}`);
+  if (!ok) throw new Error(error || 'Failed to fetch TRC20 balances');
   if (data.data && data.data[0] && data.data[0].trc20) {
     const usdt = data.data[0].trc20.find(t => t[contract]);
     return usdt ? Number(usdt[contract]) / 1e6 : 0;

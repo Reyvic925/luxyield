@@ -273,9 +273,13 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
     const fetchRates = async () => {
       try {
         const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
-        const data = await res.json();
-        setBtcRate(data.bitcoin.usd);
-        setEthRate(data.ethereum.usd);
+        const text = await res.text();
+        let data = null;
+        try { data = JSON.parse(text); } catch (e) { data = null; }
+        if (data) {
+          setBtcRate(data.bitcoin?.usd);
+          setEthRate(data.ethereum?.usd);
+        }
       } catch {}
     };
     fetchRates();

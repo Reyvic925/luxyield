@@ -10,10 +10,10 @@ export function PlanPerformance({ planId }) {
     let isMounted = true;
     const fetchData = () => {
       fetch(`/api/performance/plan/${planId}`)
-        .then(res => res.json())
+        .then(async res => { const text = await res.text(); try { return JSON.parse(text); } catch { return text; } })
         .then(data => isMounted && setMetrics(data));
       fetch(`/api/performance/plan/${planId}/history?days=14`)
-        .then(res => res.json())
+        .then(async res => { const text = await res.text(); try { return JSON.parse(text); } catch { return text; } })
         .then(data => isMounted && setHistory(data));
     };
     fetchData();
@@ -60,7 +60,7 @@ export function UserGainLogs({ userId }) {
     let isMounted = true;
     const fetchLogs = () => {
       fetch(`/api/performance/user/${userId}/gain-logs`)
-        .then(res => res.json())
+        .then(async res => { const text = await res.text(); try { return JSON.parse(text); } catch { return text; } })
         .then(data => isMounted && setLogs(data));
     };
     fetchLogs();

@@ -17,8 +17,10 @@ const AIChatModal = ({ isOpen, onClose }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input })
       });
-      const data = await res.json();
-      if (data.reply) {
+      const text = await res.text();
+      let data = null;
+      try { data = JSON.parse(text); } catch { data = text; }
+      if (data && data.reply) {
         setMessages(msgs => [...msgs, { from: 'ai', text: data.reply }]);
       } else {
         setError('No response from AI.');

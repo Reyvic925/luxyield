@@ -155,8 +155,10 @@ const InvestmentDetail = ({ investment, onClose }) => {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
-          const data = await res.json();
-          setLiveInvestment(data.investment || data);
+          const text = await res.text();
+          let data = null;
+          try { data = JSON.parse(text); } catch { data = text; }
+          setLiveInvestment((data && data.investment) ? data.investment : data);
         }
       } catch {}
     }, 15000); // Refresh every 15 seconds
@@ -356,10 +358,11 @@ const InvestmentDetail = ({ investment, onClose }) => {
                   });
                   let data = null;
                   try {
-                    data = await res.json();
+                    const text = await res.text();
+                    try { data = JSON.parse(text); } catch { data = text; }
                   } catch (jsonErr) {
-                    // If response is empty or not JSON, handle gracefully
-                    console.error('[INVEST_DETAIL] Invalid JSON response:', jsonErr);
+                    // If response is empty or not readable, handle gracefully
+                    console.error('[INVEST_DETAIL] Invalid response body:', jsonErr);
                     toast.error('Server error: Invalid response format', {
                       position: 'top-center',
                       autoClose: 5000

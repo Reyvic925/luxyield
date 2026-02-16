@@ -12,13 +12,14 @@ export default function LivePriceTicker() {
   useEffect(() => {
     async function fetchPrices() {
       try {
-        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,tether&vs_currencies=usd');
-        const data = await res.json();
+        const safeFetch = require('../../utils/safeFetch').default;
+        const { ok, data } = await safeFetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,tether&vs_currencies=usd');
+        if (!ok || !data) return;
         setPrices({
-          BTC: data.bitcoin.usd,
-          ETH: data.ethereum.usd,
-          SOL: data.solana.usd,
-          USDT: data.tether.usd,
+          BTC: data.bitcoin?.usd,
+          ETH: data.ethereum?.usd,
+          SOL: data.solana?.usd,
+          USDT: data.tether?.usd,
         });
       } catch {}
     }

@@ -7,7 +7,10 @@ const FundShowcaseSection = () => {
 	const [funds, setFunds] = useState([]);
 	useEffect(() => {
 		fetch('/api/funds')
-			.then((res) => res.json())
+			.then(async (res) => {
+				const text = await res.text();
+				try { return JSON.parse(text); } catch { return text; }
+			})
 			.then((data) => setFunds(data));
 	}, []);
 	const [hovered, setHovered] = useState(null);

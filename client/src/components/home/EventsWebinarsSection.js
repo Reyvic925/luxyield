@@ -12,7 +12,10 @@ export default function EventsWebinarsSection() {
   useEffect(() => {
     setLoading(true);
     fetch(`/api/events?page=${page}&limit=${pageSize}`)
-      .then(res => res.json())
+      .then(async res => {
+        const text = await res.text();
+        try { return JSON.parse(text); } catch { return text; }
+      })
       .then(data => {
         setEvents(data.events || data); // fallback for old API
         setTotalPages(data.totalPages || 1);

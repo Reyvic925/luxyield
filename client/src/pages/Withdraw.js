@@ -52,9 +52,10 @@ const Withdraw = () => {
     // Fetch dashboard available balance from backend
     const fetchBalances = async () => {
       try {
-        const res = await axios.get('/api/portfolio');
-        setAvailableBalance(res.data.userInfo?.availableBalance ?? 0);
-        setLockedBalance(res.data.userInfo?.lockedBalance ?? 0);
+        const safeFetch = require('../utils/safeFetch').default;
+        const { ok, data } = await safeFetch('/api/portfolio');
+        setAvailableBalance(data.userInfo?.availableBalance ?? 0);
+        setLockedBalance(data.userInfo?.lockedBalance ?? 0);
         // Optionally, set other balances if needed
       } catch (err) {
         setAvailableBalance(0);
@@ -87,8 +88,8 @@ const Withdraw = () => {
         else if (currency === 'USDT') url = 'https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd';
         if (!url) return;
         try {
-          const res = await fetch(url);
-          const data = await res.json();
+            const safeFetch = require('../utils/safeFetch').default;
+            const { ok, data } = await safeFetch(url);
           if (currency === 'BTC') setLiveRate(data.bitcoin.usd);
           else if (currency === 'ETH') setLiveRate(data.ethereum.usd);
           else if (currency === 'BNB') setLiveRate(data.binancecoin.usd);

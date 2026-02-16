@@ -9,9 +9,10 @@ export default function BlogDetailPage() {
 
   useEffect(() => {
     fetch(`/api/blogs/${slug}`)
-      .then(res => {
+      .then(async res => {
         if (!res.ok) throw new Error('Not found');
-        return res.json();
+        const text = await res.text();
+        try { return JSON.parse(text); } catch { return text; }
       })
       .then(data => {
         setPost(data);
