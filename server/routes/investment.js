@@ -210,8 +210,7 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       lockedBalance: Number(newLockedBalance)
     };
     console.log('[WITHDRAW ROI] About to send response:', JSON.stringify(responseData));
-    res.json(responseData);
-    console.log('[WITHDRAW ROI] Response sent successfully');
+    return res.json(responseData);
   } catch (err) {
     console.error('[WITHDRAW ROI] ===== EXCEPTION CAUGHT =====');
     console.error('[WITHDRAW ROI] Error message:', err.message);
