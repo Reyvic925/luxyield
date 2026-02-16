@@ -354,8 +354,19 @@ const InvestmentDetail = ({ investment, onClose }) => {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                   });
-                  const data = await res.json();
-                  if (data.success) {
+                  let data = null;
+                  try {
+                    data = await res.json();
+                  } catch (jsonErr) {
+                    // If response is empty or not JSON, handle gracefully
+                    console.error('[INVEST_DETAIL] Invalid JSON response:', jsonErr);
+                    toast.error('Server error: Invalid response format', {
+                      position: 'top-center',
+                      autoClose: 5000
+                    });
+                    return;
+                  }
+                  if (data && data.success) {
 const roiAmount = typeof data.roi === 'number' ? data.roi.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.roi || '0';
 const lockedBalance = typeof data.lockedBalance === 'number' ? data.lockedBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.lockedBalance || '0';
 toast.success(`ROI of $${roiAmount} withdrawn! Locked balance: $${lockedBalance}`, {
