@@ -389,8 +389,8 @@ const InvestmentDetail = ({ investment, onClose }) => {
                     }
                   }
 
-                  // If we got an empty response body but status is 200, verify by checking the specific investment (more reliable)
-                  if (res.ok && (text === '' || (data && data.error && data.error.toString().toLowerCase().includes('empty response')))) {
+                  // If we got an empty response (or server returned an error-like payload) but status is 200, verify by checking the specific investment (more reliable)
+                  if ((res && res.status >= 200 && res.status < 300) && ((data == null) || (data && data.error && data.error.toString().toLowerCase().includes('empty response')))) {
                     try {
                       // Prefer checking the single-investment endpoint for roiWithdrawn flag
                       const investmentVerifyRes = await fetch(`/api/portfolio/investment/${investment.id}`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -434,9 +434,9 @@ const InvestmentDetail = ({ investment, onClose }) => {
                   try { console.debug('[INVEST_DETAIL] Response headers:', Object.fromEntries(res.headers.entries())); } catch (hErr) { /* ignore */ }
 
                   // Check HTTP response status first
-                  if (!res.ok) {
-                    const errorMsg = (data && (data.error || data.message)) || `HTTP ${res.status}`;
-                    console.error('[INVEST_DETAIL] Withdrawal failed with status', res.status, ':', errorMsg);
+                  if (!(res && res.status >= 200 && res.status < 300)) {
+                    const errorMsg = (data && (data.error || data.message)) || `HTTP ${res?.status || 0}`;
+                    console.error('[INVEST_DETAIL] Withdrawal failed with status', res?.status || 'N/A', ':', errorMsg);
                     toast.error(`Failed to withdraw ROI: ${errorMsg}`, {
                       position: 'top-center',
                       autoClose: 5000
