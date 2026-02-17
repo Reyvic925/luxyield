@@ -18,7 +18,15 @@ async function getPortfolioData(userId) {
   // Get all investments for the user
   const investments = await Investment.find({ user: userId });
   
-  // Check which investments have confirmed ROI withdrawals
+  // Check which investments have pending or confirmed ROI withdrawals
+  const allRoiWithdrawals = await Withdrawal.find({
+    userId: userId,
+    type: 'roi',
+    status: { $in: ['pending', 'confirmed', 'completed'] }
+  }).lean();
+  const allWithdrawalIds = new Set(allRoiWithdrawals.map(w => w.investmentId?.toString()));
+  
+  // For display purposes, we also track confirmed-only withdrawals (admin approved)
   const confirmedRoiWithdrawals = await Withdrawal.find({
     userId: userId,
     type: 'roi',
@@ -166,7 +174,10 @@ async function getPortfolioData(userId) {
       startDate: inv.startDate,
       endDate: inv.endDate,
       status: ((inv.status === 'active' && inv.endDate && new Date(inv.endDate) <= new Date()) ? 'completed' : inv.status),
-      roiWithdrawn: confirmedWithdrawalIds.has(inv._id.toString()),
+      // roiWithdrawn = true if investment.roiWithdrawn flag is set OR there's a pending/confirmed withdrawal record
+      roiWithdrawn: inv.roiWithdrawn || allWithdrawalIds.has(inv._id.toString()),
+      roiWithdrawalPending: allWithdrawalIds.has(inv._id.toString()) && !confirmedWithdrawalIds.has(inv._id.toString()),
+      roiWithdrawalConfirmed: confirmedWithdrawalIds.has(inv._id.toString()),
       // Avoid returning full transaction arrays in portfolio summary responses
       transactionCount: (inv.transactions || []).length,
       lastTransactions: (inv.transactions || []).slice(-5).map(t => ({ type: t.type, amount: t.amount, date: t.date }))
@@ -299,15 +310,22 @@ router.get('/investment/:id', auth, async (req, res) => {
     const investment = await Investment.findById(req.params.id).lean();
     if (!investment) return res.status(404).json({ error: 'Investment not found' });
     
-    // Check if there's a confirmed ROI withdrawal
+    // Check if there's any ROI withdrawal (pending, confirmed, or completed)
+    const anyRoiWithdrawal = await Withdrawal.findOne({
+      investmentId: investment._id,
+      type: 'roi',
+      status: { $in: ['pending', 'confirmed', 'completed'] }
+    }).lean();
+    
+    // Check if withdrawal was specifically confirmed
     const confirmedWithdrawal = await Withdrawal.findOne({
       investmentId: investment._id,
       type: 'roi',
       status: { $in: ['confirmed', 'completed'] }
     }).lean();
     
-    // Only show roiWithdrawn=true if withdrawal was actually confirmed
-    const roiActuallyWithdrawn = !!confirmedWithdrawal;
+    // roiWithdrawn = true if investment flag is set OR there's a pending/confirmed withdrawal
+    const roiActuallyWithdrawn = investment.roiWithdrawn || !!anyRoiWithdrawal;
     
     // Limit transactions returned to avoid extremely large payloads
     const MAX_TX = 200;
