@@ -223,6 +223,7 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
         roiWithdrawn: true
       },
       lockedBalance: Number(newLockedBalance),
+      availableBalance: Number(user.availableBalance || 0),
       message: 'ROI withdrawn successfully! Amount moved to locked balance awaiting admin approval.'
     };
     console.log('[WITHDRAW ROI] About to send response:', JSON.stringify(responseData));
