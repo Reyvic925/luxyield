@@ -227,17 +227,10 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       message: 'ROI withdrawn successfully! Amount moved to locked balance awaiting admin approval.'
     };
     console.log('[WITHDRAW ROI] About to send response:', JSON.stringify(responseData));
-    // Ensure we explicitly set JSON content-type and always send a JSON body so clients never receive an empty response
-    try {
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      // use send with stringified JSON to avoid any middleware altering the body
-      res.status(200).send(JSON.stringify(responseData));
-      console.log('[WITHDRAW ROI] Response sent (stringified)');
-    } catch (sendErr) {
-      console.error('[WITHDRAW ROI] Error while sending response:', sendErr);
-      // Fallback: attempt res.json
-      try { res.status(200).json(responseData); } catch (jsonErr) { console.error('[WITHDRAW ROI] Fallback res.json also failed:', jsonErr); }
-    }
+    console.log('[WITHDRAW ROI] Response data types - roi:', typeof responseData.roi, 'lockedBalance:', typeof responseData.lockedBalance, 'availableBalance:', typeof responseData.availableBalance);
+    
+    // Use res.json which is more reliable than res.send
+    return res.status(200).json(responseData);
   } catch (err) {
     console.error('[WITHDRAW ROI] ===== EXCEPTION CAUGHT =====');
     console.error('[WITHDRAW ROI] Error message:', err.message);
