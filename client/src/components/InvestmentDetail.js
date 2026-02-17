@@ -354,45 +354,39 @@ const InvestmentDetail = ({ investment, onClose }) => {
                   const token = localStorage.getItem('token');
                   console.log('[INVEST_DETAIL] Starting ROI withdrawal for investment:', investment.id);
 
-                  // Capture user's lockedBalance snapshot before requesting withdrawal so we can verify when server returns an empty body
+                  // Capture user's lockedBalance snapshot using axios so auth headers and baseURL are applied
                   let prevLocked = null;
                   try {
-                    const pRes = await fetch('/api/portfolio', { headers: { 'Authorization': `Bearer ${token}` } });
-                    if (pRes.ok) {
-                      const pJson = await pRes.json();
-                      prevLocked = pJson?.userInfo?.lockedBalance ?? null;
-                      console.log('[INVEST_DETAIL] Previous lockedBalance snapshot:', prevLocked);
-                    }
+                    const axios = require('../utils/axios').default;
+                    const pResp = await axios.get('/api/portfolio');
+                    prevLocked = pResp?.data?.userInfo?.lockedBalance ?? null;
+                    console.log('[INVEST_DETAIL] Previous lockedBalance snapshot (axios):', prevLocked);
                   } catch (snapErr) {
-                    console.warn('[INVEST_DETAIL] Could not fetch pre-withdraw portfolio snapshot:', snapErr);
+                    console.warn('[INVEST_DETAIL] Could not fetch pre-withdraw portfolio snapshot (axios):', snapErr);
                   }
 
-                  const res = await fetch(`/api/investment/withdraw-roi/${investment.id}`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-                  console.log('[INVEST_DETAIL] Response received. Status:', res.status, 'OK:', res.ok);
+                  // Use axios.post so the request goes to the configured API base URL and includes auth headers
+                  const axios = require('../utils/axios').default;
+                  let res = null;
                   let data = null;
-                  let text = null;
                   try {
-                    text = await res.text();
-                    console.log('[INVEST_DETAIL] Response text:', text ? text.substring(0, 200) : '(empty)');
-                    if (text) {
-                      try {
-                        data = JSON.parse(text);
-                      } catch (parseErr) {
-                        console.warn('[INVEST_DETAIL] Response is not valid JSON:', parseErr);
-                        // keep raw text as fallback
-                        data = text;
-                      }
-                    } else {
-                      // Empty body returned — build a safe fallback object so UI has useful info
-                      console.warn('[INVEST_DETAIL] Empty response body received from server');
+                    res = await axios.post(`/api/investment/withdraw-roi/${investment.id}`);
+                    console.log('[INVEST_DETAIL] Axios response received. Status:', res.status);
+                    data = res.data;
+                    if (!data || (typeof data === 'string' && data.trim() === '')) {
+                      console.warn('[INVEST_DETAIL] Axios response body empty or invalid');
                       data = { success: false, error: 'Empty response from server' };
                     }
-                  } catch (readErr) {
-                    console.error('[INVEST_DETAIL] Error reading response body:', readErr);
-                    data = { success: false, error: 'Failed to read server response' };
+                  } catch (axiosErr) {
+                    // axios throws for non-2xx status codes; normalize into `res`/`data` so downstream logic still works
+                    console.error('[INVEST_DETAIL] Axios POST error:', axiosErr?.response?.status, axiosErr?.message);
+                    if (axiosErr.response) {
+                      res = axiosErr.response;
+                      data = axiosErr.response.data || { success: false, error: axiosErr.message };
+                    } else {
+                      res = { status: 0, ok: false };
+                      data = { success: false, error: axiosErr.message || 'Network error' };
+                    }
                   }
 
                   // If we got an empty response body but status is 200, verify by checking the specific investment (more reliable)
