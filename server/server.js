@@ -84,22 +84,22 @@ app.use((req, res, next) => {
   }
   
   // Intercept response to log what's being sent back
-  const originalJson = res.json.bind(res);
-  const originalEnd = res.end.bind(res);
-  const originalSend = res.send?.bind(res);
+  const originalJson = res.json;
+  const originalEnd = res.end;
+  const originalSend = res.send;
   
   res.json = function(data) {
     if (req.path.includes('/investment') || req.path.includes('/admin') || req.originalUrl.includes('set-gain-loss')) {
       console.log('[GLOBAL RESPONSE JSON] Path:', req.path, 'Data:', JSON.stringify(data).substring(0, 500));
     }
-    return originalJson(data);
+    return originalJson.call(this, data);
   };
   
   res.end = function(data) {
     if (req.path.includes('/investment') || req.path.includes('/admin') || req.originalUrl.includes('set-gain-loss')) {
       console.log('[GLOBAL RESPONSE END] Path:', req.path, 'Data length:', data ? String(data).length : 0);
     }
-    return originalEnd(data);
+    return originalEnd.call(this, data);
   };
   
   if (originalSend) {
@@ -107,7 +107,7 @@ app.use((req, res, next) => {
       if (req.path.includes('/investment') || req.path.includes('/admin') || req.originalUrl.includes('set-gain-loss')) {
         console.log('[GLOBAL RESPONSE SEND] Path:', req.path, 'Data:', JSON.stringify(data).substring(0, 500));
       }
-      return originalSend(data);
+      return originalSend.call(this, data);
     };
   }
   
