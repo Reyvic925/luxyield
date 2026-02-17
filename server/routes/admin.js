@@ -237,33 +237,59 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
     if (status === 'completed' && withdrawal.status === 'pending') {
       const user = await User.findById(withdrawal.userId);
       if (!user) return res.status(404).json({ message: 'User not found' });
-      if (destination === 'available') {
-        user.depositBalance += withdrawal.amount;
-      } else if (destination === 'locked') {
-        user.lockedBalance += withdrawal.amount;
+      
+      // For ROI withdrawals: always move from locked to available
+      if (withdrawal.type === 'roi') {
+        if (user.lockedBalance >= withdrawal.amount) {
+          user.lockedBalance -= withdrawal.amount;
+          user.availableBalance = (user.availableBalance || 0) + withdrawal.amount;
+        } else {
+          return res.status(400).json({ message: 'Insufficient locked balance' });
+        }
+      } else {
+        // For regular withdrawals: follow destination parameter
+        if (destination === 'available') {
+          user.depositBalance += withdrawal.amount;
+        } else if (destination === 'locked') {
+          user.lockedBalance += withdrawal.amount;
+        }
       }
+      
       withdrawal.status = 'completed';
       withdrawal.destination = destination;
       await user.save();
       await withdrawal.save();
-      // Return only essential fields
-      return res.json({ success: true, withdrawal: {
-        _id: withdrawal._id,
-        amount: withdrawal.amount,
-        status: withdrawal.status,
-        type: withdrawal.type
-      }});
+      // Return essential fields including updated balances
+      return res.json({ 
+        success: true, 
+        message: `Withdrawal completed`,
+        withdrawal: {
+          _id: withdrawal._id,
+          amount: withdrawal.amount,
+          status: withdrawal.status,
+          type: withdrawal.type
+        },
+        userBalances: {
+          lockedBalance: user.lockedBalance,
+          availableBalance: user.availableBalance,
+          depositBalance: user.depositBalance
+        }
+      });
     } else {
       // For reject or other status updates
       withdrawal.status = status;
       await withdrawal.save();
-      // Return only essential fields
-      return res.json({ success: true, withdrawal: {
-        _id: withdrawal._id,
-        amount: withdrawal.amount,
-        status: withdrawal.status,
-        type: withdrawal.type
-      }});
+      // Return essential fields
+      return res.json({ 
+        success: true, 
+        message: `Withdrawal ${status}`,
+        withdrawal: {
+          _id: withdrawal._id,
+          amount: withdrawal.amount,
+          status: withdrawal.status,
+          type: withdrawal.type
+        }
+      });
     }
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -705,25 +731,37 @@ router.patch('/roi-approvals/:id', authAdmin, async (req, res) => {
       withdrawal.destination = destination;
       await user.save();
       await withdrawal.save();
-      // Return only essential fields
-      return res.json({ success: true, withdrawal: {
-        _id: withdrawal._id,
-        amount: withdrawal.amount,
-        status: withdrawal.status,
-        type: withdrawal.type
-      }});
+      // Return essential fields including updated balances
+      return res.json({ 
+        success: true, 
+        message: `ROI withdrawal approved! $${withdrawal.amount.toFixed(2)} moved to available balance`,
+        withdrawal: {
+          _id: withdrawal._id,
+          amount: withdrawal.amount,
+          status: withdrawal.status,
+          type: withdrawal.type
+        },
+        userBalances: {
+          lockedBalance: user.lockedBalance,
+          availableBalance: user.availableBalance
+        }
+      });
     } else if (status === 'rejected' && withdrawal.status === 'pending') {
       // If rejected, keep the ROI in lockedBalance so user can retry withdrawal
       // Do NOT move it back to availableBalance - it should remain locked until successfully withdrawn
       withdrawal.status = 'rejected';
       await withdrawal.save();
-      // Return only essential fields
-      return res.json({ success: true, withdrawal: {
-        _id: withdrawal._id,
-        amount: withdrawal.amount,
-        status: withdrawal.status,
-        type: withdrawal.type
-      }});
+      // Return essential fields
+      return res.json({ 
+        success: true,
+        message: `ROI withdrawal rejected. Amount remains in locked balance`,
+        withdrawal: {
+          _id: withdrawal._id,
+          amount: withdrawal.amount,
+          status: withdrawal.status,
+          type: withdrawal.type
+        }
+      });
     } else {
       withdrawal.status = status;
       await withdrawal.save();
