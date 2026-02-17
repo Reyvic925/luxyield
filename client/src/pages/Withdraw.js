@@ -39,12 +39,12 @@ const Withdraw = () => {
   // Function to refresh user balances
   const refreshBalances = async () => {
     try {
-      const safeFetch = require('../utils/safeFetch').default;
-      const { ok, data } = await safeFetch('/api/portfolio');
-      setAvailableBalance(data.userInfo?.availableBalance ?? 0);
-      setLockedBalance(data.userInfo?.lockedBalance ?? 0);
+      const response = await axios.get('/api/portfolio');
+      setAvailableBalance(response.data.userInfo?.availableBalance ?? 0);
+      setLockedBalance(response.data.userInfo?.lockedBalance ?? 0);
+      console.log('[WITHDRAW] Balances refreshed:', { available: response.data.userInfo?.availableBalance, locked: response.data.userInfo?.lockedBalance });
     } catch (err) {
-      console.error('Failed to refresh balances:', err);
+      console.error('[WITHDRAW] Failed to refresh balances:', err);
     }
   };
 
@@ -64,12 +64,14 @@ const Withdraw = () => {
     // Fetch dashboard available balance from backend
     const fetchBalances = async () => {
       try {
-        const safeFetch = require('../utils/safeFetch').default;
-        const { ok, data } = await safeFetch('/api/portfolio');
-        setAvailableBalance(data.userInfo?.availableBalance ?? 0);
-        setLockedBalance(data.userInfo?.lockedBalance ?? 0);
+        console.log('[WITHDRAW] Fetching balances from portfolio API...');
+        const response = await axios.get('/api/portfolio');
+        setAvailableBalance(response.data.userInfo?.availableBalance ?? 0);
+        setLockedBalance(response.data.userInfo?.lockedBalance ?? 0);
+        console.log('[WITHDRAW] Balances fetched on mount:', { available: response.data.userInfo?.availableBalance, locked: response.data.userInfo?.lockedBalance });
         // Optionally, set other balances if needed
       } catch (err) {
+        console.error('[WITHDRAW] Failed to fetch balances:', err);
         setAvailableBalance(0);
         setLockedBalance(0);
       } finally {
