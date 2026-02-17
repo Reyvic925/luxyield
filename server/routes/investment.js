@@ -164,7 +164,24 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     network = network || wallet?.network || 'ERC20';
     currency = currency || wallet?.currency || 'USDT';
 
-    // Create a pending withdrawal for ROI
+    // Deduct ROI from investment.currentValue
+    investment.currentValue -= roi;
+    console.log('[WITHDRAW ROI] Deducted ROI from investment. New currentValue:', investment.currentValue);
+    
+    // Add ROI withdrawal transaction to investment history
+    investment.transactions.push({
+      type: 'withdrawal',
+      amount: roi,
+      date: new Date(),
+      description: 'ROI Withdrawal'
+    });
+    
+    // Mark ROI as withdrawn
+    investment.roiWithdrawn = true;
+    await investment.save();
+    console.log('[WITHDRAW ROI] Investment updated: ROI deducted and marked as withdrawn');
+    
+    // Create a pending withdrawal for ROI (for admin approval)
     const withdrawal = new Withdrawal({
       userId,
       investmentId,
@@ -180,17 +197,11 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     console.log('[WITHDRAW ROI] About to save withdrawal with amount:', roi);
     const savedWithdrawal = await withdrawal.save();
     console.log('[WITHDRAW ROI] Withdrawal saved with ID:', savedWithdrawal._id);
-    console.log('[WITHDRAW ROI] Withdrawal saved, now updating investment');
     
-    // Mark ROI as pending withdrawal
-    investment.roiWithdrawn = false; // Will be marked true only after admin accepts
-    await investment.save();
-    console.log('[WITHDRAW ROI] Investment marked as pending withdrawal');
-    
-    // Add ROI to lockedBalance (pending admin approval)
+    // Move ROI directly to lockedBalance (user's money, awaiting admin release)
     user.lockedBalance = (user.lockedBalance || 0) + roi;
     await user.save();
-    console.log('[WITHDRAW ROI] ROI amount added to lockedBalance pending admin review');
+    console.log('[WITHDRAW ROI] ROI amount added to lockedBalance. Awaiting admin approval to move to availableBalance');
     
     // Fetch updated locked balance
     const newLockedBalance = user.lockedBalance;
@@ -206,9 +217,13 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
     const responseData = { 
       success: true, 
       withdrawalId: savedWithdrawal._id.toString(),
-      roi: Number(roi), 
+      roi: Number(roi),
+      investment: {
+        currentValue: investment.currentValue,
+        roiWithdrawn: true
+      },
       lockedBalance: Number(newLockedBalance),
-      message: 'ROI withdrawal submitted for admin review'
+      message: 'ROI withdrawn successfully! Amount moved to locked balance awaiting admin approval.'
     };
     console.log('[WITHDRAW ROI] About to send response:', JSON.stringify(responseData));
     // Ensure we explicitly set JSON content-type and always send a JSON body so clients never receive an empty response

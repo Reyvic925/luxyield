@@ -958,4 +958,47 @@ router.post('/roi-withdrawals/:withdrawalId/accept', authAdmin, async (req, res)
   }
 });
 
+// Admin: Release funds from lockedBalance to availableBalance
+router.post('/users/:userId/release-locked-funds', authAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { amount, reason } = req.body;
+    
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid amount' });
+    }
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
+    if ((user.lockedBalance || 0) < amount) {
+      return res.status(400).json({ 
+        success: false, 
+        error: `Insufficient locked balance. Available: $${(user.lockedBalance || 0).toFixed(2)}, Requested: $${amount.toFixed(2)}` 
+      });
+    }
+    
+    // Move from locked to available
+    user.lockedBalance = (user.lockedBalance || 0) - amount;
+    user.availableBalance = (user.availableBalance || 0) + amount;
+    await user.save();
+    
+    console.log(`[ADMIN] Released $${amount.toFixed(2)} from lockedBalance to availableBalance for user ${userId}. Reason: ${reason || 'Not specified'}`);
+    
+    res.json({
+      success: true,
+      message: `Released $${amount.toFixed(2)} from locked to available balance`,
+      userBalances: {
+        availableBalance: user.availableBalance,
+        lockedBalance: user.lockedBalance
+      }
+    });
+  } catch (err) {
+    console.error('[ADMIN] Error releasing locked funds:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

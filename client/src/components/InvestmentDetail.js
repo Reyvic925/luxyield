@@ -353,6 +353,20 @@ const InvestmentDetail = ({ investment, onClose }) => {
                 try {
                   const token = localStorage.getItem('token');
                   console.log('[INVEST_DETAIL] Starting ROI withdrawal for investment:', investment.id);
+
+                  // Capture user's lockedBalance snapshot before requesting withdrawal so we can verify when server returns an empty body
+                  let prevLocked = null;
+                  try {
+                    const pRes = await fetch('/api/portfolio', { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (pRes.ok) {
+                      const pJson = await pRes.json();
+                      prevLocked = pJson?.userInfo?.lockedBalance ?? null;
+                      console.log('[INVEST_DETAIL] Previous lockedBalance snapshot:', prevLocked);
+                    }
+                  } catch (snapErr) {
+                    console.warn('[INVEST_DETAIL] Could not fetch pre-withdraw portfolio snapshot:', snapErr);
+                  }
+
                   const res = await fetch(`/api/investment/withdraw-roi/${investment.id}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -379,6 +393,32 @@ const InvestmentDetail = ({ investment, onClose }) => {
                   } catch (readErr) {
                     console.error('[INVEST_DETAIL] Error reading response body:', readErr);
                     data = { success: false, error: 'Failed to read server response' };
+                  }
+
+                  // If we got an empty response body but status is 200, verify by checking the portfolio lockedBalance changed
+                  if (res.ok && (text === '' || (data && data.error && data.error.toString().toLowerCase().includes('empty response')))) {
+                    try {
+                      const verifyRes = await fetch('/api/portfolio', { headers: { 'Authorization': `Bearer ${token}` } });
+                      if (verifyRes.ok) {
+                        const verifyJson = await verifyRes.json();
+                        const newLocked = verifyJson?.userInfo?.lockedBalance ?? null;
+                        console.log('[INVEST_DETAIL] Verification lockedBalance:', newLocked, 'previous:', prevLocked);
+                        // If locked balance increased (or became non-null), assume withdrawal succeeded
+                        if (prevLocked !== null && newLocked !== null && newLocked > prevLocked) {
+                          console.log('[INVEST_DETAIL] Withdrawal likely succeeded (lockedBalance increased) — treating as success');
+                          toast.success('ROI withdrawal submitted for admin review (verified).', { position: 'top-center', autoClose: 4000 });
+                          setTimeout(() => window.location.reload(), 1500);
+                          return;
+                        }
+                        // If we cannot verify but status was 200, show a neutral message and suggest retry/check
+                        toast.error('Failed to withdraw ROI: Empty server response (please check portfolio or try again).', { position: 'top-center', autoClose: 6000 });
+                        return;
+                      }
+                    } catch (verifyErr) {
+                      console.warn('[INVEST_DETAIL] Verification fetch failed:', verifyErr);
+                      toast.error('Failed to withdraw ROI: Empty server response (verification failed).', { position: 'top-center', autoClose: 6000 });
+                      return;
+                    }
                   }
 
                   // Log headers for debugging when response body is unexpected

@@ -134,19 +134,22 @@ async function runRoiSimulation() {
         logged_at: now
       });
       
-      // Credit ROI to user's availableBalance (positive gains only)
-      if (fluctuation > 0) {
-        await User.findByIdAndUpdate(invDoc.user, { $inc: { availableBalance: fluctuation } });
-      }
+      // NOTE: ROI stays in investment currentValue only - NOT credited to availableBalance
+      // When investment ends, entire currentValue moves to lockedBalance
+      // Admin can then approve release from lockedBalance to availableBalance
       
       if (fluctuation >= 0) {
         console.log(`[ROI SIM][GAIN] Investment ${invDoc._id} (${invDoc.planName}): +$${fluctuation.toFixed(2)} | Current Value: $${invDoc.currentValue.toFixed(2)}`);
       } else {
         console.log(`[ROI SIM][LOSS] Investment ${invDoc._id} (${invDoc.planName}): -$${Math.abs(fluctuation).toFixed(2)} | Current Value: $${invDoc.currentValue.toFixed(2)}`);
       }
-      // Mark as completed if matured
+      // Mark as completed if matured and move to lockedBalance
       if (minutesLeft <= 0) {
         invDoc.status = 'completed';
+        // Move investment currentValue to user's lockedBalance
+        const currentValue = invDoc.currentValue;
+        await User.findByIdAndUpdate(invDoc.user, { $inc: { lockedBalance: currentValue } });
+        console.log(`[ROI SIM] Investment ${invDoc._id} matured: $${currentValue.toFixed(2)} moved to lockedBalance`);
       }
       await invDoc.save();
     }

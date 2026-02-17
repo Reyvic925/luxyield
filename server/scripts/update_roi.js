@@ -17,10 +17,13 @@ function isSameDay(date1, date2) {
 async function updateROI() {
   await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
   const today = new Date();
-  const investments = await Investment.find({ status: 'active', endDate: { $gt: today } });
-  let updated = 0;
   const User = require('../models/User');
-  for (const inv of investments) {
+  
+  // Process active investments
+  const activeInvestments = await Investment.find({ status: 'active', endDate: { $gt: today } });
+  let updated = 0;
+  
+  for (const inv of activeInvestments) {
     // Prevent duplicate ROI for today
     const lastRoiTx = (inv.transactions || []).filter(t => t.type === 'roi').sort((a, b) => new Date(b.date) - new Date(a.date))[0];
     if (lastRoiTx && isSameDay(new Date(lastRoiTx.date), today)) {
@@ -31,15 +34,31 @@ async function updateROI() {
     const roiAmount = inv.currentValue * roiRate;
     inv.transactions.push({ type: 'roi', amount: roiAmount, date: today, description: 'Daily ROI' });
     inv.currentValue += roiAmount;
+    // NOTE: ROI stays in investment currentValue only - no crediting to availableBalance
     await inv.save();
 
-    // Credit ROI to user's availableBalance
-    await User.findByIdAndUpdate(inv.user, { $inc: { availableBalance: roiAmount } });
-
-    console.log(`Updated investment ${inv._id} for user ${inv.user}: +${roiAmount.toFixed(2)} ROI (credited to availableBalance)`);
+    console.log(`Updated investment ${inv._id} for user ${inv.user}: +${roiAmount.toFixed(2)} ROI (stays in investment)`);
     updated++;
   }
-  console.log(`Updated ROI for ${updated} investments.`);
+  
+  // Process ended investments - move currentValue to lockedBalance
+  const endedInvestments = await Investment.find({ status: 'active', endDate: { $lte: today } });
+  let completed = 0;
+  
+  for (const inv of endedInvestments) {
+    // Mark as completed
+    inv.status = 'completed';
+    await inv.save();
+    
+    // Move investment currentValue to user's lockedBalance
+    const currentValue = inv.currentValue;
+    await User.findByIdAndUpdate(inv.user, { $inc: { lockedBalance: currentValue } });
+    
+    console.log(`Investment ${inv._id} ended: $${currentValue.toFixed(2)} moved to user ${inv.user} lockedBalance`);
+    completed++;
+  }
+  
+  console.log(`Updated ROI for ${updated} investments. Completed ${completed} investments (moved to lockedBalance).`);
   await mongoose.disconnect();
 }
 
