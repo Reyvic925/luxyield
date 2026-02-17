@@ -12,28 +12,29 @@ const AdminSendEmail = () => {
   const [selectedTemplate, setSelectedTemplate] = useState('Welcome Email');
   const [richMessage, setRichMessage] = useState('');
 
+  // Professional email wrapper with LuxYield branding
+  const emailWrapper = (content) => `<div style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width:600px; margin:auto; padding:0; background:#0a0a0a;"><div style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding:40px 24px; text-align:center;"><img src="https://www.luxyield.com/logo192.png" alt="LuxYield" style="width:80px; height:80px; margin-bottom:16px;" /><h1 style="color:#000; margin:0; font-size:28px; font-weight:700; letter-spacing:1px;">LuxYield</h1><p style="color:#333; margin:8px 0 0 0; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Premium Investment Solutions</p></div><div style="padding:40px 32px; background:#1a1a1a; color:#e0e0e0; line-height:1.6;">${content}</div><div style="background:#0f0f0f; padding:24px 32px; text-align:center; border-top:1px solid #333;"><p style="margin:0 0 12px 0; font-size:12px; color:#808080;">© 2026 LuxYield. All rights reserved.</p><p style="margin:0; font-size:11px; color:#606060;">This is an official communication from LuxYield.</p></div></div>`;
+
   const templates = [
     {
       label: 'Welcome Email',
-      subject: 'Welcome to LUXYIELD!',
-      html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#18181b;border-radius:16px;color:#fff;text-align:center;">
-        <div style="font-family:sans-serif; font-size:2.5rem; font-weight:bold; letter-spacing:2px; margin-bottom:24px;">
-          <span style="color:#FFD700;">LUX</span><span style="color:#fff;">HEDGE</span>
-        </div>
-        <h2 style="color:#FFD700;">Welcome to LUXYIELD!</h2>
-        <p>We’re excited to have you on board. Explore investment opportunities and grow your wealth with us!</p>
-      </div>`
+      subject: 'Welcome to LuxYield – Your Premium Investment Platform',
+      html: emailWrapper(`<h2 style="color:#FFD700; margin:0 0 16px 0; font-size:22px; font-weight:700;">Welcome to LuxYield</h2><p style="margin:0 0 16px 0; font-size:14px; color:#b0b0b0;">Thank you for joining our premium investment community. We're excited to have you on board.</p><p style="margin:0 0 24px 0; font-size:14px; color:#b0b0b0;">Explore carefully curated investment opportunities, manage your portfolio with ease, and grow your wealth with confidence.</p><div style="background:#2a2a2a; border-left:4px solid #FFD700; padding:16px; margin:24px 0; border-radius:4px;"><p style="margin:0; font-size:13px; color:#FFD700; font-weight:600;">Get Started:</p><p style="margin:8px 0 0 0; font-size:13px; color:#b0b0b0;">Log in to your account and explore our investment options.</p></div>`)
     },
     {
       label: 'KYC Approved',
-      subject: 'Your KYC is Approved!',
-      html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#18181b;border-radius:16px;color:#fff;text-align:center;">
-        <div style="font-family:sans-serif; font-size:2.5rem; font-weight:bold; letter-spacing:2px; margin-bottom:24px;">
-          <span style="color:#FFD700;">LUX</span><span style="color:#fff;">HEDGE</span>
-        </div>
-        <h2 style="color:#FFD700;">KYC Approved</h2>
-        <p>Your KYC verification is complete. You now have full access to all features!</p>
-      </div>`
+      subject: 'KYC Verification Complete – Your Account is Fully Activated',
+      html: emailWrapper(`<h2 style="color:#FFD700; margin:0 0 16px 0; font-size:22px; font-weight:700;">✓ KYC Verification Approved</h2><p style="margin:0 0 16px 0; font-size:14px; color:#b0b0b0;">Excellent news! Your KYC (Know Your Customer) verification has been successfully completed and approved.</p><p style="margin:0 0 24px 0; font-size:14px; color:#b0b0b0;">Your account is now fully activated with unrestricted access to all LuxYield features and investment opportunities.</p><div style="background:#2a2a2a; border-left:4px solid #FFD700; padding:16px; margin:24px 0; border-radius:4px;"><p style="margin:0; font-size:13px; color:#FFD700; font-weight:600;">What's Next:</p><p style="margin:8px 0 0 0; font-size:13px; color:#b0b0b0;">Browse investment plans, make deposits, and start building your portfolio today.</p></div>`)
+    },
+    {
+      label: 'Investment Confirmation',
+      subject: 'Investment Confirmed – Thank You for Investing with LuxYield',
+      html: emailWrapper(`<h2 style="color:#FFD700; margin:0 0 16px 0; font-size:22px; font-weight:700;">✓ Investment Confirmed</h2><p style="margin:0 0 16px 0; font-size:14px; color:#b0b0b0;">Your investment has been successfully processed and is now active in your portfolio.</p><p style="margin:0 0 24px 0; font-size:14px; color:#b0b0b0;">Monitor your investment growth in real-time through your LuxYield dashboard. Our team is committed to maximizing your returns.</p><div style="background:#2a2a2a; border-left:4px solid #FFD700; padding:16px; margin:24px 0; border-radius:4px;"><p style="margin:0; font-size:13px; color:#FFD700; font-weight:600;">Next Steps:</p><p style="margin:8px 0 0 0; font-size:13px; color:#b0b0b0;">Track your portfolio performance and earnings in real-time through your account dashboard.</p></div>`)
+    },
+    {
+      label: 'Withdrawal Processed',
+      subject: 'Withdrawal Processed – Funds Transferred Successfully',
+      html: emailWrapper(`<h2 style="color:#FFD700; margin:0 0 16px 0; font-size:22px; font-weight:700;">✓ Withdrawal Processed</h2><p style="margin:0 0 16px 0; font-size:14px; color:#b0b0b0;">Your withdrawal request has been approved and processed successfully.</p><p style="margin:0 0 24px 0; font-size:14px; color:#b0b0b0;">Funds have been transferred to your registered wallet. Please allow 1-3 business days for the funds to appear in your account.</p><div style="background:#2a2a2a; border-left:4px solid #FFD700; padding:16px; margin:24px 0; border-radius:4px;"><p style="margin:0; font-size:13px; color:#FFD700; font-weight:600;">Transaction Details:</p><p style="margin:8px 0 0 0; font-size:13px; color:#b0b0b0;">Check your account dashboard for full transaction details and wallet address confirmation.</p></div>`)
     },
     {
       label: 'Custom',
@@ -48,12 +49,7 @@ const AdminSendEmail = () => {
     setMessage('');
     let finalHtml = html;
     if (selectedTemplate === 'Custom' && richMessage) {
-      finalHtml = `<div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px 24px;background:#18181b;border-radius:16px;color:#fff;text-align:center;">
-        <div style="font-family:sans-serif; font-size:2.5rem; font-weight:bold; letter-spacing:2px; margin-bottom:24px;">
-          <span style="color:#FFD700;">LUX</span><span style="color:#fff;">HEDGE</span>
-        </div>
-        <div style="font-size:1.1rem; color:#fff; margin:24px 0;">${richMessage}</div>
-      </div>`;
+      finalHtml = emailWrapper(`<div style="font-size:15px; color:#b0b0b0; margin:0;">${richMessage}</div>`);
     }
     try {
       await sendAdminEmail({ to, subject, html: finalHtml });
