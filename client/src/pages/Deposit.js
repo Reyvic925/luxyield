@@ -46,8 +46,8 @@ const Deposit = () => {
   const handleAmountSubmit = (e) => {
     e.preventDefault();
     setError('');
-    if (!amount || isNaN(amount) || parseFloat(amount) < 300) {
-      setError('Minimum deposit is $300'); return;
+    if (!amount || isNaN(amount) || parseFloat(amount) < 100) {
+      setError('Minimum deposit is $100'); return;
     }
     setStep(2);
     setShowWallets(true);
@@ -128,11 +128,11 @@ const Deposit = () => {
         <label className="block text-gray-400 mb-2">Amount (USD)</label>
         <input
           type="number"
-          min="300"
+          min="100"
           value={amount}
           onChange={e => setAmount(e.target.value)}
           className="w-full bg-dark border border-gray-700 rounded-lg py-3 px-4 mb-2 focus:border-gold focus:outline-none"
-          placeholder="Minimum $300"
+          placeholder="Minimum $100"
           required
         />
         {error && <div className="text-red-400 mb-2">{error}</div>}
@@ -151,7 +151,7 @@ const Deposit = () => {
             {COINS.map(chain => (
               <button
                 key={chain}
-                className={`px-6 py-3 rounded-xl font-bold border-2 shadow-lg text-lg transition-all duration-200 ${selectedChain === chain ? 'bg-gold text-black border-gold scale-105' : 'bg-gray-900 text-gold border-gray-700 hover:border-gold hover:scale-105'}`}
+                className={`px-6 py-3 rounded-xl font-bold border-2 shadow-lg text-lg transition-all duration-200 ${selectedChain === chain ? 'bg-gold text-black border-gold scale-105' : 'bg-gray-900 border-gray-600 text-gray-300 hover:border-gold'}`}
                 onClick={() => { setSelectedChain(chain); setSelectedNetwork(null); }}
                 type="button"
               >
@@ -168,7 +168,7 @@ const Deposit = () => {
                 {(NETWORKS[selectedChain] || ["Mainnet"]).map(net => (
                   <button
                     key={net}
-                    className={`px-4 py-2 rounded-lg font-bold border transition-all duration-200 ${selectedNetwork === net ? 'bg-gold text-black border-gold scale-105' : 'bg-gray-800 text-gold border-gray-700 hover:border-gold hover:scale-105'}`}
+                    className={`px-4 py-2 rounded-lg font-bold border transition-all duration-200 ${selectedNetwork === net ? 'bg-gold text-black border-gold scale-105' : 'bg-gray-800 text-gold border-gray-700 hover:border-gold'}`}
                     onClick={() => setSelectedNetwork(net)}
                     type="button"
                   >
