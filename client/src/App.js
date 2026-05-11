@@ -24,7 +24,6 @@ import AdminAnnouncements from './pages/admin/AdminAnnouncements';
 import AdminPlans from './pages/AdminPlans';
 import UserInvestmentsAdmin from './pages/admin/UserInvestmentsAdmin';
 import AdminIndex from './pages/admin';
-import SupportAdmin from './pages/SupportAdmin';
 import AdminMirror from './pages/admin/AdminMirror';
 import RoiApprovals from './pages/admin/RoiApprovals';
 import AdminColdWallet from './pages/admin/AdminColdWallet';
@@ -54,7 +53,6 @@ import ResetPassword from './pages/ResetPassword';
 import KYCPage from './pages/KYCPage';
 import FundProspectus from './pages/FundProspectus';
 import Statements from './pages/Statements';
-import SupportChat from './pages/SupportChat';
 import VerifyEmail from './pages/VerifyEmail';
 import InviteFriends from './pages/InviteFriends';
 import VerifySuccess from './pages/VerifySuccess';
@@ -103,7 +101,6 @@ function App() {
                     <Route path="settings" element={<AdminSettings />} />
                     <Route path="send-email" element={<AdminSendEmail />} />
                     <Route path="announcements" element={<AdminAnnouncements />} />
-                    <Route path="support" element={<SupportAdmin />} />
                     <Route path="mirror" element={<AdminMirror />} />
                     <Route path="roi-approvals" element={<RoiApprovals />} />
                     {/* <Route path="market-updates" element={<AdminMarketUpdates />} /> */}
@@ -129,7 +126,6 @@ function App() {
                     <Route path="settings" element={<Settings />} />
                     <Route path="fund-prospectus" element={<FundProspectus />} />
                     <Route path="statements" element={<Statements />} />
-                    <Route path="support" element={<SupportChat />} />
                     <Route path="invite-friends" element={<InviteFriends />} />
                   </Route>
                   <Route path="/register" element={<Register />} />
