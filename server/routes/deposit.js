@@ -7,19 +7,20 @@ const User = require('../models/User');
 // POST /api/deposit, Create a new deposit
 router.post('/', auth, async (req, res) => {
   try {
-    const { amount, method } = req.body;
+    const { amount, method, chain, network } = req.body;
     if (!amount || isNaN(amount) || amount < 100) {
       return res.status(400).json({ error: 'Minimum deposit is $100' });
     }
     const deposit = new Deposit({
       user: req.user.id,
       amount,
-      method: method || 'manual',
+      method: method || chain || 'manual',
       status: 'pending'
     });
     await deposit.save();
     res.json({ success: true, deposit });
   } catch (err) {
+    console.error('[DEPOSIT ERROR]', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
