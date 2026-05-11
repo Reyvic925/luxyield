@@ -21,9 +21,9 @@ const AdminLayout = () => {
         aria-label="Toggle theme"
       >
         {darkMode ? (
-          <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-sun"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-sun"><circle cx="12" cy="12" r="5"/>[...]
         ) : (
-          <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-moon"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
+          <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-moon"><path d="M21 12.79A9 9 0 1111.[...]
         )}
       </button>
       {/* Mobile Sidebar Overlay */}
@@ -47,15 +47,15 @@ const AdminLayout = () => {
       >
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute -right-3 top-6 w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-gold hover:bg-gray-700 transition-colors border border-gray-700 cursor-pointer z-50 shadow-lg"
+          className="absolute -right-3 top-6 w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-gold hover:bg-gray-700 transition-colors border border-gray-700 cursor-pointer z[...]
           aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
         >
           {sidebarOpen ? <FiChevronLeft size={14} /> : <FiChevronRight size={14} />}
         </button>
 
         <div className={`flex items-center h-20 px-4 border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
-          <span className={`text-2xl font-extrabold tracking-widest ${darkMode ? 'text-gold' : 'text-yellow-700'} transition-all duration-300 ${!sidebarOpen ? 'opacity-0 w-0' : 'opacity-100 w-auto'}`}>LUXHEDGE</span>
-          <button className="ml-auto text-gray-400 hover:text-gold" onClick={() => setSidebarOpen(false)} style={{display: sidebarOpen && !isMobile ? 'block' : 'none'}} aria-label="Collapse sidebar">
+          <span className={`text-2xl font-extrabold tracking-widest ${darkMode ? 'text-gold' : 'text-yellow-700'} transition-all duration-300 ${!sidebarOpen ? 'opacity-0 w-0' : 'opacity-100 w-auto[...]
+          <button className="ml-auto text-gray-400 hover:text-gold" onClick={() => setSidebarOpen(false)} style={{display: sidebarOpen && !isMobile ? 'block' : 'none'}} aria-label="Collapse sideba[...]
             <FiChevronLeft size={24} />
           </button>
           <button className="ml-auto md:hidden text-gray-400 hover:text-gold" onClick={() => setSidebarOpen(false)} style={{display: isMobile ? 'block' : 'none'}}>&times;</button>
@@ -70,14 +70,13 @@ const AdminLayout = () => {
             { to: "/admin/settings", icon: <FiSettings size={20} />, label: "Settings" },
             { to: "/admin/send-email", icon: <FiSettings size={20} />, label: "Send Email" },
             { to: "/admin/announcements", icon: <FiBell size={20} />, label: "Announcements" },
-            { to: "/admin/support", icon: <FiBell size={20} />, label: "Support Chat" },
             { to: "/admin/mirror", icon: <FiUsers size={20} />, label: "Mirror User" },
             { to: "/admin/roi-approvals", icon: <FiSettings size={20} />, label: "ROI Approvals" }
           ].map(({ to, icon, label }) => (
             <Link
               key={to}
               to={to}
-              className={`flex items-center ${sidebarOpen ? 'px-4' : 'px-2 justify-center'} py-3 rounded-lg transition-all hover:bg-gray-800 text-gray-200 hover:text-gold font-medium group relative`}
+              className={`flex items-center ${sidebarOpen ? 'px-4' : 'px-2 justify-center'} py-3 rounded-lg transition-all hover:bg-gray-800 text-gray-200 hover:text-gold font-medium group relativ[...]
             >
               <div className={`${sidebarOpen ? 'mr-3' : 'mr-0'} text-lg transition-all duration-300`}>
                 {icon}
@@ -95,11 +94,11 @@ const AdminLayout = () => {
         </nav>
         <div className={`px-4 py-6 border-t ${darkMode ? 'border-gray-800' : 'border-gray-200'} flex items-center transition-all duration-300`}>
           <div className="group relative">
-            <div className={`w-10 h-10 rounded-full ${darkMode ? 'bg-gray-700 text-gold hover:bg-gray-600' : 'bg-gray-200 text-yellow-700 hover:bg-gray-300'} flex items-center justify-center text-lg font-bold cursor-pointer transition-colors`}>
+            <div className={`w-10 h-10 rounded-full ${darkMode ? 'bg-gray-700 text-gold hover:bg-gray-600' : 'bg-gray-200 text-yellow-700 hover:bg-gray-300'} flex items-center justify-center text-[...]
               {admin?.name?.charAt(0) || 'A'}
             </div>
             {!sidebarOpen && (
-              <div className="absolute left-full bottom-0 ml-2 py-1 px-2 bg-gray-800 text-sm rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+              <div className="absolute left-full bottom-0 ml-2 py-1 px-2 bg-gray-800 text-sm rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap [...]
                 {admin?.name || 'Admin'}
               </div>
             )}
@@ -113,7 +112,7 @@ const AdminLayout = () => {
           {sidebarOpen && (
             <button
               onClick={logout}
-              className={`ml-4 px-4 py-2 rounded-lg font-semibold transition ${darkMode ? 'bg-gray-900 text-red-400 hover:bg-red-900 hover:text-white' : 'bg-gray-100 text-red-600 hover:bg-red-200 hover:text-white'}`}
+              className={`ml-4 px-4 py-2 rounded-lg font-semibold transition ${darkMode ? 'bg-gray-900 text-red-400 hover:bg-red-900 hover:text-white' : 'bg-gray-100 text-red-600 hover:bg-red-200[...]
             >
               Logout
             </button>
