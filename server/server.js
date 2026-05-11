@@ -156,28 +156,9 @@ app.use('/uploads/announcements', express.static(__dirname + '/uploads/announcem
 app.use('/api', require('./routes/announcementUploads'));
 app.use('/api/performance', require('./routes/performance')); // Add performance metrics API route
 app.use('/api/news', require('./routes/news')); // Add news API route
-const supportChat = require('./routes/supportChat');
-app.use('/api/support', supportChat(io));
 app.use('/api/investment', require('./routes/investment'));
 app.use('/api/ai-chat', require('./routes/aiChat'));
 app.use('/api/withdrawal', require('./routes/withdrawal'));
-
-// Serve support uploads statically
-app.use('/uploads/support', express.static(__dirname + '/uploads/support'));
-
-// Logging middleware for support uploads
-app.use('/uploads/support/:filename', (req, res, next) => {
-  const filePath = require('path').join(__dirname, 'uploads', 'support', req.params.filename);
-  const fs = require('fs');
-  fs.access(filePath, fs.constants.F_OK, (err) => {
-    if (err) {
-      console.error(`[UPLOADS LOG] File not found: ${filePath}`);
-    } else {
-      console.log(`[UPLOADS LOG] File found: ${filePath}`);
-    }
-    next();
-  });
-});
 
 // Socket.IO logic
 io.on('connection', (socket) => {
@@ -192,28 +173,6 @@ io.on('connection', (socket) => {
   socket.on('groupMessage', (msg) => {
     // Broadcast to all in groupchat room
     io.to('groupchat').emit('groupMessage', msg);
-  });
-  socket.on('join', (userId) => {
-    socket.join(userId);
-    console.log('Socket joined room:', userId);
-  });
-  socket.on('adminJoin', () => {
-    socket.join('admins');
-    console.log('Admin joined admins room');
-  });
-  socket.on('leaveAdmins', () => {
-    socket.leave('admins');
-    console.log('Admin left admins room');
-  });
-  socket.on('adminTyping', ({ userId }) => {
-    io.to(userId).emit('adminTyping', { userId });
-  });
-  socket.on('adminStopTyping', ({ userId }) => {
-    io.to(userId).emit('adminStopTyping', { userId });
-  });
-  socket.on('endSupportSession', ({ userId }) => {
-    console.log('Backend received endSupportSession for user:', userId);
-    io.to(userId).emit('endSupportSession');
   });
 });
 
