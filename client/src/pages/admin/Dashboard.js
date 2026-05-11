@@ -46,13 +46,6 @@ const AdminDashboard = () => {
           <h2 className="text-xl font-bold mb-4 text-white">Recent Activity</h2>
           <div className="text-gray-300">Activity feed component would go here</div>
         </div>
-
-        {/* Support Chat Panel */}
-        <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200 shadow">
-          <h2 className="text-xl font-bold mb-4 text-yellow-700 flex items-center gap-2">Support Chat <span className="text-base font-normal text-yellow-500">(Admin)</span></h2>
-          <div className="mb-4 text-yellow-900">View and reply to user support messages in real time.</div>
-          <a href="/admin/support" className="inline-block bg-yellow-400 text-yellow-900 font-bold px-6 py-2 rounded-lg shadow hover:bg-yellow-500 transition">Go to Support Chat Panel</a>
-        </div>
       </div>
     </div>
   );
