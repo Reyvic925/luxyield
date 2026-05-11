@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiHome, FiPieChart, FiDollarSign, FiUpload, 
-         FiFileText, FiShield, FiBell, FiMessageSquare, 
+         FiFileText, FiShield, FiBell,
          FiTarget, FiBook, FiSettings, FiMenu, FiX, FiLogOut, FiUsers } from 'react-icons/fi';
 import { useUser } from '../contexts/UserContext';
 import '../custom-scrollbar.css';
@@ -28,7 +28,6 @@ const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncemen
           )}
         </span>
       ), label: 'Announcements', path: '/dashboard/announcements' },
-    { icon: <FiMessageSquare />, label: 'Support Chat', path: '/dashboard/support' },
     { icon: <FiTarget />, label: 'My Goals', path: '/dashboard/goals' },
     { icon: <FiSettings />, label: 'Settings', path: '/dashboard/settings' },
     { icon: <FiBook />, label: 'Education Center', path: '/dashboard/education' },
@@ -82,7 +81,7 @@ const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncemen
           <li key={index} className="mb-2 w-full transition-all duration-300">
             <Link
               to={item.path}
-              className={`flex items-center p-4 sm:p-3 rounded-lg hover:bg-gold hover:bg-opacity-20 hover:text-gold transition-all duration-300 ${collapsed ? 'justify-center' : 'justify-start'} w-full text-lg sm:text-base`}
+              className={`flex items-center p-4 sm:p-3 rounded-lg hover:bg-gold hover:bg-opacity-20 hover:text-gold transition-all duration-300 ${collapsed ? 'justify-center' : 'justify-start'} w-[...]
               onClick={() => setMobileOpen(false)}
             >
               <span className="mr-3 text-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-110">{item.icon}</span>
