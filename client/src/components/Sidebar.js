@@ -76,21 +76,21 @@ const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncemen
           {/* Remove close button for mobile, handled by hamburger toggle above */}
         </div>
         <nav className="flex-1">
-      <ul className="flex flex-col items-start w-full pb-24 md:pb-0">
-        {navItems.map((item, index) => (
-          <li key={index} className="mb-2 w-full transition-all duration-300">
-            <Link
-              to={item.path}
-              className={`flex items-center p-4 sm:p-3 rounded-lg hover:bg-gold hover:bg-opacity-20 hover:text-gold transition-all duration-300 ${collapsed ? 'justify-center' : 'justify-start'} w-[...]
-              onClick={() => setMobileOpen(false)}
-            >
-              <span className="mr-3 text-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-110">{item.icon}</span>
-              {!collapsed && <span className="transition-opacity duration-300">{item.label}</span>}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
+          <ul className="flex flex-col items-start w-full pb-24 md:pb-0">
+            {navItems.map((item, index) => (
+              <li key={index} className="mb-2 w-full transition-all duration-300">
+                <Link
+                  to={item.path}
+                  className={`flex items-center p-4 sm:p-3 rounded-lg hover:bg-gold hover:bg-opacity-20 hover:text-gold transition-all duration-300 ${collapsed ? 'justify-center' : 'justify-start'} w-full`}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <span className="mr-3 text-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-110">{item.icon}</span>
+                  {!collapsed && <span className="transition-opacity duration-300">{item.label}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
       {/* Overlay for mobile */}
       {mobileOpen && (
