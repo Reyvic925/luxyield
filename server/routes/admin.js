@@ -323,6 +323,47 @@ router.post('/users/:id/kyc/reject', authAdmin, async (req, res) => {
   }
 });
 
+// Get pending KYC submissions for admin review
+router.get('/kyc/pending', authAdmin, async (req, res) => {
+  try {
+    const users = await User.find({ 'kyc.status': 'pending' }).select('_id name email kyc createdAt');
+    res.json(users);
+  } catch (err) {
+    console.error('[ADMIN KYC] Error fetching pending KYC:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get KYC details for a specific user
+router.get('/users/:id/kyc-details', authAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('_id name email kyc');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    // Return KYC data with file paths
+    res.json({
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      kyc: {
+        status: user.kyc?.status || 'not_submitted',
+        country: user.kyc?.country || '',
+        documentType: user.kyc?.documentType || '',
+        submittedAt: user.kyc?.submittedAt || '',
+        rejectionReason: user.kyc?.rejectionReason || '',
+        photos: {
+          idFront: user.kyc?.idFront ? `/api/uploads/kyc/${path.basename(user.kyc.idFront)}` : null,
+          idBack: user.kyc?.idBack ? `/api/uploads/kyc/${path.basename(user.kyc.idBack)}` : null,
+          selfie: user.kyc?.selfie ? `/api/uploads/kyc/${path.basename(user.kyc.selfie)}` : null
+        }
+      }
+    });
+  } catch (err) {
+    console.error('[ADMIN KYC] Error fetching KYC details:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Update user tier/role
 router.patch('/users/:id/tier', authAdmin, async (req, res) => {
   console.log('admin tier update req.user:', req.user); // Debug log
