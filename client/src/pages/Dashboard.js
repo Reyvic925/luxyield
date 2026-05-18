@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { FiDownload, FiGlobe, FiCopy, FiTrendingUp, FiDollarSign, FiRefreshCw, FiMessageCircle } from 'react-icons/fi';
+import { FiDownload, FiGlobe, FiCopy, FiTrendingUp, FiDollarSign, FiRefreshCw } from 'react-icons/fi';
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getReferralStats } from '../services/referralAPI';
 import KYCStatus from '../components/KYCStatus';
@@ -315,7 +315,7 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
               </button>
             ) : (
               <span
-                className="inline-block bg-gradient-to-r from-yellow-400 via-gold to-yellow-600 text-black text-lg font-extrabold px-8 py-2 rounded-full shadow-lg border-2 border-yellow-700 uppercase tracking-wider"
+                className="inline-block bg-gradient-to-r from-yellow-400 via-gold to-yellow-600 text-black text-lg font-extrabold px-8 py-2 rounded-full shadow-lg border-2 border-yellow-700 upper"
                 style={{ letterSpacing: '0.08em', boxShadow: '0 4px 24px 0 rgba(212,175,55,0.25)' }}
               >
                 {portfolioData.userInfo?.planName || portfolioData.userInfo?.tier}
@@ -340,7 +340,7 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                   {portfolioData.userInfo?.planName?.toLowerCase().includes('gold') && 'Gold status: Enjoy premium support and top-tier rewards.'}
                   {portfolioData.userInfo?.planName?.toLowerCase().includes('silver') && 'Silver status: Enhanced features and steady growth.'}
                   {portfolioData.userInfo?.planName?.toLowerCase().includes('platinum') && 'Platinum status: Elite access and maximum benefits.'}
-                  {!(portfolioData.userInfo?.planName?.toLowerCase().includes('gold') || portfolioData.userInfo?.planName?.toLowerCase().includes('silver') || portfolioData.userInfo?.planName?.toLowerCase().includes('platinum')) && 'Active plan: Your investment is working for you.'}
+                  {!(portfolioData.userInfo?.planName?.toLowerCase().includes('gold') || portfolioData.userInfo?.planName?.toLowerCase().includes('silver') || portfolioData.userInfo?.planName?.toLowerCase().includes('platinum')) && 'Enjoy your investment experience.'}
                 </span>
               </>
             )}
@@ -391,7 +391,7 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                 <XAxis dataKey="name" stroke="#aaa" />
                 <YAxis yAxisId="left" stroke="#aaa" tickFormatter={v => typeof v === 'number' ? `$${v.toLocaleString()}` : '$0'}/>
                 <YAxis yAxisId="right" orientation="right" stroke="#4ade80" tickFormatter={v => `${v}%`}/>
-                <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333', borderRadius: '8px' }} formatter={(value, name) => name === 'ROI %' ? `${value}%` : (typeof value === 'number' ? `$${value.toLocaleString()}` : '$0')}/>
+                <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333', borderRadius: '8px' }} formatter={(value, name) => name === 'ROI %' ? `${value}%` : (typeof value === 'number' ? `$${value.toLocaleString()}` : value)}/>
                 <Legend />
                 <Line yAxisId="left" type="monotone" dataKey="portfolioValue" stroke="#D4AF37" strokeWidth={2} name="Portfolio Value" dot={false} />
                 <Line yAxisId="right" type="monotone" dataKey="roiPercent" stroke="#4ade80" strokeWidth={2} name="ROI %" dot={false} />
@@ -429,11 +429,11 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
           </div>
           <div className="flex gap-2 mb-2">
             <button
-              className="bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition glass-card scale-100 hover:scale-105 active:scale-95 shadow-lg focus:outline-none focus:ring-2 focus:ring-gold focus:ring-opacity-50"
+              className="bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition glass-card scale-100 hover:scale-105 active:scale-95 shadow-lg focus:outline-none focus:ring-2 focus:ring-gold"
               onClick={() => window.location.href = '/deposit'}
             >Deposit</button>
             <button
-              className="bg-gray-800 text-gold px-4 py-2 rounded-lg font-bold hover:bg-gray-700 transition glass-card scale-100 hover:scale-105 active:scale-95 shadow-lg focus:outline-none focus:ring-2 focus:ring-gold focus:ring-opacity-50"
+              className="bg-gray-800 text-gold px-4 py-2 rounded-lg font-bold hover:bg-gray-700 transition glass-card scale-100 hover:scale-105 active:scale-95 shadow-lg focus:outline-none focus:ring-2 focus:ring-gold"
               onClick={() => window.location.href = '/withdraw'}
             >Withdraw</button>
           </div>
@@ -582,14 +582,16 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         <div className="glassmorphic p-6 rounded-xl">
           <h3 className="text-lg font-bold mb-2">Referral Program</h3>
           <div className="text-xs text-gray-300 mb-4">
-            How it works: Share your referral link. When friends sign up and invest, you earn <span className="text-gold font-bold">10% of their investment profits</span> as a cash bonus. The more you invite, the more you earn!
+            How it works: Share your referral link. When friends sign up and invest, you earn <span className="text-gold font-bold">10% of their investment profits</span> as a cash bonus. The more friends you refer, the more you earn!
           </div>
           {referralStats ? (
             <>
               <div className="mb-2">Your Referral Link:</div>
               <div className="flex items-center gap-2 mb-2">
             <input className="bg-gray-900 rounded px-2 py-1 text-xs w-48" value={referralStats.referralLink} readOnly />
-            <button className="bg-gold text-black px-2 py-1 rounded text-xs flex items-center gap-1 glass-card scale-100 hover:scale-105 active:scale-95 shadow focus:outline-none focus:ring-2 focus:ring-gold focus:ring-opacity-50" onClick={() => {navigator.clipboard.writeText(referralStats.referralLink); window.toast && window.toast.success('Referral link copied!')}}><FiCopy /> Copy</button>
+            <button className="bg-gold text-black px-2 py-1 rounded text-xs flex items-center gap-1 glass-card scale-100 hover:scale-105 active:scale-95 shadow focus:outline-none focus:ring-2 focus:ring-gold" onClick={() => { navigator.clipboard.writeText(referralStats.referralLink); alert('Copied!'); }}>
+              <FiCopy /> Copy
+            </button>
               </div>
               <div className="mb-2">Total Referred Users: <span className="font-bold">{referralStats.referredCount}</span></div>
               <div className="mb-2">Total Earned: <span className="font-bold">${referralStats.totalEarnings}</span></div>
@@ -612,31 +614,10 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         </div>
       </div>
 
-      {/* KYC, Chat, Multilingual, Activity, Market Updates */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="glassmorphic p-6 rounded-xl mb-6">
-          <h3 className="text-lg font-bold mb-2">KYC & Security</h3>
-          <KYCStatus />
-
-        </div>
-        <div className="glassmorphic p-6 rounded-xl mb-6">
-          <h3 className="text-lg font-bold mb-2">Chat & Support</h3>
-          <div className="flex flex-col gap-4 mb-2">
-            <button
-              className="w-full bg-blue-500 text-white py-4 sm:py-6 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-3 shadow-lg hover:bg-blue-600 transition min-h-[56px] sm:min-h-[72px]"
-              onClick={() => window.location.href = '/dashboard/support'}
-            >
-              <FiMessageCircle className="h-6 w-6 sm:h-7 sm:w-7" />
-              Support Chat
-            </button>
-            <button
-              className="w-full bg-green-500 text-white py-4 sm:py-6 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-3 shadow-lg hover:bg-green-600 transition min-h-[56px] sm:min-h-[72px]"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8l-4 1 1-3.2A7.96 7.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-              WhatsApp
-            </button>
-          </div>
-        </div>
+      {/* KYC & Security */}
+      <div className="glassmorphic p-6 rounded-xl mb-6">
+        <h3 className="text-lg font-bold mb-2">KYC & Security</h3>
+        <KYCStatus />
       </div>
 
       {/* Multilingual & Statement Download */}
@@ -651,7 +632,7 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
 </select>
         </div>
         <button
-          className="bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition glass-card scale-100 hover:scale-105 active:scale-95 shadow-lg focus:outline-none focus:ring-2 focus:ring-gold focus:ring-opacity-50"
+          className="bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition glass-card scale-100 hover:scale-105 active:scale-95 shadow-lg focus:outline-none focus:ring-2 focus:ring-gold"
           onClick={() => window.location.href = '/statement'}
         >
           <FiDownload className="inline-block mr-2" />
