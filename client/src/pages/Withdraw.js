@@ -30,10 +30,11 @@ const Withdraw = () => {
 
   // Available networks and currencies
   const networks = [
-    { id: 'BTC', name: 'Bitcoin', currencies: ['BTC'] },
-    { id: 'ERC20', name: 'ERC20 (Ethereum)', currencies: ['USDT', 'ETH'] },
-    { id: 'TRC20', name: 'TRC20 (Tron)', currencies: ['USDT'] },
-    { id: 'BEP20', name: 'BEP20 (Binance Smart Chain)', currencies: ['USDT', 'BNB'] },
+    { id: 'BTC', name: 'Bitcoin (BTC)', currencies: ['BTC'] },
+    { id: 'ETH', name: 'Ethereum (ETH)', currencies: ['ETH'] },
+    { id: 'ERC20', name: 'USDT on ERC20 (Ethereum)', currencies: ['USDT'] },
+    { id: 'TRC20', name: 'USDT on TRC20 (Tron)', currencies: ['USDT'] },
+    { id: 'BEP20', name: 'USDT on BEP20 (Binance Smart Chain)', currencies: ['USDT'] },
   ];
 
   // Function to refresh user balances
@@ -86,9 +87,10 @@ const Withdraw = () => {
   // For now, set currency automatically based on network
   useEffect(() => {
     if (selectedNetwork === 'BTC') setCurrency('BTC');
-    else if (selectedNetwork === 'ERC20') setCurrency('USDT'); // or 'ETH' if you want to support both
+    else if (selectedNetwork === 'ETH') setCurrency('ETH');
+    else if (selectedNetwork === 'ERC20') setCurrency('USDT');
     else if (selectedNetwork === 'TRC20') setCurrency('USDT');
-    else if (selectedNetwork === 'BEP20') setCurrency('USDT'); // or 'BNB'
+    else if (selectedNetwork === 'BEP20') setCurrency('USDT');
   }, [selectedNetwork]);
 
   // Fetch live crypto rates for confirmation step
@@ -128,6 +130,9 @@ const Withdraw = () => {
       if (selectedNetwork === 'BTC') {
         submitCurrency = 'BTC';
         submitNetwork = 'BTC';
+      } else if (selectedNetwork === 'ETH') {
+        submitCurrency = 'ETH';
+        submitNetwork = 'ETH';
       }
       const result = await submitWithdrawal({
         amount: parseFloat(amount),
