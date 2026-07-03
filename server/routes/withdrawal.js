@@ -115,13 +115,15 @@ router.post('/set-withdrawal-pin', auth, async (req, res) => {
     if (!/^[0-9]{6}$/.test(pin)) {
       return res.status(400).json({ msg: 'PIN must be exactly 6 digits.' });
     }
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).select('+withdrawalPin');
     if (!user) {
       console.error('User not found for PIN set:', req.user.id);
       return res.status(404).json({ msg: 'User not found' });
     }
     user.withdrawalPin = pin;
+    user.markModified('withdrawalPin');
     await user.save();
+    console.log(`[WITHDRAWAL PIN] Saved PIN for user ${req.user.id}`);
     res.json({ success: true, msg: 'Withdrawal PIN set successfully.' });
   } catch (err) {
     console.error('Error setting withdrawal PIN:', err);
