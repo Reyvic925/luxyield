@@ -2,12 +2,22 @@
 console.log('Withdrawal route loaded');
 
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const Withdrawal = require('../models/Withdrawal');
 const User = require('../models/User');
 const { sendMail } = require('../utils/mailer'); // Use mailer.js utility
 const { getCryptoUSDPrices } = require('../utils/cryptoRates');
+
+function hashPin(pin) {
+  return crypto.createHash('sha256').update(String(pin)).digest('hex');
+}
+
+function matchesStoredPin(storedPin, submittedPin) {
+  if (!storedPin || !submittedPin) return false;
+  return storedPin === hashPin(submittedPin) || storedPin === submittedPin;
+}
 
 // Simulate withdrawal request
 router.post('/', auth, async (req, res) => {
@@ -26,7 +36,7 @@ router.post('/', auth, async (req, res) => {
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    if (!user.withdrawalPin || user.withdrawalPin !== pin) {
+    if (!matchesStoredPin(user.withdrawalPin, pin)) {
       return res.status(400).json({ msg: 'Invalid withdrawal PIN' });
     }
 
@@ -120,7 +130,7 @@ router.post('/set-withdrawal-pin', auth, async (req, res) => {
       console.error('User not found for PIN set:', req.user.id);
       return res.status(404).json({ msg: 'User not found' });
     }
-    user.withdrawalPin = pin;
+    user.withdrawalPin = hashPin(pin);
     user.markModified('withdrawalPin');
     await user.save();
     console.log(`[WITHDRAWAL PIN] Saved PIN for user ${req.user.id}`);
@@ -165,7 +175,7 @@ router.post('/reset-pin', auth, async (req, res) => {
     if (user.pinResetCode !== code || user.pinResetExpiry < Date.now()) {
       return res.status(400).json({ msg: 'Invalid or expired code.' });
     }
-    user.withdrawalPin = newPin;
+    user.withdrawalPin = hashPin(newPin);
     user.pinResetCode = undefined;
     user.pinResetExpiry = undefined;
     await user.save();
@@ -186,7 +196,7 @@ router.post('/verify-pin', auth, async (req, res) => {
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
-    if (!user.withdrawalPin || user.withdrawalPin !== pin) {
+    if (!matchesStoredPin(user.withdrawalPin, pin)) {
       return res.status(400).json({ msg: 'Invalid withdrawal PIN' });
     }
     res.json({ success: true, msg: 'PIN is valid.' });

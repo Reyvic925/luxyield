@@ -29,8 +29,10 @@ export default function Settings() {
 
   // Withdrawal PIN state
   const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
   const [pinMsg, setPinMsg] = useState('');
   const [pinError, setPinError] = useState('');
+  const [isPinSubmitting, setIsPinSubmitting] = useState(false);
 
   // PIN reset state
   const [showPinReset, setShowPinReset] = useState(false);
@@ -166,12 +168,20 @@ export default function Settings() {
       setPinError('PIN must be exactly 6 digits.');
       return;
     }
+    if (pin !== confirmPin) {
+      setPinError('PINs do not match.');
+      return;
+    }
     try {
+      setIsPinSubmitting(true);
       await setWithdrawalPin(pin);
       setPinMsg('Withdrawal PIN set successfully!');
       setPin('');
+      setConfirmPin('');
     } catch (err) {
       setPinError(err.response?.data?.msg || err.message || 'Failed to set PIN.');
+    } finally {
+      setIsPinSubmitting(false);
     }
   };
 
@@ -267,19 +277,37 @@ export default function Settings() {
           <FiLock className="text-2xl text-gold" />
           <span className="font-semibold text-lg">Withdrawal PIN</span>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 items-center mb-2 w-full">
+        <div className="flex flex-col gap-2 mb-2 w-full">
           <input
             type="password"
             value={pin}
             onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
             className="p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-gold outline-none"
-            placeholder="Set or update 6-digit PIN"
+            placeholder="Enter new 6-digit PIN"
             maxLength={6}
             minLength={6}
             pattern="[0-9]{6}"
           />
-          <button className="bg-gold text-black px-4 py-2 rounded-lg hover:bg-yellow-400" onClick={handleSetPin}>Set PIN</button>
-          <button className="text-blue-400 underline ml-2" onClick={() => setShowPinReset(true)}>Forgot PIN?</button>
+          <input
+            type="password"
+            value={confirmPin}
+            onChange={e => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            className="p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-gold outline-none"
+            placeholder="Confirm 6-digit PIN"
+            maxLength={6}
+            minLength={6}
+            pattern="[0-9]{6}"
+          />
+          <div className="flex flex-col sm:flex-row gap-2 items-center">
+            <button
+              className="bg-gold text-black px-4 py-2 rounded-lg hover:bg-yellow-400 disabled:opacity-60"
+              onClick={handleSetPin}
+              disabled={isPinSubmitting || pin.length !== 6 || confirmPin.length !== 6}
+            >
+              {isPinSubmitting ? 'Saving...' : 'Set PIN'}
+            </button>
+            <button className="text-blue-400 underline ml-2" onClick={() => setShowPinReset(true)}>Forgot PIN?</button>
+          </div>
         </div>
         {pinMsg && <div className="mt-2 text-green-400">{pinMsg}</div>}
         {pinError && <div className="mt-2 text-red-400">{pinError}</div>}
