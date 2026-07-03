@@ -5,6 +5,10 @@ const API = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL + '/api/admin/withdrawals',
 });
 
+const getAuthHeaders = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+});
+
 // ...existing code...
 
 export const getWithdrawals = async (filters = {}) => {
@@ -51,26 +55,26 @@ const userAPI = axios.create({
 
 // Add setWithdrawalPin API
 export const setWithdrawalPin = async (pin) => {
-  const response = await userAPI.post('/set-withdrawal-pin', { pin });
+  const response = await userAPI.post('/set-withdrawal-pin', { pin }, getAuthHeaders());
   return response.data;
 };
 
 export const submitWithdrawal = async (data) => {
-  const response = await userAPI.post('/', data);
+  const response = await userAPI.post('/', data, getAuthHeaders());
   return response.data;
 };
 
 export const requestPinReset = async () => {
-  const response = await userAPI.post('/request-pin-reset');
+  const response = await userAPI.post('/request-pin-reset', {}, getAuthHeaders());
   return response.data;
 };
 
 export const resetPin = async (code, newPin) => {
-  const response = await userAPI.post('/reset-pin', { code, newPin });
+  const response = await userAPI.post('/reset-pin', { code, newPin }, getAuthHeaders());
   return response.data;
 };
 
 export const verifyWithdrawalPin = async (pin) => {
-  const response = await userAPI.post('/verify-pin', { pin });
+  const response = await userAPI.post('/verify-pin', { pin }, getAuthHeaders());
   return response.data;
 };

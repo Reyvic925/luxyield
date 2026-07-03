@@ -8,6 +8,7 @@ import { useUserDataRefresh } from '../contexts/UserDataRefreshContext';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { setWithdrawalPin, requestPinReset as requestWithdrawalPinReset, resetPin as resetWithdrawalPin } from '../services/withdrawalAPI';
 
 export default function Settings() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -166,31 +167,31 @@ export default function Settings() {
       return;
     }
     try {
-      // await setWithdrawalPin(pin); // Removed: setWithdrawalPin is not defined here
+      await setWithdrawalPin(pin);
       setPinMsg('Withdrawal PIN set successfully!');
       setPin('');
     } catch (err) {
-      setPinError(err.response?.data?.msg || 'Failed to set PIN.');
+      setPinError(err.response?.data?.msg || err.message || 'Failed to set PIN.');
     }
   };
 
   // Request PIN reset code
   const requestPinReset = async () => {
     try {
-      const res = await axios.post('/api/auth/request-pin-reset', { email: profile.email });
-      return res.data;
+      const res = await requestWithdrawalPinReset();
+      return res;
     } catch (err) {
-      throw new Error(err.response?.data?.msg || 'Failed to send PIN reset code.');
+      throw new Error(err.response?.data?.msg || err.message || 'Failed to send PIN reset code.');
     }
   };
 
   // Reset PIN
   const resetPin = async (code, newPin) => {
     try {
-      const res = await axios.post('/api/auth/reset-pin', { code, newPin });
-      return res.data;
+      const res = await resetWithdrawalPin(code, newPin);
+      return res;
     } catch (err) {
-      throw new Error(err.response?.data?.msg || 'Failed to reset PIN.');
+      throw new Error(err.response?.data?.msg || err.message || 'Failed to reset PIN.');
     }
   };
 
