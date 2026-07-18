@@ -168,7 +168,7 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
+      <div className="bg-gray-800 rounded-xl w-full max-w-full sm:max-w-4xl mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
             <h2 className="text-2xl font-bold">
@@ -330,6 +330,7 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
 
             <div className="mt-8">
               <h3 className="text-lg font-bold mb-4">Investment Plans</h3>
+              <div className="hidden md:block">
               <table className="w-full mb-4 text-sm rounded-lg border border-gray-700 overflow-hidden">
                 <thead>
                   <tr className="text-gold bg-gray-900 border-b border-gray-700">
@@ -359,6 +360,29 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
                   ))}
                 </tbody>
               </table>
+              </div>
+
+              {/* Mobile cards for plans */}
+              <div className="block md:hidden space-y-3">
+                {plans.map((plan, idx) => (
+                  <div key={idx} className="bg-gray-900 p-3 rounded-lg border border-gray-800">
+                    <div className="flex justify-between items-start">
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{plan.name}</div>
+                        <div className="text-xs text-gray-400">ROI: {plan.roi}% • Lock: {plan.lockPeriod} days</div>
+                        <div className="text-xs text-gray-400">Min: {plan.minInvestment} • Max: {plan.maxInvestment}</div>
+                      </div>
+                      <div className="ml-3 text-right">
+                        <div className="text-xs text-gray-400">{plan.compounding ? 'Compounding' : 'No Compounding'}</div>
+                        <div className="mt-2 flex flex-col gap-2">
+                          <button onClick={() => handleEditPlan(idx)} className="px-3 py-2 bg-gray-700 rounded-lg">Edit</button>
+                          <button onClick={() => handleDeletePlan(idx)} className="px-3 py-2 bg-gray-700 rounded-lg">Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
               <div className="bg-gray-700 p-4 rounded-lg mb-4">
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2">
                   <input name="name" value={planForm.name} onChange={handlePlanInputChange} placeholder="Name" className="p-2 rounded bg-gray-800 text-white" />
@@ -454,17 +478,17 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
               <button type="button" onClick={handleSendAlert} className="bg-gold text-black font-bold px-4 py-2 rounded">Send Alert</button>
             </div>
 
-            <div className="flex justify-end space-x-4 pt-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:space-x-4 pt-6 justify-end">
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-6 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition"
+                className="w-full sm:w-auto px-6 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-gold text-black rounded-lg hover:bg-yellow-600 transition flex items-center"
+                className="w-full sm:w-auto px-6 py-2 bg-gold text-black rounded-lg hover:bg-yellow-600 transition flex items-center justify-center"
               >
                 <FiSave className="mr-2" /> Save Fund
               </button>

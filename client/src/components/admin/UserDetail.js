@@ -92,7 +92,7 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-        <div className="bg-gray-800 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
+        <div className="bg-gray-800 rounded-xl w-full max-w-full sm:max-w-4xl mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
           <div className="p-6">
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -106,28 +106,28 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
                 <FiX size={24} />
               </button>
             </div>
-            <div className="flex border-b border-gray-700 mb-6">
+            <div className="flex overflow-x-auto border-b border-gray-700 mb-6">
               <button
                 onClick={() => setActiveTab('overview')}
-                className={`px-4 py-2 ${activeTab === 'overview' ? 'border-b-2 border-gold' : ''}`}
+                className={`px-4 py-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-b-2 border-gold' : ''}`}
               >
                 Overview
               </button>
               <button
                 onClick={() => setActiveTab('documents')}
-                className={`px-4 py-2 ${activeTab === 'documents' ? 'border-b-2 border-gold' : ''}`}
+                className={`px-4 py-2 whitespace-nowrap ${activeTab === 'documents' ? 'border-b-2 border-gold' : ''}`}
               >
                 Documents
               </button>
               <button
                 onClick={() => setActiveTab('activity')}
-                className={`px-4 py-2 ${activeTab === 'activity' ? 'border-b-2 border-gold' : ''}`}
+                className={`px-4 py-2 whitespace-nowrap ${activeTab === 'activity' ? 'border-b-2 border-gold' : ''}`}
               >
                 Activity
               </button>
               <button
                 onClick={() => setActiveTab('notes')}
-                className={`px-4 py-2 ${activeTab === 'notes' ? 'border-b-2 border-gold' : ''}`}
+                className={`px-4 py-2 whitespace-nowrap ${activeTab === 'notes' ? 'border-b-2 border-gold' : ''}`}
               >
                 Notes
               </button>
@@ -138,14 +138,14 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
                   <div>
                     <h3 className="text-lg font-bold mb-2">Account Details</h3>
                     <div className="bg-gray-700 p-4 rounded-lg">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <p className="text-gray-400">User ID</p>
-                          <p>{user.id || user._id}</p>
+                          <p className="break-all">{user.id || user._id}</p>
                         </div>
                         <div>
                           <p className="text-gray-400">Tier</p>
-                          <select value={tier} onChange={handleTierChange} className="bg-gray-800 text-white rounded p-1">
+                          <select value={tier} onChange={handleTierChange} className="w-full bg-gray-800 text-white rounded p-2 mt-1">
                             <option>Basic</option>
                             <option>Silver</option>
                             <option>Gold</option>
@@ -154,7 +154,7 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
                         </div>
                         <div>
                           <p className="text-gray-400">Role</p>
-                          <select value={role} onChange={handleRoleChange} className="bg-gray-800 text-white rounded p-1">
+                          <select value={role} onChange={handleRoleChange} className="w-full bg-gray-800 text-white rounded p-2 mt-1">
                             <option value="user">User</option>
                             <option value="admin">Admin</option>
                           </select>
@@ -163,10 +163,10 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
                           <p className="text-gray-400">KYC Status</p>
                           <p>{kycStatus}</p>
                           {kycStatus === 'pending' && (
-                            <div className="flex gap-2 mt-2">
-                              <button onClick={handleApproveKYC} className="bg-green-600 px-3 py-1 rounded text-white" disabled={loading}>Approve</button>
-                              <button onClick={handleRejectKYC} className="bg-red-600 px-3 py-1 rounded text-white" disabled={loading}>Reject</button>
-                              <input type="text" placeholder="Rejection reason" value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} className="bg-gray-800 text-white rounded p-1 ml-2" />
+                            <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                              <button onClick={handleApproveKYC} className="w-full sm:w-auto bg-green-600 px-3 py-2 rounded text-white" disabled={loading}>Approve</button>
+                              <button onClick={handleRejectKYC} className="w-full sm:w-auto bg-red-600 px-3 py-2 rounded text-white" disabled={loading}>Reject</button>
+                              <input type="text" placeholder="Rejection reason" value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} className="w-full sm:flex-1 bg-gray-800 text-white rounded p-2" />
                             </div>
                           )}
                         </div>
@@ -189,7 +189,7 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
                         <p className="text-gray-400 font-semibold">Country</p>
                         <p>{user.kyc?.country || 'N/A'}</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <div>
                           <p className="text-gray-400">ID Document</p>
                           {user.kyc?.idUrl ? (
@@ -226,10 +226,10 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
                         <span>KYC {kycStatus}</span>
                       </div>
                       {kycStatus === 'pending' && (
-                        <div className="flex gap-2 mt-4">
-                          <button onClick={handleApproveKYC} className="bg-green-600 px-3 py-1 rounded text-white" disabled={loading}>Approve</button>
-                          <button onClick={handleRejectKYC} className="bg-red-600 px-3 py-1 rounded text-white" disabled={loading}>Reject</button>
-                          <input type="text" placeholder="Rejection reason" value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} className="bg-gray-800 text-white rounded p-1 ml-2" />
+                        <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                          <button onClick={handleApproveKYC} className="w-full sm:w-auto bg-green-600 px-3 py-2 rounded text-white" disabled={loading}>Approve</button>
+                          <button onClick={handleRejectKYC} className="w-full sm:w-auto bg-red-600 px-3 py-2 rounded text-white" disabled={loading}>Reject</button>
+                          <input type="text" placeholder="Rejection reason" value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} className="w-full sm:flex-1 bg-gray-800 text-white rounded p-2" />
                         </div>
                       )}
                       {kycStatus === 'rejected' && user.kyc?.rejectionReason && (
@@ -242,7 +242,7 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
                     <h3 className="text-lg font-bold mb-2">Sensitive Keys</h3>
                     <div className="bg-gray-700 p-4 rounded-lg">
                       <button
-                        className="bg-gold text-black px-3 py-1 rounded mb-2"
+                        className="w-full sm:w-auto bg-gold text-black px-3 py-2 rounded mb-2"
                         onClick={handleFetchKeys}
                         type="button"
                       >
@@ -296,7 +296,7 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
       </div>
       {imageModal.open && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-xl p-6 relative max-w-lg w-full">
+          <div className="bg-gray-900 rounded-xl p-4 sm:p-6 relative w-full max-w-full sm:max-w-lg mx-4">
             <button onClick={() => setImageModal({ open: false, url: '', label: '' })} className="absolute top-2 right-2 text-white"><FiX size={24} /></button>
             <h3 className="text-lg font-bold mb-4 text-gold">{imageModal.label}</h3>
             <img src={imageModal.url} alt={imageModal.label} className="max-w-full max-h-[60vh] rounded-lg border border-gold" />

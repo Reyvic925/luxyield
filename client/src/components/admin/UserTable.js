@@ -56,7 +56,7 @@ const UserTable = ({ users, onSelectUser }) => {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-700 text-left">
@@ -121,6 +121,29 @@ const UserTable = ({ users, onSelectUser }) => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="block md:hidden space-y-3">
+        {uniqueUsers.map(user => (
+          <div key={user.id} className="bg-gray-800 rounded-lg p-3">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0">
+                <div className="font-semibold truncate">{user.name}</div>
+                <div className="text-xs text-gray-400 truncate">{user.email}</div>
+                <div className="text-xs text-gray-400 mt-1">ID: {user.id}</div>
+              </div>
+              <div className="text-right ml-3">
+                <div className="font-mono">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</div>
+                <div className={`mt-1 px-2 py-0.5 rounded-full text-xs ${user.tier === 'VIP' ? 'bg-purple-500 bg-opacity-20 text-purple-400' : user.tier === 'Gold' ? 'bg-yellow-500 bg-opacity-20 text-yellow-400' : 'bg-gray-600'}`}>{user.tier}</div>
+              </div>
+            </div>
+            <div className="mt-3 flex space-x-2">
+              <button onClick={() => onSelectUser(user)} className="flex-1 p-2 bg-gray-700 rounded-lg hover:bg-gray-600">View</button>
+              <button className="flex-1 p-2 bg-gray-700 rounded-lg hover:bg-gray-600">Edit</button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

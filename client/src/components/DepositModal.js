@@ -92,18 +92,18 @@ const DepositModal = ({ isOpen, onClose, fundTypes }) => {
             />
           </div>
           
-          <div className="flex justify-end space-x-3">
+          <div className="flex flex-col sm:flex-row gap-3 sm:space-x-3 justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-800 transition"
+              className="w-full sm:w-auto px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-800 transition"
               disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gold text-black rounded-lg hover:bg-opacity-90 transition flex items-center"
+              className="w-full sm:w-auto px-4 py-2 bg-gold text-black rounded-lg hover:bg-opacity-90 transition flex items-center justify-center"
               disabled={loading}
             >
               {loading && <div className="animate-spin rounded-full h-4 w-4 mr-2 border-t-2 border-b-2 border-black"></div>}

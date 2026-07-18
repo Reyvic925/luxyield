@@ -178,15 +178,11 @@ const AdminUsers = () => {
 
       {/* User Detail Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <UserDetail
-              user={selectedUser}
-              onClose={() => setSelectedUser(null)}
-              onUpdate={handleUpdateUser}
-            />
-          </div>
-        </div>
+        <UserDetail
+          user={selectedUser}
+          onClose={() => setSelectedUser(null)}
+          onUpdate={handleUpdateUser}
+        />
       )}
     </div>
   );

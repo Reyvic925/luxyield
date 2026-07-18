@@ -48,7 +48,7 @@ const AIChatModal = ({ isOpen, onClose }) => {
           ))}
         </div>
         {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             className="flex-1 border rounded px-2 py-1"
             type="text"
@@ -59,7 +59,7 @@ const AIChatModal = ({ isOpen, onClose }) => {
             disabled={loading}
           />
           <button
-            className="bg-blue-600 text-white px-4 py-1 rounded disabled:opacity-50"
+            className="w-full sm:w-auto bg-blue-600 text-white px-4 py-1 rounded disabled:opacity-50"
             onClick={sendMessage}
             disabled={loading || !input.trim()}
           >

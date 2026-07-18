@@ -32,7 +32,7 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
+      <div className="bg-gray-800 rounded-xl w-full max-w-full sm:max-w-2xl mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
             <h2 className="text-2xl font-bold">Withdrawal Review</h2>
@@ -134,11 +134,11 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:space-x-4 justify-end">
             <button
               onClick={handleReject}
               disabled={isProcessing}
-              className={`px-6 py-2 bg-red-500 bg-opacity-20 text-red-400 rounded-lg hover:bg-opacity-30 transition ${
+              className={`w-full sm:w-auto px-6 py-2 bg-red-500 bg-opacity-20 text-red-400 rounded-lg hover:bg-opacity-30 transition ${
                 isProcessing ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
@@ -147,7 +147,7 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
             <button
               onClick={handleApprove}
               disabled={isProcessing}
-              className={`px-6 py-2 bg-green-500 bg-opacity-20 text-green-400 rounded-lg hover:bg-opacity-30 transition ${
+              className={`w-full sm:w-auto px-6 py-2 bg-green-500 bg-opacity-20 text-green-400 rounded-lg hover:bg-opacity-30 transition ${
                 isProcessing ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >

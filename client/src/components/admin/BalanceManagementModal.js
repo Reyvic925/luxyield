@@ -134,18 +134,18 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
           </div>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex flex-col sm:flex-row gap-3 sm:space-x-3 justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="mr-3 px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 text-gray-300"
+            className="w-full sm:w-auto px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 text-gray-300"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className={`px-4 py-2 rounded-lg flex items-center ${
+            className={`w-full sm:w-auto px-4 py-2 rounded-lg flex items-center justify-center ${
               loading ? 'bg-blue-500 bg-opacity-50 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
             }`}
           >
