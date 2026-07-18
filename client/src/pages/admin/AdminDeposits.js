@@ -1,4 +1,4 @@
-// src/pages/admin/AdminDeposits.js
+﻿// src/pages/admin/AdminDeposits.js
 import React, { useEffect, useState } from 'react';
 import { getAdminDeposits, updateAdminDeposit } from '../../services/adminDepositsAPI';
 import { useNavigate } from 'react-router-dom';
@@ -91,3 +91,4 @@ const AdminDeposits = () => {
 };
 
 export default AdminDeposits;
+

@@ -1,4 +1,4 @@
-// src/components/admin/UserDetail.js
+﻿// src/components/admin/UserDetail.js
 import React, { useState } from 'react';
 import { FiX, FiCheck, FiAlertTriangle, FiDownload } from 'react-icons/fi';
 import { approveKYC, rejectKYC, updateUserTier, updateUserRole, getUserKeys } from '../../services/adminAPI';

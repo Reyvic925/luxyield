@@ -1,4 +1,4 @@
-// src/pages/admin/PlansAdmin.js
+﻿// src/pages/admin/PlansAdmin.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -10,7 +10,7 @@ const PlansAdmin = () => {
 
   const fetchPlans = async () => {
     setLoading(true);
-    const res = await axios.get('/api/admin/plans', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+    const res = await axios.get('/api/admin/plans');
     setPlans(res.data);
     setLoading(false);
   };
@@ -23,16 +23,16 @@ const PlansAdmin = () => {
   };
 
   const handleDelete = async (id) => {
-    await axios.delete(`/api/admin/plans/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+    await axios.delete(`/api/admin/plans/${id}`);
     fetchPlans();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (editing) {
-      await axios.put(`/api/admin/plans/${editing}`, form, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.put(`/api/admin/plans/${editing}`, form);
     } else {
-      await axios.post('/api/admin/plans', form, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('/api/admin/plans', form);
     }
     setEditing(null);
     setForm({ name: '', percentReturn: 150, durationDays: 4, minInvestment: 10, maxInvestment: 10000, isActive: true });
@@ -92,3 +92,5 @@ const PlansAdmin = () => {
 };
 
 export default PlansAdmin;
+
+

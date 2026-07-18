@@ -1,4 +1,4 @@
-// src/pages/admin/UserInvestmentsAdmin.js
+﻿// src/pages/admin/UserInvestmentsAdmin.js
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -9,7 +9,7 @@ const UserInvestmentsAdmin = () => {
   const [editForm, setEditForm] = useState({});
 
   const fetchInvestments = async () => {
-    const res = await axios.get(`/api/admin/user-investments/${userId}`, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
+    const res = await axios.get(`/api/admin/user-investments/${userId}`);
     setInvestments(res.data);
   };
 
@@ -20,7 +20,7 @@ const UserInvestmentsAdmin = () => {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    await axios.put(`/api/admin/user-investments/${editing}`, editForm, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
+    await axios.put(`/api/admin/user-investments/${editing}`, editForm);
     setEditing(null);
     fetchInvestments();
   };
@@ -33,13 +33,13 @@ const UserInvestmentsAdmin = () => {
     await axios.post(`/api/admin/investment/${id}/set-gain-loss`, {
       amount: parseFloat(gainLossAmount),
       type: gainLossType
-    }, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
+    });
     setGainLossAmount('');
     fetchInvestments();
   };
 
   const handleComplete = async (id) => {
-    await axios.post(`/api/admin/user-investments/${id}/complete`, {}, { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } });
+    await axios.post(`/api/admin/user-investments/${id}/complete`);
     fetchInvestments();
   };
 
@@ -106,3 +106,5 @@ const UserInvestmentsAdmin = () => {
 };
 
 export default UserInvestmentsAdmin;
+
+

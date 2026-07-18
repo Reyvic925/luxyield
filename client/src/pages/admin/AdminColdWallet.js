@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { FiKey, FiSend, FiDownload, FiEye, FiEyeOff, FiCopy, FiBookOpen, FiTrash2 } from 'react-icons/fi';
 import { QRCodeCanvas } from 'qrcode.react';
 import {
@@ -298,3 +298,4 @@ const AdminColdWallet = () => {
 };
 
 export default AdminColdWallet;
+

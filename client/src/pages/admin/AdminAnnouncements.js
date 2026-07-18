@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -20,9 +20,7 @@ const AdminAnnouncements = () => {
   const fetchAnnouncements = async () => {
     try {
       const token = localStorage.getItem('adminToken');
-      const res = await axios.get('/api/admin/announcements', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get('/api/admin/announcements');
       console.log('Fetched announcements:', res.data.announcements);
       setAnnouncements(res.data.announcements || []);
     } catch (err) {
@@ -41,9 +39,7 @@ const AdminAnnouncements = () => {
     setError('');
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.post('/api/admin/announcements', { title, message: richMessage }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post('/api/admin/announcements', { title, message: richMessage });
       setSuccess('Announcement posted!');
       setTitle('');
       setRichMessage('');
@@ -62,9 +58,7 @@ const AdminAnnouncements = () => {
     setError('');
     try {
       const token = localStorage.getItem('adminToken');
-      await axios.delete(`/api/admin/announcements/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`/api/admin/announcements/${id}`);
       await fetchAnnouncements(); // Always re-fetch after delete
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete announcement');
@@ -185,3 +179,5 @@ const AdminAnnouncements = () => {
 };
 
 export default AdminAnnouncements;
+
+
