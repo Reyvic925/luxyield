@@ -40,7 +40,7 @@ const PlansAdmin = () => {
   };
 
   return (
-    <div className="w-full max-w-full sm:max-w-2xl mx-auto p-2 sm:p-4 md:p-6 overflow-x-auto">
+    <div className="w-full min-w-0 max-w-full sm:max-w-2xl mx-auto p-2 sm:p-4 md:p-6 overflow-x-auto">
       <h1 className="text-2xl font-bold mb-4">Investment Plans Admin</h1>
       <form onSubmit={handleSubmit} className="mb-6 space-y-2 bg-gray-900 p-4 rounded-lg border border-gray-700">
         <input className="w-full p-2 border rounded bg-gray-800 text-white border-gray-700 focus:border-gold outline-none" placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
@@ -55,8 +55,8 @@ const PlansAdmin = () => {
         </div>
       </form>
       {loading ? <div>Loading...</div> : (
-        <div className="overflow-x-auto rounded-lg border border-gray-700">
-          <table className="w-full min-w-full table-fixed text-sm">
+        <div className="overflow-x-auto rounded-lg border border-gray-700 min-w-0">
+          <table className="w-full min-w-full table-auto text-sm whitespace-normal">
             <thead>
               <tr className="border-b border-gray-700 bg-gray-900 text-left">
                 <th className="w-3/12 py-3 px-4 font-semibold">Name</th>

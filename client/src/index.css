@@ -103,3 +103,19 @@ body {
   overflow-x: auto !important;
   max-width: 100vw !important;
 }
+
+/* Quill editor responsiveness */
+.ql-toolbar,
+.ql-container {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.ql-container {
+  overflow-x: auto;
+}
+
+.ql-editor {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}

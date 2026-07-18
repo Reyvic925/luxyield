@@ -18,7 +18,7 @@ const AdminUserList = ({ onSelectUser }) => {
   const filtered = users.filter(u => u.email.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="p-2 sm:p-4 md:p-6 w-full max-w-full sm:max-w-4xl mx-auto overflow-x-auto">
+    <div className="p-2 sm:p-4 md:p-6 w-full max-w-full sm:max-w-4xl mx-auto overflow-x-auto min-w-0">
       <h1 className="text-2xl font-bold mb-4">All Users</h1>
       <input
         className="mb-4 p-2 rounded bg-gray-800 text-white w-full border border-gray-700 focus:border-gold outline-none"
@@ -27,8 +27,8 @@ const AdminUserList = ({ onSelectUser }) => {
         onChange={e => setSearch(e.target.value)}
       />
       {loading ? <div>Loading...</div> : (
-        <div className="overflow-x-auto rounded-lg border border-gray-700">
-          <table className="w-full min-w-full table-fixed text-sm">
+        <div className="overflow-x-auto rounded-lg border border-gray-700 min-w-0">
+          <table className="w-full min-w-full table-auto text-sm whitespace-normal">
             <thead>
               <tr className="border-b border-gray-700 bg-gray-900 text-left">
                 <th className="w-1/3 py-3 px-4 font-semibold">Email</th>

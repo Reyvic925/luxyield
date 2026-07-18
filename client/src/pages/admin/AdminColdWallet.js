@@ -114,8 +114,8 @@ const AdminColdWallet = () => {
   };
 
   return (
-    <div className="w-full max-w-full sm:max-w-2xl mx-auto p-2 sm:p-6 md:p-8 bg-gradient-to-br from-gray-950 to-gray-900 rounded-2xl shadow-2xl border border-gray-800 mt-4 sm:mt-10 overflow-x-auto">
-      <h1 className="text-3xl font-bold text-gold mb-8 flex items-center gap-2"><FiKey /> Cold Wallet Admin</h1>
+    <div className="w-full max-w-full sm:max-w-2xl mx-auto p-2 sm:p-6 md:p-8 bg-gradient-to-br from-gray-950 to-gray-900 rounded-2xl shadow-2xl border border-gray-800 mt-4 sm:mt-10 overflow-x-auto min-w-0">
+      <h1 className="text-3xl font-bold text-gold mb-8 flex flex-wrap items-center gap-2"><FiKey /> Cold Wallet Admin</h1>
       <div className="mb-6 flex flex-wrap gap-4">
         <select className="px-4 py-2 rounded-lg font-semibold bg-gray-800 text-gray-300" value={network} onChange={e => setNetwork(e.target.value)}>
           <option value="ethereum">Ethereum (ETH, USDT ERC20, USDC ERC20)</option>
@@ -199,17 +199,17 @@ const AdminColdWallet = () => {
         </button>
       </div>
       {wallet && (
-        <div className="mb-8 p-6 rounded-xl bg-gray-900 border border-gray-800">
-          <div className="mb-2 text-gray-400 flex items-center gap-2">
+        <div className="mb-8 p-6 rounded-xl bg-gray-900 border border-gray-800 min-w-0">
+          <div className="mb-2 text-gray-400 flex items-center gap-2 flex-wrap">
             Address:
             <button className="ml-2 text-gold" onClick={() => handleCopy(wallet.address)}><FiCopy /></button>
             {copied && <span className="text-green-400 text-xs ml-2">Copied!</span>}
           </div>
-          <div className="font-mono text-lg text-gold mb-4 flex items-center gap-2">{wallet.address}</div>
+          <div className="font-mono text-lg text-gold mb-4 flex flex-wrap items-center gap-2 break-all max-w-full">{wallet.address}</div>
           <div className="mb-2 text-gray-400">Network:</div>
           <div className="mb-4 text-white">{wallet.network}</div>
           <div className="mb-2 text-gray-400">Balances:</div>
-          <div className="flex gap-6 mb-4">
+          <div className="flex flex-wrap gap-6 mb-4">
             {Object.entries(wallet.balances).map(([asset, amount]) => (
               <div key={asset} className="flex flex-col items-center">
                 <span className="text-gold font-bold text-lg">{amount}</span>
