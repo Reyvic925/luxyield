@@ -14,4 +14,4 @@ router.get('/', authAdmin, async (req, res) => {
   }
 });
 
-module.exports = router;`n
+module.exports = router;

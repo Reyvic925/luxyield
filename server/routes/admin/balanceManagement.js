@@ -152,4 +152,5 @@ router.post('/users/:id/investment-adjustment', authAdmin, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-`n
+
+module.exports = router;
