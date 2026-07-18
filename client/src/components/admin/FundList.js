@@ -13,7 +13,7 @@ const FundList = ({ funds, onEdit }) => {
 
   return (
     <div className="bg-gray-800 rounded-xl overflow-hidden">
-      <div className="hidden md:block">
+      <div className="hidden md:block overflow-x-auto rounded-xl">
       <table className="w-full">
         <thead>
           <tr className="border-b border-gray-700 text-left">

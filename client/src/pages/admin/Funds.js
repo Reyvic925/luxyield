@@ -52,7 +52,7 @@ const AdminFunds = () => {
   }
 
   return (
-    <div className="max-w-full sm:max-w-6xl mx-auto p-3 sm:p-6 md:p-8 lg:p-10 xl:p-12 2xl:p-16 font-sans text-base text-gray-100 bg-black rounded-xl shadow-lg overflow-x-hidden">
+    <div className="max-w-full sm:max-w-6xl mx-auto p-3 sm:p-6 md:p-8 lg:p-10 xl:p-12 2xl:p-16 font-sans text-base text-gray-100 bg-black rounded-xl shadow-lg overflow-x-auto">
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h1 className="text-2xl font-bold">Fund Management</h1>

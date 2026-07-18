@@ -132,12 +132,12 @@ const AdminMirrorUser = ({ userId, onBack }) => {
   return (
     <div className="p-2 sm:p-4 md:p-6 overflow-auto w-full">
       <button className="mb-4 bg-gray-700 px-4 py-2 rounded w-full md:w-auto" onClick={onBack}>Back to User List</button>
-      <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:space-x-4 mb-4 sm:mb-6 overflow-x-auto w-full">
-        <button className={tab==='dashboard'?"bg-gold px-4 py-2 rounded min-w-[120px]":"px-4 py-2 min-w-[120px]"} onClick={()=>setTab('dashboard')}>Dashboard</button>
-        <button className={tab==='portfolio'?"bg-gold px-4 py-2 rounded min-w-[120px]":"px-4 py-2 min-w-[120px]"} onClick={()=>setTab('portfolio')}>Portfolio</button>
-        <button className={tab==='settings'?"bg-gold px-4 py-2 rounded min-w-[120px]":"px-4 py-2 min-w-[120px]"} onClick={()=>setTab('settings')}>Settings</button>
-        <button className={tab==='kyc'?"bg-gold px-4 py-2 rounded min-w-[120px]":"px-4 py-2 min-w-[120px]"} onClick={()=>setTab('kyc')}>KYC</button>
-        <button className={tab==='details'?"bg-gold px-4 py-2 rounded min-w-[120px]":"px-4 py-2 min-w-[120px]"} onClick={()=>setTab('details')}>Details</button>
+      <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto w-full">
+        <button className={`px-4 py-2 rounded whitespace-nowrap ${tab==='dashboard' ? 'bg-gold' : 'bg-gray-800'}`} onClick={()=>setTab('dashboard')}>Dashboard</button>
+        <button className={`px-4 py-2 rounded whitespace-nowrap ${tab==='portfolio' ? 'bg-gold' : 'bg-gray-800'}`} onClick={()=>setTab('portfolio')}>Portfolio</button>
+        <button className={`px-4 py-2 rounded whitespace-nowrap ${tab==='settings' ? 'bg-gold' : 'bg-gray-800'}`} onClick={()=>setTab('settings')}>Settings</button>
+        <button className={`px-4 py-2 rounded whitespace-nowrap ${tab==='kyc' ? 'bg-gold' : 'bg-gray-800'}`} onClick={()=>setTab('kyc')}>KYC</button>
+        <button className={`px-4 py-2 rounded whitespace-nowrap ${tab==='details' ? 'bg-gold' : 'bg-gray-800'}`} onClick={()=>setTab('details')}>Details</button>
       </div>
       {tab==='dashboard' && <Dashboard adminView portfolioData={portfolioData} />}
       {tab==='portfolio' && (

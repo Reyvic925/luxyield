@@ -21,7 +21,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
         </button>
       </div>
       <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-800 bg-gray-950">
-        <table className="w-full text-sm min-w-[700px]">
+        <table className="w-full text-sm min-w-full">
           <thead>
             <tr className="bg-gray-900 border-b border-gray-800 text-left">
               <th className="py-4 px-4 font-semibold text-gray-300">ID</th>
