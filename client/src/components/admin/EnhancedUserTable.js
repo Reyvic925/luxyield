@@ -334,3 +334,5 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
   );
 };
 
+export default EnhancedUserTable;
+
