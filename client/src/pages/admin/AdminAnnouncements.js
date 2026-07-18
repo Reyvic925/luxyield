@@ -117,7 +117,7 @@ const AdminAnnouncements = () => {
   };
 
   return (
-    <div className="p-2 sm:p-4 md:p-6 max-w-full sm:max-w-3xl mx-auto overflow-x-auto">
+    <div className="w-full p-2 sm:p-4 md:p-6 max-w-full sm:max-w-3xl mx-auto overflow-x-auto">
       <h2 className="text-3xl font-bold text-gold mb-6 text-center">Admin Announcements</h2>
       {/* Post form */}
       <div className="glassmorphic p-2 sm:p-6 md:p-8 rounded-xl mb-6 sm:mb-10 overflow-x-auto">
@@ -165,7 +165,7 @@ const AdminAnnouncements = () => {
                 </button>
               )}
             </div>
-            <div className="text-white mb-2 announcement-message" dangerouslySetInnerHTML={{ __html: a.message }} />
+            <div className="text-white mb-2 announcement-message break-words" dangerouslySetInnerHTML={{ __html: a.message }} />
             <div className="flex items-center text-gray-400 text-sm">
               <FiClock className="mr-1" />
               {a.date ? (new Date(a.date)).toLocaleString() : ''}
