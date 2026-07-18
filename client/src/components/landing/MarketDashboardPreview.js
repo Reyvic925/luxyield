@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const MarketDashboardPreview = () => (
   <section className="py-16 bg-transparent text-white">
@@ -49,3 +49,4 @@ const MarketDashboardPreview = () => (
 );
 
 export default MarketDashboardPreview;
+

@@ -1,4 +1,4 @@
-// src/components/TouchSelect.js
+﻿// src/components/TouchSelect.js
 import React, { useState, useRef, useEffect } from 'react';
 import { FiChevronDown } from 'react-icons/fi';
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { FiTrendingUp, FiTrendingDown, FiPercent } from 'react-icons/fi';
 
 const InvestmentGainLossModal = ({ user, onClose, onUpdate }) => {
@@ -163,4 +163,5 @@ const InvestmentGainLossModal = ({ user, onClose, onUpdate }) => {
 };
 
 export default InvestmentGainLossModal;
+
 

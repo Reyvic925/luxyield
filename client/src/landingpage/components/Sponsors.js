@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 const e = React.createElement;
 
 function Sponsors() {
@@ -17,3 +17,4 @@ function Sponsors() {
 }
 
 export default Sponsors;
+

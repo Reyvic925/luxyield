@@ -1,4 +1,4 @@
-// src/pages/AdminMarketEvents.js
+﻿// src/pages/AdminMarketEvents.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -21,11 +21,7 @@ const AdminMarketEvents = () => {
   
   const fetchEvents = async () => {
     try {
-      const response = await axios.get('/api/admin/market-events', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        }
-      });
+      const response = await axios.get('/api/admin/market-events');
       setEvents(response.data);
     } catch (err) {
       console.error('Error fetching events:', err.message);
@@ -69,11 +65,7 @@ const AdminMarketEvents = () => {
     e.preventDefault();
     
     try {
-      await axios.post('/api/admin/market-events', formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        }
-      });
+      await axios.post('/api/admin/market-events', formData);
       
       fetchEvents();
       setShowForm(false);
@@ -270,11 +262,7 @@ const AdminMarketEvents = () => {
                   <button 
                     onClick={async () => {
                       try {
-                        await axios.delete(`/api/admin/market-events/${event._id}`, {
-                          headers: {
-                            Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-                          }
-                        });
+                        await axios.delete(`/api/admin/market-events/${event._id}`);
                         fetchEvents();
                       } catch (err) {
                         console.error('Error deleting event:', err.message);
@@ -297,3 +285,4 @@ const AdminMarketEvents = () => {
 };
 
 export default AdminMarketEvents;
+

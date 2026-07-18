@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 
 const MobileAppPreviewSection = () => (
@@ -36,3 +36,4 @@ const MobileAppPreviewSection = () => (
 );
 
 export default MobileAppPreviewSection;
+

@@ -1,4 +1,4 @@
-// src/utils/addressBook.js
+﻿// src/utils/addressBook.js
 // Simple localStorage-based address book for admin wallet
 
 const STORAGE_KEY = 'admin_wallet_address_book';
@@ -25,3 +25,4 @@ export function removeAddress(address) {
   const book = getAddressBook().filter(a => a.address !== address);
   saveAddressBook(book);
 }
+

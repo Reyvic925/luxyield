@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 export default function PageShell({ title, imageSrc, imageAlt, children }) {
   return (
@@ -21,3 +21,4 @@ export default function PageShell({ title, imageSrc, imageAlt, children }) {
     </div>
   );
 }
+

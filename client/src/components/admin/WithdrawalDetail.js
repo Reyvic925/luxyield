@@ -1,4 +1,4 @@
-// src/components/admin/WithdrawalDetail.js
+﻿// src/components/admin/WithdrawalDetail.js
 import React, { useState } from 'react';
 import { FiX, FiClock, FiCopy } from 'react-icons/fi';
 

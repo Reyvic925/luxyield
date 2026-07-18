@@ -1,4 +1,4 @@
-// src/components/InvestmentDetail.js
+﻿// src/components/InvestmentDetail.js
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { FiX, FiDollarSign, FiPieChart, FiTrendingUp, FiClock } from 'react-icons/fi';

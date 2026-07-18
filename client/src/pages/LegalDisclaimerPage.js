@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 export default function LegalDisclaimerPage() {
   return (
@@ -44,3 +44,4 @@ export default function LegalDisclaimerPage() {
     </div>
   );
 }
+

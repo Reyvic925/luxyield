@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import axios from 'axios';
 
 const AdminWallets = () => {
@@ -15,9 +15,7 @@ const AdminWallets = () => {
     setSelectedUser(null);
     setWallets(null);
     try {
-      const res = await axios.get(`/api/wallets/admin/search?q=${encodeURIComponent(query)}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await axios.get(`/api/wallets/admin/search?q=${encodeURIComponent(query)}`);
       setUsers(res.data.users || []);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to search users');
@@ -29,9 +27,7 @@ const AdminWallets = () => {
     setWallets(null);
     setSelectedUser(userId);
     try {
-      const res = await axios.get(`/api/wallets/admin/${userId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      const res = await axios.get(`/api/wallets/admin/${userId}`);
       setWallets(res.data.wallets);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to fetch wallets');
@@ -86,3 +82,5 @@ const AdminWallets = () => {
 };
 
 export default AdminWallets;
+
+

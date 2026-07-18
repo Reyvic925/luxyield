@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+﻿import React, { useRef, useEffect } from 'react';
 
 const ParticleBackground = () => {
   const canvasRef = useRef(null);
@@ -89,3 +89,4 @@ const ParticleBackground = () => {
 };
 
 export default ParticleBackground;
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { FiCopy, FiUsers, FiGift, FiBarChart2 } from 'react-icons/fi';
 import { getReferralStats } from '../services/referralAPI';
 import { useUser } from '../contexts/UserContext';
@@ -166,3 +166,4 @@ export default function InviteFriends() {
     </div>
   );
 }
+

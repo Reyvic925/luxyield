@@ -1,4 +1,4 @@
-// src/components/InAppNotifications.js
+﻿// src/components/InAppNotifications.js
 import React, { useState, useEffect } from 'react';
 import { FiBell, FiX } from 'react-icons/fi';
 import { getNotifications } from '../services/notificationAPI';

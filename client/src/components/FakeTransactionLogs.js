@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 
 const FUNDS = ['Alpha Hedge', 'Quantum Arbitrage', 'DeFi Yield', 'NFT Index', 'Stablecoin Vault'];
 const ACTIONS = ['Bought', 'Sold', 'Rebalanced', 'Shorted', 'Longed'];
@@ -39,3 +39,4 @@ export default function FakeTransactionLogs() {
     </div>
   );
 }
+

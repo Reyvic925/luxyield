@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const press = [
   { src: '/press-bloomberg.png', alt: 'Bloomberg' },
@@ -18,3 +18,4 @@ export default function PressMentions() {
     </section>
   );
 }
+

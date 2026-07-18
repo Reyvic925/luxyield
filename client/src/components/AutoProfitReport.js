@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 
 function randomROI() {
   return (Math.random() * 10 + 5).toFixed(2); // 5% - 15%
@@ -27,3 +27,4 @@ export default function AutoProfitReport() {
     </div>
   );
 }
+

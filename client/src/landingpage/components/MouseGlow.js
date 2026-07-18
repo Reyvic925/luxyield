@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+﻿import React, { useRef, useEffect } from 'react';
 import { useMousePosition } from '../hooks/useMousePosition.js';
 
 const e = React.createElement;
@@ -20,3 +20,4 @@ function MouseGlow() {
 }
 
 export default MouseGlow;
+

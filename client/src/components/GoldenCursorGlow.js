@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
 
 const GoldenCursorGlow = () => {
   const glowRef = useRef(null);
@@ -39,3 +39,4 @@ const GoldenCursorGlow = () => {
 };
 
 export default GoldenCursorGlow;
+

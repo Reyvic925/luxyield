@@ -1,4 +1,4 @@
-// src/components/MobileInvestmentCard.js
+﻿// src/components/MobileInvestmentCard.js
 import React from 'react';
 import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 
 const coins = [
   { symbol: 'BTC', name: 'Bitcoin', color: '#F7931A' },
@@ -38,3 +38,4 @@ export default function LivePriceTicker() {
     </div>
   );
 }
+

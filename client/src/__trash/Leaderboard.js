@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { fetchLeaderboard } from '../services/leaderboardAPI';
 import { FiTrendingUp, FiAward, FiUser, FiBarChart2 } from 'react-icons/fi';
 
@@ -77,3 +77,4 @@ const Leaderboard = () => {
 };
 
 export default Leaderboard;
+

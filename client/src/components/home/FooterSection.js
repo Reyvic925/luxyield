@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 
 const socials = [
   { icon: 'fab fa-linkedin', label: 'LinkedIn', href: '#' },
@@ -68,3 +68,4 @@ const FooterSection = () => {
 };
 
 export default FooterSection;
+

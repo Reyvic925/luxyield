@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FiTarget, FiTrash2, FiPlusCircle } from 'react-icons/fi';
 import { toast } from 'react-toastify';
@@ -90,3 +90,4 @@ export default function GoalsDashboard() {
     </div>
   );
 }
+

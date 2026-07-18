@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+﻿import React, { useRef, useEffect } from 'react';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver.js';
 import { useMousePosition } from '../hooks/useMousePosition.js';
 
@@ -30,3 +30,4 @@ function InteractiveElement({ children, depth = 0.005, className = '' }) {
 }
 
 export default InteractiveElement;
+

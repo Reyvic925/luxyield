@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 
 const AIChatModal = ({ isOpen, onClose }) => {
   const [input, setInput] = useState('');
@@ -72,3 +72,4 @@ const AIChatModal = ({ isOpen, onClose }) => {
 };
 
 export default AIChatModal;
+

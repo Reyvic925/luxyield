@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const GetStartedSection = () => (
   <section className="py-20 bg-transparent text-white text-center">
@@ -15,3 +15,4 @@ const GetStartedSection = () => (
 );
 
 export default GetStartedSection;
+

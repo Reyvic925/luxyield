@@ -1,4 +1,4 @@
-import GroupChat from './pages/GroupChat';
+﻿import GroupChat from './pages/GroupChat';
 import NotificationProvider from './contexts/NotificationProvider';
 import AboutPage from './pages/AboutPage';
 import LegalDisclaimerPage from './pages/LegalDisclaimerPage';
@@ -151,3 +151,4 @@ function App() {
 }
 
 export default App;
+

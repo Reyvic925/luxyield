@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const ContactSupportSection = () => (
   <section id="contact" className="py-20 bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white">
@@ -24,3 +24,4 @@ const ContactSupportSection = () => (
 );
 
 export default ContactSupportSection;
+

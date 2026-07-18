@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const EducationHubSection = () => (
   <section className="py-20 bg-transparent text-white">
@@ -25,3 +25,4 @@ const EducationHubSection = () => (
 );
 
 export default EducationHubSection;
+

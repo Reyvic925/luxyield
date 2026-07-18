@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { FiSearch, FiFilter, FiEdit2, FiEye, FiDownload, FiSliders, FiChevronDown, FiUser, FiDollarSign, FiTrendingUp } from 'react-icons/fi';
 import BalanceManagementModal from './BalanceManagementModal';
 import InvestmentGainLossModal from './InvestmentGainLossModal';
@@ -362,4 +362,5 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
 };
 
 export default EnhancedUserTable;
+
 

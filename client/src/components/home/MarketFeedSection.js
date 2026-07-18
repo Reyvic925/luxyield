@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const feed = [
   { icon: '₿', text: 'BTC Fund returned +8.2% last month', color: '#F7931A' },
@@ -41,3 +41,4 @@ const MarketFeedSection = () => (
 );
 
 export default MarketFeedSection;
+

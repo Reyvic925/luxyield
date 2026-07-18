@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FiBell, FiClock, FiInfo } from 'react-icons/fi';
 import './Announcements.css';
@@ -47,3 +47,4 @@ const Announcements = ({ onNewAnnouncement }) => {
 };
 
 export default Announcements;
+

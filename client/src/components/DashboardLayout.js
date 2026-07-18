@@ -1,4 +1,4 @@
-// src/components/DashboardLayout.js
+﻿// src/components/DashboardLayout.js
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';

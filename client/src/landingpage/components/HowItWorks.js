@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import InteractiveElement from './InteractiveElement.js';
 import { UserPlus, PiggyBank, TrendingUp } from 'https://esm.sh/lucide-react@0.381.0';
 
@@ -33,3 +33,4 @@ function HowItWorks() {
 }
 
 export default HowItWorks;
+

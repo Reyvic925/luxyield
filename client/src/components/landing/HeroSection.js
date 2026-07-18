@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const HeroSection = () => (
   <section className="relative min-h-[80vh] flex flex-col items-center justify-center text-center bg-transparent overflow-hidden">
@@ -32,3 +32,4 @@ const HeroSection = () => (
 );
 
 export default HeroSection;
+

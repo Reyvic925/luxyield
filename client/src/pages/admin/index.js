@@ -1,4 +1,4 @@
-// src/pages/admin/index.js
+﻿// src/pages/admin/index.js
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -14,3 +14,4 @@ const AdminIndex = () => (
 );
 
 export default AdminIndex;
+

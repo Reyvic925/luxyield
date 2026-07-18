@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { FiBookOpen, FiPlayCircle, FiSearch, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
 const resources = [
@@ -160,3 +160,4 @@ export default function EducationCenter() {
     </div>
   );
 }
+

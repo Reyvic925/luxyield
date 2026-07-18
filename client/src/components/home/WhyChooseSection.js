@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
 const features = [
@@ -125,3 +125,4 @@ const WhyChooseSection = () => {
 };
 
 export default WhyChooseSection;
+

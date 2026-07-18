@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 
 const testimonials = [
@@ -45,3 +45,4 @@ export default function TestimonialsSection() {
     </section>
   );
 }
+

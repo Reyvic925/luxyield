@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const audits = [
   { name: 'CertiK', url: '#', year: 2025 },
@@ -22,3 +22,4 @@ export default function SecurityAuditSection() {
     </section>
   );
 }
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Menu } from 'https://esm.sh/lucide-react@0.381.0';
 
 const e = React.createElement;
@@ -48,3 +48,4 @@ function Header({ onMenuClick }) {
 }
 
 export default Header;
+

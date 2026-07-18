@@ -1,4 +1,4 @@
-// src/services/referralAPI.js
+﻿// src/services/referralAPI.js
 import axios from 'axios';
 
 export const getReferralStats = async () => {
@@ -6,3 +6,4 @@ export const getReferralStats = async () => {
   const res = await axios.get(`${baseUrl}/api/user/referral-stats`);
   return res.data;
 };
+

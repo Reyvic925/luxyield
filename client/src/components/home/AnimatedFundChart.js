@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 // Placeholder animated chart (replace with real chart lib/data for production)
 export default function AnimatedFundChart({ color = '#FFD700' }) {
@@ -10,3 +10,4 @@ export default function AnimatedFundChart({ color = '#FFD700' }) {
     </svg>
   );
 }
+

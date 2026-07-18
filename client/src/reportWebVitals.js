@@ -1,4 +1,4 @@
-const reportWebVitals = onPerfEntry => {
+﻿const reportWebVitals = onPerfEntry => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
     // Static import for web-vitals
     const { getCLS, getFID, getFCP, getLCP, getTTFB } = require('web-vitals');
@@ -11,3 +11,4 @@ const reportWebVitals = onPerfEntry => {
 };
 
 export default reportWebVitals;
+

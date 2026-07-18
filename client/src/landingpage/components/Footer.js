@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Linkedin, Twitter } from 'https://esm.sh/lucide-react@0.381.0';
 
 const e = React.createElement;
@@ -47,3 +47,4 @@ function Footer() {
 }
 
 export default Footer;
+

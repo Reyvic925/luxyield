@@ -1,4 +1,4 @@
-// src/services/adminStatsAPI.js
+﻿// src/services/adminStatsAPI.js
 import axios from 'axios';
 
 const API = axios.create({
@@ -11,3 +11,4 @@ export const getAdminStats = async () => {
   const res = await API.get('/stats');
   return res.data;
 };
+

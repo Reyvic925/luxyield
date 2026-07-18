@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const WalletIcon = ({ size = 40, className = '' }) => (
   <svg
@@ -20,3 +20,4 @@ const WalletIcon = ({ size = 40, className = '' }) => (
 );
 
 export default WalletIcon;
+

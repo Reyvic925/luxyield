@@ -1,4 +1,4 @@
-// src/components/Logo.js
+﻿// src/components/Logo.js
 import React from 'react';
 
 const Logo = ({ size = 'text-4xl' }) => {

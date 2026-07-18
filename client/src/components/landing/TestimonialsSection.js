@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const TestimonialsSection = () => (
   <section className="py-20 bg-transparent text-white">
@@ -24,3 +24,4 @@ const TestimonialsSection = () => (
 );
 
 export default TestimonialsSection;
+

@@ -1,4 +1,4 @@
-// src/services/userWithdrawalAPI.js
+﻿// src/services/userWithdrawalAPI.js
 import axios from 'axios';
 
 const API = axios.create({
@@ -11,3 +11,4 @@ export const getUserWithdrawals = async () => {
   const response = await API.get('/withdrawals');
   return response.data;
 };
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 
 const PLANS = [
   { name: 'Starter', rate: 0.0003 },
@@ -28,3 +28,4 @@ export default function SimulatedGrowth({ plan = 'Starter', balance = 10000 }) {
     </div>
   );
 }
+

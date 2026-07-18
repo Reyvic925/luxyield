@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import ConfirmModal from '../components/ConfirmModal';
 import { FiUser, FiLock, FiBell, FiGlobe, FiMoon, FiSun, FiEdit2, FiSave, FiX, FiShield, FiKey, FiLogOut, FiSettings, FiTrash2, FiActivity, FiUserX, FiSmartphone, FiMail, FiCreditCard, FiGift, FiUsers, FiHelpCircle } from 'react-icons/fi';
 import axios from 'axios';
@@ -650,3 +650,4 @@ export default function Settings() {
     </div>
   );
 }
+

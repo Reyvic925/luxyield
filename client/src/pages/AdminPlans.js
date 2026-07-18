@@ -1,4 +1,4 @@
-// AdminPlans.js
+﻿// AdminPlans.js
 // Admin page for managing investment plans (add, edit, list)
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -113,3 +113,4 @@ export default function AdminPlans() {
     </div>
   );
 }
+

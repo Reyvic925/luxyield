@@ -1,4 +1,4 @@
-// Add to AdminWithdrawals.js
+﻿// Add to AdminWithdrawals.js
 const handleBulkUpdate = async (ids, status) => {
   try {
     // In a real app: await bulkUpdateWithdrawals(ids, { status });

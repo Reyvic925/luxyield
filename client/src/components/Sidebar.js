@@ -1,4 +1,4 @@
-// src/components/Sidebar.js
+﻿// src/components/Sidebar.js
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiHome, FiPieChart, FiDollarSign, FiUpload, 
@@ -104,3 +104,4 @@ const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncemen
 };
 
 export default Sidebar;
+

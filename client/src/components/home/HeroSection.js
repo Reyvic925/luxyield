@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+﻿import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
@@ -103,3 +103,4 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+

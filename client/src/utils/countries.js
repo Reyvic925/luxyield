@@ -1,4 +1,4 @@
-// A simple country list for the KYC form
+﻿// A simple country list for the KYC form
 const countries = [
   'Afghanistan', 'Albania', 'Algeria', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
   'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belgium', 'Belize', 'Bermuda', 'Bolivia', 'Bosnia and Herzegovina',
@@ -19,3 +19,4 @@ const countries = [
   'Virgin Islands of the United States', 'Yemen', 'Zambia', 'Zimbabwe'
 ];
 export default countries;
+

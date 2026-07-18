@@ -1,4 +1,4 @@
-// src/services/adminDepositsAPI.js
+﻿// src/services/adminDepositsAPI.js
 import axios from 'axios';
 
 const API = axios.create({
@@ -11,7 +11,7 @@ API.interceptors.request.use((config) => {
   const token = localStorage.getItem('adminToken');
   if (token) {
     config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = Bearer ;
   }
   return config;
 }, (error) => Promise.reject(error));
@@ -33,3 +33,5 @@ export const updateAdminDeposit = async (id, data) => {
     throw error.response?.data?.message || 'Failed to update deposit';
   }
 };
+
+

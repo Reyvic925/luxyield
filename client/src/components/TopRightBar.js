@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { FiSettings, FiLogOut } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
@@ -27,3 +27,4 @@ const TopRightBar = () => {
 };
 
 export default TopRightBar;
+

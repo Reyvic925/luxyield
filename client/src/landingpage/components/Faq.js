@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { ChevronDown } from 'https://esm.sh/lucide-react@0.381.0';
 import InteractiveElement from './InteractiveElement.js';
 
@@ -65,3 +65,4 @@ function Faq() {
 }
 
 export default Faq;
+

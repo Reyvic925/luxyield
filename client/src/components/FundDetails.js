@@ -1,4 +1,4 @@
-// src/components/FundDetails.js
+﻿// src/components/FundDetails.js
 import React from 'react';
 import { FiBarChart2, FiClock, FiDollarSign, FiShield, FiInfo } from 'react-icons/fi';
 

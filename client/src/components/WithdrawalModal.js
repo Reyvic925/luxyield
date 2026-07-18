@@ -1,4 +1,4 @@
-// src/components/WithdrawalModal.js
+﻿// src/components/WithdrawalModal.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -23,11 +23,7 @@ const WithdrawalModal = ({ isOpen, onClose, investments }) => {
     setLoading(true);
     
     try {
-      const response = await axios.post('/api/user/withdraw', formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await axios.post('/api/user/withdraw', formData);
       
       toast.success(response.data.message);
       onClose();
@@ -119,3 +115,4 @@ const WithdrawalModal = ({ isOpen, onClose, investments }) => {
 };
 
 export default WithdrawalModal;
+

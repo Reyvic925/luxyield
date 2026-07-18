@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import GoalsDashboard from '../components/GoalsDashboard';
 import { ToastContainer } from 'react-toastify';
 
@@ -10,3 +10,4 @@ export default function Goals() {
     </div>
   );
 }
+

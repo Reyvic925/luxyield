@@ -1,4 +1,4 @@
-import axios from '../utils/axios';
+﻿import axios from '../utils/axios';
 
 // Use the configured axios instance so auth headers and baseURL are applied
 export const getRoiWithdrawals = async () => {
@@ -15,3 +15,4 @@ export const rejectRoiWithdrawal = async (id) => {
   const res = await axios.patch(`/api/admin/roi-approvals/${id}`, { status: 'rejected' });
   return res.data;
 };
+

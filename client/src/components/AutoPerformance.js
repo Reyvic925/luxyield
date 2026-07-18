@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 
 const AUTO_REFRESH_INTERVAL = 60000; // 60 seconds
 
@@ -81,3 +81,4 @@ export function UserGainLogs({ userId }) {
     </div>
   );
 }
+

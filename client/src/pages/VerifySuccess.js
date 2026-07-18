@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
 const VerifySuccess = () => {
@@ -26,3 +26,4 @@ const VerifySuccess = () => {
 };
 
 export default VerifySuccess;
+

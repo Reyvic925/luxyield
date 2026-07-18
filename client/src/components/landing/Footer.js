@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const Footer = () => (
   <footer className="bg-black bg-opacity-90 text-gray-400 py-10 px-4">
@@ -27,3 +27,4 @@ const Footer = () => (
 );
 
 export default Footer;
+

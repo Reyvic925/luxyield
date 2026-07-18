@@ -1,4 +1,4 @@
-// src/pages/admin/Dashboard.js
+﻿// src/pages/admin/Dashboard.js
 import React, { useEffect, useState } from 'react';
 import { FiUsers, FiDollarSign, FiDownload, FiActivity } from 'react-icons/fi';
 import AdminCard from '../../components/admin/AdminCard';
@@ -24,7 +24,7 @@ const AdminDashboard = () => {
   }, []);
 
   return (
-    <div className="max-w-screen-xl mx-auto p-2 sm:p-4 md:p-8 font-sans text-base text-gray-100 bg-black rounded-xl shadow-lg overflow-x-hidden overflow-y-auto">
+    <div className="max-w-screen-xl mx-auto p-2 sm:p-4 md:p-8 font-sans text-base text-gray-100 bg-black rounded-xl shadow-lg overflow-x-auto overflow-y-auto">
       <div className="space-y-8 w-full max-w-full">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         
@@ -52,3 +52,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+

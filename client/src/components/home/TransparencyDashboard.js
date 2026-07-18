@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const stats = [
   { label: 'Total AUM', value: '$2.3B' },
@@ -23,3 +23,4 @@ export default function TransparencyDashboard() {
     </section>
   );
 }
+

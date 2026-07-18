@@ -1,5 +1,4 @@
-
-import axios from 'axios';
+﻿import axios from 'axios';
 
 // Set base URL globally for all axios requests
 axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || '';
@@ -33,3 +32,4 @@ axios.interceptors.response.use(
 );
 
 export default axios;
+

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 // You must have a socket context or hook that provides the socket instance
@@ -16,3 +16,4 @@ export default function NotificationProvider({ children }) {
     </>
   );
 }
+

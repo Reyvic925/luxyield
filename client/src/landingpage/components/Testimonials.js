@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import InteractiveElement from './InteractiveElement.js';
 
 const e = React.createElement;
@@ -40,3 +40,4 @@ function Testimonials() {
 }
 
 export default Testimonials;
+

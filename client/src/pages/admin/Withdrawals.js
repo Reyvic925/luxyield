@@ -1,4 +1,4 @@
-// src/pages/admin/Withdrawals.js
+﻿// src/pages/admin/Withdrawals.js
 import React, { useState, useEffect } from 'react';
 import WithdrawalList from '../../components/admin/WithdrawalList';
 import WithdrawalDetail from '../../components/admin/WithdrawalDetail';
@@ -190,3 +190,4 @@ const AdminWithdrawals = () => {
 };
 
 export default AdminWithdrawals;
+

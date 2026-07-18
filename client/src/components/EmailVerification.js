@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
 
@@ -126,3 +126,4 @@ const EmailVerification = ({ email, onVerified }) => {
 };
 
 export default EmailVerification;
+

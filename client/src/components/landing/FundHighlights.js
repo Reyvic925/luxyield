@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const FundHighlights = () => (
   <section className="py-20 bg-transparent text-white">
@@ -32,3 +32,4 @@ const FundHighlights = () => (
 );
 
 export default FundHighlights;
+

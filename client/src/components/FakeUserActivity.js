@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 
 const NAMES = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Heidi'];
 const ACTIONS = [
@@ -37,3 +37,4 @@ export default function FakeUserActivity() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-// src/utils/formatDate.js
+﻿// src/utils/formatDate.js
 export const formatDate = (date, options = {}) => {
   const isMobile = window.innerWidth < 768;
   const defaultOptions = {

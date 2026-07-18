@@ -1,4 +1,4 @@
-// src/pages/groupchatMessages.js
+﻿// src/pages/groupchatMessages.js
 export const SIMULATED_MESSAGES = [
   "Hi everyone!",
   "How's it going?",
@@ -21,3 +21,4 @@ export const SIMULATED_MESSAGES = [
   "The UI is so clean!",
   "Happy investing!"
 ];
+

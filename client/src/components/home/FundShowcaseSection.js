@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import AnimatedFundChart from './AnimatedFundChart';
@@ -72,3 +72,4 @@ const FundShowcaseSection = () => {
 };
 
 export default FundShowcaseSection;
+

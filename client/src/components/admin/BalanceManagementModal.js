@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { FiPlus, FiMinus, FiDollarSign } from 'react-icons/fi';
 
 const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
@@ -164,5 +164,6 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
 };
 
 export default BalanceManagementModal;
+
 
 

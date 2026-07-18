@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 export default function BlockchainTransactions({ walletAddresses = [] }) {
@@ -57,3 +57,4 @@ export default function BlockchainTransactions({ walletAddresses = [] }) {
     </div>
   );
 }
+

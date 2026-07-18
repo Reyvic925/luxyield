@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const WhyChooseSection = () => (
   <section className="py-20 bg-transparent text-white">
@@ -39,3 +39,4 @@ const WhyChooseSection = () => (
 );
 
 export default WhyChooseSection;
+

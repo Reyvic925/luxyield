@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 
 const faqs = [
   {
@@ -38,3 +38,4 @@ export default function FAQSection() {
     </section>
   );
 }
+

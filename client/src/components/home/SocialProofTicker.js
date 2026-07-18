@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 
 const events = [
   'James from London joined LUXHEDGE',
@@ -21,3 +21,4 @@ export default function SocialProofTicker() {
     </div>
   );
 }
+

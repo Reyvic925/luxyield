@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+﻿import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const UserDataRefreshContext = createContext({
   lastRefresh: 0,
@@ -20,3 +20,4 @@ export function UserDataRefreshProvider({ children }) {
 export function useUserDataRefresh() {
   return useContext(UserDataRefreshContext);
 }
+

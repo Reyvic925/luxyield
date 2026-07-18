@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import countries from '../utils/countries';
 import Webcam from 'react-webcam';
@@ -379,3 +379,4 @@ const KYCPage = () => {
 };
 
 export default KYCPage;
+

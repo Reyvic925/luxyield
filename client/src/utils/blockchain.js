@@ -1,4 +1,4 @@
-// src/utils/blockchain.js
+﻿// src/utils/blockchain.js
 // Unified blockchain utility for Bitcoin, Ethereum, Tron, USDT (ERC20/TRC20), USDC (ERC20)
 // Uses: ethers.js, bitcoinjs-lib, tronweb
 
@@ -89,3 +89,4 @@ export function getTronWallet({ mnemonic, privateKey }) {
 }
 
 // Add more functions for sending/receiving on each chain as needed
+

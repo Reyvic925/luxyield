@@ -1,4 +1,4 @@
-// This file is being rebuilt from scratch.
+﻿// This file is being rebuilt from scratch.
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FaHeadset, FaArrowLeft, FaPaperPlane, FaCheckDouble, FaSmile, FaFileAlt, FaImage, FaTimes, FaRedo, FaStop } from 'react-icons/fa';
 import axios from '../utils/axios';
@@ -750,3 +750,4 @@ export default function SupportChat() {
     </div>
   );
 }
+

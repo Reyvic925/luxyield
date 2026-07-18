@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const Announcements = () => (
   <div className="glassmorphic p-8 rounded-xl text-center">
@@ -12,3 +12,4 @@ const Announcements = () => (
 );
 
 export default Announcements;
+

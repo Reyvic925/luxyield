@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 
 export default function AccessibilityWidget() {
   const [open, setOpen] = useState(false);
@@ -27,3 +27,4 @@ export default function AccessibilityWidget() {
     </div>
   );
 }
+

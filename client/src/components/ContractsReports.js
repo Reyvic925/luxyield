@@ -1,1 +1,2 @@
-// File removed: ContractsReports.js
+﻿// File removed: ContractsReports.js
+

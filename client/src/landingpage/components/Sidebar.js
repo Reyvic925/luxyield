@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { X } from 'https://esm.sh/lucide-react@0.381.0';
 
 const e = React.createElement;
@@ -33,3 +33,4 @@ function Sidebar({ isOpen, onClose }) {
 }
 
 export default Sidebar;
+

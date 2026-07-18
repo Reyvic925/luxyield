@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const MobileAppPreview = () => (
   <div className="glassmorphic p-8 rounded-xl text-center">
@@ -19,3 +19,4 @@ const MobileAppPreview = () => (
 );
 
 export default MobileAppPreview;
+

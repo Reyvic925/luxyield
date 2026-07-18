@@ -1,4 +1,4 @@
-// src/utils/simulateData.js
+﻿// src/utils/simulateData.js
 
 // Generate a random ROI within a range
 export function simulateROI(min = 5, max = 12) {
@@ -46,3 +46,4 @@ export function simulateActivity(count = 5) {
     status: 'Completed'
   }));
 }
+

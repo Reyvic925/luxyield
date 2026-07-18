@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { FiTrendingUp, FiPieChart, FiBarChart2 } from 'react-icons/fi';
 
@@ -105,3 +105,4 @@ const FundPerformance = () => {
 };
 
 export default FundPerformance;
+

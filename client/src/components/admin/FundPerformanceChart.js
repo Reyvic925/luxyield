@@ -1,4 +1,4 @@
-// src/components/admin/FundPerformanceChart.js
+﻿// src/components/admin/FundPerformanceChart.js
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 

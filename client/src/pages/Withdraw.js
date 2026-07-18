@@ -1,4 +1,4 @@
-// src/pages/Withdraw.js
+﻿// src/pages/Withdraw.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiCheck, FiInfo, FiClock, FiDollarSign, FiCopy } from 'react-icons/fi';

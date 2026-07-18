@@ -1,4 +1,4 @@
-// src/components/admin/FundList.js
+﻿// src/components/admin/FundList.js
 import React from 'react';
 import { FiEdit2, FiTrendingUp, FiClock } from 'react-icons/fi';
 

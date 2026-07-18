@@ -1,4 +1,4 @@
-// src/pages/admin/Funds.js
+﻿// src/pages/admin/Funds.js
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiFilter, FiDownload } from 'react-icons/fi';
 import FundList from '../../components/admin/FundList';

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 // Simulate user context (replace with real auth/user context in production)
 const user = {
@@ -20,3 +20,4 @@ export default function PersonalizedGreeting() {
     </div>
   );
 }
+

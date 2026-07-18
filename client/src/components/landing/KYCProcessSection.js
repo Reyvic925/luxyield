@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const KYCProcessSection = () => (
   <section className="py-20 bg-transparent text-white">
@@ -28,3 +28,4 @@ const KYCProcessSection = () => (
 );
 
 export default KYCProcessSection;
+

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 const AboutSection = () => (
   <section className="py-20 bg-transparent text-white text-center">
@@ -34,3 +34,4 @@ const AboutSection = () => (
 );
 
 export default AboutSection;
+

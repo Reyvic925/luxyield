@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { FiPlus, FiEdit, FiTrash2, FiTarget, FiTrendingUp, FiCheckCircle } from 'react-icons/fi';
 
 const initialGoals = [
@@ -142,3 +142,4 @@ export default function MyGoals() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AdminUserList = ({ onSelectUser }) => {
@@ -8,9 +8,7 @@ const AdminUserList = ({ onSelectUser }) => {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const res = await axios.get('/api/admin/users', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
-      });
+      const res = await axios.get('/api/admin/users');
       setUsers(res.data);
       setLoading(false);
     };
@@ -59,3 +57,5 @@ const AdminUserList = ({ onSelectUser }) => {
 };
 
 export default AdminUserList;
+
+

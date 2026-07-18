@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -44,3 +44,4 @@ const VerifyFailed = () => {
 };
 
 export default VerifyFailed;
+

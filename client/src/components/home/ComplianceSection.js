@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const badges = [
@@ -159,3 +159,4 @@ const ComplianceSection = () => {
 };
 
 export default ComplianceSection;
+
