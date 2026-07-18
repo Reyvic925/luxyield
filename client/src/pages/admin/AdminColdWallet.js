@@ -145,9 +145,9 @@ const AdminColdWallet = () => {
           ) : (
             <ul className="mb-2">
               {addressBook.map(a => (
-                <li key={a.address} className="flex items-center gap-2 mb-1">
-                  <span className="font-mono text-xs text-gray-300">{a.address}</span>
-                  <span className="text-gray-400 ml-2">{a.label}</span>
+                <li key={a.address} className="flex flex-wrap items-center gap-2 mb-1">
+                  <span className="font-mono text-xs text-gray-300 break-words w-full sm:w-auto">{a.address}</span>
+                  <span className="text-gray-400 ml-2 break-words">{a.label}</span>
                   <button className="ml-2 text-red-500" onClick={() => handleRemoveFromBook(a.address)}><FiTrash2 /></button>
                   <button className="ml-2 text-gold" onClick={() => setSendForm(f => ({ ...f, to: a.address }))}><FiSend /></button>
                 </li>

@@ -27,28 +27,47 @@ const AdminUserList = ({ onSelectUser }) => {
         onChange={e => setSearch(e.target.value)}
       />
       {loading ? <div>Loading...</div> : (
-        <div className="overflow-x-auto rounded-lg border border-gray-700 min-w-0">
-          <table className="w-full min-w-full table-auto text-sm whitespace-normal">
-            <thead>
-              <tr className="border-b border-gray-700 bg-gray-900 text-left">
-                <th className="w-1/3 py-3 px-4 font-semibold">Email</th>
-                <th className="w-1/3 py-3 px-4 font-semibold">Name</th>
-                <th className="w-1/3 py-3 px-4 font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(user => (
-                <tr key={user._id} className="border-b border-gray-800 hover:bg-gray-800 transition">
-                  <td className="py-3 px-4 break-words max-w-[10rem]">{user.email}</td>
-                  <td className="py-3 px-4 break-words">{user.name}</td>
-                  <td className="py-3 px-4">
-                    <button className="bg-gold px-3 py-1 rounded text-black font-semibold hover:bg-yellow-400 transition" onClick={() => onSelectUser(user._id)}>Mirror</button>
-                  </td>
+        <>
+          <div className="space-y-4 md:hidden">
+            {filtered.length === 0 ? (
+              <div className="text-gray-400">No users found.</div>
+            ) : filtered.map(user => (
+              <div key={user._id} className="rounded-xl border border-gray-700 bg-gray-900 p-4 shadow-sm">
+                <div className="mb-2 break-words">
+                  <div className="text-sm text-gray-400">Email</div>
+                  <div className="text-white font-semibold break-words">{user.email}</div>
+                </div>
+                <div className="mb-2 break-words">
+                  <div className="text-sm text-gray-400">Name</div>
+                  <div className="text-white break-words">{user.name}</div>
+                </div>
+                <button className="bg-gold px-3 py-2 rounded text-black font-semibold hover:bg-yellow-400 transition w-full text-left" onClick={() => onSelectUser(user._id)}>Mirror</button>
+              </div>
+            ))}
+          </div>
+          <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-700 min-w-0">
+            <table className="w-full min-w-full table-auto text-sm whitespace-normal">
+              <thead>
+                <tr className="border-b border-gray-700 bg-gray-900 text-left">
+                  <th className="w-1/3 py-3 px-4 font-semibold">Email</th>
+                  <th className="w-1/3 py-3 px-4 font-semibold">Name</th>
+                  <th className="w-1/3 py-3 px-4 font-semibold">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtered.map(user => (
+                  <tr key={user._id} className="border-b border-gray-800 hover:bg-gray-800 transition">
+                    <td className="py-3 px-4 break-words max-w-[10rem]">{user.email}</td>
+                    <td className="py-3 px-4 break-words">{user.name}</td>
+                    <td className="py-3 px-4">
+                      <button className="bg-gold px-3 py-1 rounded text-black font-semibold hover:bg-yellow-400 transition" onClick={() => onSelectUser(user._id)}>Mirror</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

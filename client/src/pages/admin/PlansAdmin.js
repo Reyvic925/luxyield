@@ -55,37 +55,65 @@ const PlansAdmin = () => {
         </div>
       </form>
       {loading ? <div>Loading...</div> : (
-        <div className="overflow-x-auto rounded-lg border border-gray-700 min-w-0">
-          <table className="w-full min-w-full table-auto text-sm whitespace-normal">
-            <thead>
-              <tr className="border-b border-gray-700 bg-gray-900 text-left">
-                <th className="w-3/12 py-3 px-4 font-semibold">Name</th>
-                <th className="w-1/12 py-3 px-4 font-semibold">% Return</th>
-                <th className="w-1/12 py-3 px-4 font-semibold">Days</th>
-                <th className="w-1/12 py-3 px-4 font-semibold">Min</th>
-                <th className="w-1/12 py-3 px-4 font-semibold">Max</th>
-                <th className="w-1/12 py-3 px-4 font-semibold">Active</th>
-                <th className="w-2/12 py-3 px-4 font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {plans.map(plan => (
-                <tr key={plan._id} className="border-b border-gray-800 hover:bg-gray-800 transition">
-                  <td className="py-3 px-4 break-words">{plan.name}</td>
-                  <td className="py-3 px-4 break-words">{plan.percentReturn}</td>
-                  <td className="py-3 px-4 break-words">{plan.durationDays}</td>
-                  <td className="py-3 px-4 break-words">{plan.minInvestment}</td>
-                  <td className="py-3 px-4 break-words">{plan.maxInvestment}</td>
-                  <td className="py-3 px-4 break-words">{plan.isActive ? 'Yes' : 'No'}</td>
-                  <td className="py-3 px-4 flex flex-col sm:flex-row gap-2">
-                    <button className="text-blue-600 font-semibold hover:underline" onClick={() => handleEdit(plan)}>Edit</button>
-                    <button className="text-red-600 font-semibold hover:underline" onClick={() => handleDelete(plan._id)}>Delete</button>
-                  </td>
+        <>
+          <div className="space-y-4 md:hidden">
+            {plans.length === 0 ? (
+              <div className="text-gray-400">No plans found.</div>
+            ) : (
+              plans.map(plan => (
+                <div key={plan._id} className="rounded-xl border border-gray-700 bg-gray-900 p-4 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-semibold text-white break-words">{plan.name}</h2>
+                      <p className="text-sm text-gray-400 mt-1">% Return: <span className="text-white">{plan.percentReturn}</span></p>
+                    </div>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${plan.isActive ? 'bg-green-600 text-green-100' : 'bg-red-600 text-red-100'}`}>{plan.isActive ? 'Active' : 'Inactive'}</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-gray-300">
+                    <div><span className="text-gray-400">Days:</span> <span className="text-white">{plan.durationDays}</span></div>
+                    <div><span className="text-gray-400">Min:</span> <span className="text-white">{plan.minInvestment}</span></div>
+                    <div><span className="text-gray-400">Max:</span> <span className="text-white">{plan.maxInvestment}</span></div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button className="text-blue-500 font-semibold hover:underline" onClick={() => handleEdit(plan)}>Edit</button>
+                    <button className="text-red-500 font-semibold hover:underline" onClick={() => handleDelete(plan._id)}>Delete</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-700 min-w-0">
+            <table className="w-full min-w-full table-auto text-sm whitespace-normal">
+              <thead>
+                <tr className="border-b border-gray-700 bg-gray-900 text-left">
+                  <th className="w-3/12 py-3 px-4 font-semibold">Name</th>
+                  <th className="w-1/12 py-3 px-4 font-semibold">% Return</th>
+                  <th className="w-1/12 py-3 px-4 font-semibold">Days</th>
+                  <th className="w-1/12 py-3 px-4 font-semibold">Min</th>
+                  <th className="w-1/12 py-3 px-4 font-semibold">Max</th>
+                  <th className="w-1/12 py-3 px-4 font-semibold">Active</th>
+                  <th className="w-2/12 py-3 px-4 font-semibold">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {plans.map(plan => (
+                  <tr key={plan._id} className="border-b border-gray-800 hover:bg-gray-800 transition">
+                    <td className="py-3 px-4 break-words">{plan.name}</td>
+                    <td className="py-3 px-4 break-words">{plan.percentReturn}</td>
+                    <td className="py-3 px-4 break-words">{plan.durationDays}</td>
+                    <td className="py-3 px-4 break-words">{plan.minInvestment}</td>
+                    <td className="py-3 px-4 break-words">{plan.maxInvestment}</td>
+                    <td className="py-3 px-4 break-words">{plan.isActive ? 'Yes' : 'No'}</td>
+                    <td className="py-3 px-4 flex flex-col sm:flex-row gap-2">
+                      <button className="text-blue-600 font-semibold hover:underline" onClick={() => handleEdit(plan)}>Edit</button>
+                      <button className="text-red-600 font-semibold hover:underline" onClick={() => handleDelete(plan._id)}>Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
