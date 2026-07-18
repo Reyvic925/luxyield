@@ -1,4 +1,4 @@
-﻿export default async function safeFetch(url, options = {}) {
+export default async function safeFetch(url, options = {}) {
   try {
     const res = await fetch(url, options);
     const text = await res.text();
@@ -18,4 +18,4 @@
   } catch (err) {
     return { ok: false, status: null, data: null, text: null, error: err.message };
   }
-}`n
+}

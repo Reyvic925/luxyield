@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { FiTrendingUp, FiTrendingDown, FiPercent } from 'react-icons/fi';
 
 const InvestmentGainLossModal = ({ user, onClose, onUpdate }) => {
@@ -43,7 +43,7 @@ const InvestmentGainLossModal = ({ user, onClose, onUpdate }) => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-white">Manage Investment {type === 'gain' ? 'Gains' : 'Losses'}</h2>
         <button onClick={onClose} className="text-gray-400 hover:text-white">
-          âœ•
+          ✕
         </button>
       </div>
 
@@ -161,4 +161,4 @@ const InvestmentGainLossModal = ({ user, onClose, onUpdate }) => {
     </div>
   );
 };
-`n
+

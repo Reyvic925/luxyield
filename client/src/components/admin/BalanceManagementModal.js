@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { FiPlus, FiMinus, FiDollarSign } from 'react-icons/fi';
 
 const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
@@ -74,7 +74,7 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-white">Manage User Balance</h2>
         <button onClick={onClose} className="text-gray-400 hover:text-white">
-          âœ•
+          ✕
         </button>
       </div>
 
@@ -162,4 +162,4 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
     </div>
   );
 };
-`n
+
