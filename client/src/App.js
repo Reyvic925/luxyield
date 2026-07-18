@@ -61,8 +61,8 @@ import VerifyFailed from './pages/VerifyFailed';
 function AppLayout({ sidebarCollapsed, setSidebarCollapsed, hasNewAnnouncement, children }) {
   console.log('AppLayout rendered');
   const location = useLocation();
-  const hideSidebarRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/dashboard', '/verify-email'];
-  // Hide sidebar for /dashboard and its subroutes
+  const hideSidebarRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/dashboard', '/verify-email', '/admin'];
+  // Hide sidebar for /dashboard, /admin, and their subroutes
   const hideSidebar = hideSidebarRoutes.some((route) => location.pathname.startsWith(route));
   return (
     <div className="flex min-h-screen">
