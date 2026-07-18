@@ -162,3 +162,5 @@ const InvestmentGainLossModal = ({ user, onClose, onUpdate }) => {
   );
 };
 
+export default InvestmentGainLossModal;
+
