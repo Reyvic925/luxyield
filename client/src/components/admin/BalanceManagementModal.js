@@ -163,3 +163,6 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
   );
 };
 
+export default BalanceManagementModal;
+
+
