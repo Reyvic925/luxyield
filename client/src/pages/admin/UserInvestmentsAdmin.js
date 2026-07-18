@@ -50,8 +50,50 @@ const UserInvestmentsAdmin = () => {
         <input className="flex-1 p-2 border rounded bg-gray-800 text-white border-gray-700 focus:border-gold outline-none" placeholder="User ID" value={userId} onChange={e => setUserId(e.target.value)} />
         <button className="bg-gold text-black px-4 py-2 rounded font-semibold hover:bg-yellow-400 transition" onClick={fetchInvestments}>Fetch Investments</button>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-gray-700 mb-6">
-        <table className="w-full min-w-full table-fixed text-sm">
+      <div className="space-y-4 md:hidden mb-6">
+        {investments.length === 0 ? (
+          <div className="text-gray-400">No investments found.</div>
+        ) : investments.map(inv => (
+          <div key={inv._id} className="rounded-xl border border-gray-700 bg-gray-900 p-4">
+            <div className="mb-3">
+              <div className="text-sm text-gray-400">ID</div>
+              <div className="text-white font-semibold break-words">{inv._id}</div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm text-gray-300">
+              <div>
+                <div className="text-gray-400">Plan</div>
+                <div className="text-white break-words">{inv.planName}</div>
+              </div>
+              <div>
+                <div className="text-gray-400">Status</div>
+                <div className="text-white capitalize break-words">{inv.status}</div>
+              </div>
+              <div>
+                <div className="text-gray-400">Amount</div>
+                <div className="text-white break-words">{inv.amount}</div>
+              </div>
+              <div>
+                <div className="text-gray-400">Current Value</div>
+                <div className="text-white break-words">{inv.currentValue}</div>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-2">
+              <button className="w-full text-blue-600 font-semibold text-left hover:underline" onClick={() => handleEdit(inv)}>Edit</button>
+              <button className="w-full text-green-600 font-semibold text-left hover:underline" onClick={() => handleComplete(inv._id)}>Complete</button>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <input className="p-2 border rounded w-full bg-gray-800 text-white border-gray-700 focus:border-gold outline-none" type="number" placeholder="Gain/Loss $" value={gainLossAmount} onChange={e => setGainLossAmount(e.target.value)} />
+                <select className="p-2 border rounded w-full bg-gray-800 text-white border-gray-700 focus:border-gold outline-none" value={gainLossType} onChange={e => setGainLossType(e.target.value)}>
+                  <option value="gain">Gain</option>
+                  <option value="loss">Loss</option>
+                </select>
+                <button className="w-full text-red-600 font-semibold text-left hover:underline" onClick={() => handleSetGainLoss(inv._id)}>Set</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-700 mb-6 min-w-0">
+        <table className="w-full min-w-full table-auto text-sm whitespace-normal">
           <thead>
             <tr className="border-b border-gray-700 bg-gray-900 text-left">
               <th className="w-1/5 py-3 px-4 font-semibold">ID</th>
