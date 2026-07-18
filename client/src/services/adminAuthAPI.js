@@ -1,4 +1,4 @@
-﻿// src/services/adminAuthAPI.js
+// src/services/adminAuthAPI.js
 import axios from 'axios';
 
 const base = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
@@ -11,7 +11,7 @@ API.interceptors.request.use((config) => {
   const token = localStorage.getItem('adminToken');
   if (token) {
     config.headers = config.headers || {};
-    config.headers.Authorization = Bearer ;
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 }, (error) => Promise.reject(error));
@@ -56,4 +56,5 @@ export const updateAdminNotificationPrefs = async (prefs) => {
   const response = await API.patch('/notification-preferences', prefs);
   return response.data;
 };
+
 

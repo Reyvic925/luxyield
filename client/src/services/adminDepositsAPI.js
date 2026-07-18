@@ -10,7 +10,7 @@ API.interceptors.request.use((config) => {
   const token = localStorage.getItem('adminToken');
   if (token) {
     config.headers = config.headers || {};
-    config.headers.Authorization = Bearer ;
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 }, (error) => Promise.reject(error));
@@ -26,9 +26,10 @@ export const getAdminDeposits = async () => {
 
 export const updateAdminDeposit = async (id, data) => {
   try {
-    const response = await API.patch(/, data);
+    const response = await API.patch(`/${id}`, data);
     return response.data;
   } catch (error) {
     throw error.response?.data?.message || 'Failed to update deposit';
   }
 };
+

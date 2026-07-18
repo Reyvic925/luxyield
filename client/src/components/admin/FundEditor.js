@@ -132,7 +132,6 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
     formData.append('pdf', pdfFile);
     await fetch(`${process.env.REACT_APP_API_BASE_URL}/funds/${fund._id}/report`, {
       method: 'POST',
-      ,
       body: formData
     });
     setPdfFile(null);
