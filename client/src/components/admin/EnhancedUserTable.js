@@ -193,7 +193,8 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Desktop/table view (hidden on small screens) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full table-auto min-w-full">
           <thead>
             <tr className="border-b border-gray-700 text-left">
@@ -293,6 +294,32 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile card view */}
+      <div className="block md:hidden space-y-3">
+        {uniqueUsers.map(user => (
+          <div key={user.id || user._id} className="bg-gray-800 rounded-lg p-3">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0">
+                <div className="font-semibold truncate">{user.name}</div>
+                <div className="text-xs text-gray-400 truncate">{user.email}</div>
+                <div className="text-xs text-gray-400 mt-1">ID: {user.id || user._id}</div>
+              </div>
+              <div className="text-right ml-3">
+                <div className="font-mono">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</div>
+                <div className={`mt-1 px-2 py-0.5 rounded-full text-xs ${getTierColor(user.tier)}`}>{user.tier}</div>
+              </div>
+            </div>
+
+            <div className="mt-3 flex space-x-2">
+              <button onClick={() => onSelectUser(user)} className="flex-1 p-2 bg-gray-700 rounded-lg hover:bg-blue-600 transition-colors">View</button>
+              <button className="flex-1 p-2 bg-gray-700 rounded-lg hover:bg-blue-600 transition-colors">Edit</button>
+              <button onClick={() => setSelectedUserForBalance(user)} className="flex-1 p-2 bg-gray-700 rounded-lg hover:bg-green-600 transition-colors">Balance</button>
+              <button onClick={() => setSelectedUserForInvestment(user)} className="flex-1 p-2 bg-gray-700 rounded-lg hover:bg-yellow-600 transition-colors">Invest</button>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Balance Management Modal */}

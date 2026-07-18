@@ -39,7 +39,7 @@ const InvestmentGainLossModal = ({ user, onClose, onUpdate }) => {
   };
 
   return (
-    <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+    <div className="bg-gray-800 rounded-xl p-6 w-full max-w-full sm:max-w-md mx-4">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-white">Manage Investment {type === 'gain' ? 'Gains' : 'Losses'}</h2>
         <button onClick={onClose} className="text-gray-400 hover:text-white">
