@@ -20,7 +20,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
           <FiDownload /> Export CSV
         </button>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-gray-800 bg-gray-950">
+      <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-800 bg-gray-950">
         <table className="w-full text-sm min-w-[700px]">
           <thead>
             <tr className="bg-gray-900 border-b border-gray-800 text-left">
@@ -79,6 +79,37 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile list */}
+      <div className="block md:hidden space-y-3">
+        {withdrawals.length === 0 ? (
+          <div className="bg-gray-950 rounded-lg p-4 text-center text-gray-400">No withdrawals found.</div>
+        ) : (
+          withdrawals.map(wd => (
+            <div key={wd.id} className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+              <div className="flex justify-between items-start">
+                <div className="min-w-0">
+                  <div className="font-semibold truncate">{wd.userFullName || wd.userId}</div>
+                  <div className="text-xs text-gray-400 truncate">{wd.userEmail}</div>
+                  <div className="text-xs text-gray-400 mt-1">ID: {wd.id}</div>
+                </div>
+                <div className="text-right ml-3">
+                  <div className="font-mono text-gold">{Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {wd.currency}</div>
+                  <div className={`mt-1 px-2 py-0.5 rounded-full text-xs ${statusColors[wd.status]}`}>{wd.status}</div>
+                </div>
+              </div>
+              <div className="mt-3 flex space-x-2">
+                {wd.status === 'pending' ? (
+                  <button onClick={() => onSelect(wd)} className="flex-1 px-3 py-2 bg-gold text-black rounded-lg font-semibold">Review</button>
+                ) : (
+                  <button className="flex-1 px-3 py-2 bg-gray-700 text-gray-300 rounded-lg">Details</button>
+                )}
+                <button onClick={onExport} className="px-3 py-2 bg-gray-700 rounded-lg">Export</button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
