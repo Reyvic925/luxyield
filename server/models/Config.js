@@ -7,4 +7,4 @@ const ConfigSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Config', ConfigSchema);`n
+module.exports = mongoose.model('Config', ConfigSchema);
