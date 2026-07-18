@@ -1,4 +1,4 @@
-// src/components/admin/FundEditor.js
+﻿// src/components/admin/FundEditor.js
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSave, FiTrash2 } from 'react-icons/fi';
 import FundPerformanceChart from './FundPerformanceChart';
@@ -132,7 +132,7 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
     formData.append('pdf', pdfFile);
     await fetch(`${process.env.REACT_APP_API_BASE_URL}/funds/${fund._id}/report`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` },
+      ,
       body: formData
     });
     setPdfFile(null);
@@ -501,3 +501,4 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
 };
 
 export default FundEditor;
+

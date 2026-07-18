@@ -1,4 +1,4 @@
-// src/components/admin/AdminLayout.js
+﻿// src/components/admin/AdminLayout.js
 import React, { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { FiUsers, FiDollarSign, FiDownload, FiSettings, FiHome, FiBell, FiMail, FiList, FiArrowUpRight, FiShield, FiDatabase } from 'react-icons/fi';
@@ -79,3 +79,4 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
+
