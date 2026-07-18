@@ -45,21 +45,21 @@ const AdminUserList = ({ onSelectUser }) => {
               </div>
             ))}
           </div>
-          <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-700 min-w-0">
+          <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-700 bg-gray-900 min-w-0">
             <table className="w-full min-w-full table-auto text-sm whitespace-normal">
               <thead>
                 <tr className="border-b border-gray-700 bg-gray-900 text-left">
-                  <th className="w-1/3 py-3 px-4 font-semibold">Email</th>
-                  <th className="w-1/3 py-3 px-4 font-semibold">Name</th>
-                  <th className="w-1/3 py-3 px-4 font-semibold">Actions</th>
+                  <th className="w-1/3 py-3 px-4 font-semibold min-w-0">Email</th>
+                  <th className="w-1/3 py-3 px-4 font-semibold min-w-0">Name</th>
+                  <th className="w-1/3 py-3 px-4 font-semibold min-w-0">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(user => (
                   <tr key={user._id} className="border-b border-gray-800 hover:bg-gray-800 transition">
-                    <td className="py-3 px-4 break-words max-w-[10rem]">{user.email}</td>
-                    <td className="py-3 px-4 break-words">{user.name}</td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 break-words max-w-[14rem] min-w-0">{user.email}</td>
+                    <td className="py-3 px-4 break-words min-w-0">{user.name}</td>
+                    <td className="py-3 px-4 min-w-0">
                       <button className="bg-gold px-3 py-1 rounded text-black font-semibold hover:bg-yellow-400 transition" onClick={() => onSelectUser(user._id)}>Mirror</button>
                     </td>
                   </tr>

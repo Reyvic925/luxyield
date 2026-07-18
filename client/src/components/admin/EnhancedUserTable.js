@@ -194,12 +194,12 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
 
       {/* Table */}
       {/* Desktop/table view (hidden on small screens) */}
-      <div className="hidden md:block overflow-x-auto min-w-0">
+      <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-700 bg-gray-900 min-w-0">
         <table className="w-full table-auto min-w-full whitespace-normal">
           <thead>
             <tr className="border-b border-gray-700 text-left">
               <th className="py-4 px-4 min-w-0 cursor-pointer" onClick={() => handleSort('name')}>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span>User</span>
                   {sortBy === 'name' && (
                     <FiChevronDown className={`ml-1 transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
@@ -207,7 +207,7 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
                 </div>
               </th>
               <th className="py-4 px-4 min-w-0 cursor-pointer" onClick={() => handleSort('email')}>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span>Email</span>
                   {sortBy === 'email' && (
                     <FiChevronDown className={`ml-1 transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
@@ -217,7 +217,7 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
               <th className="py-4 px-4 min-w-0">Tier</th>
               <th className="py-4 px-4 min-w-0">KYC Status</th>
               <th className="py-4 px-4 min-w-0 cursor-pointer" onClick={() => handleSort('balance')}>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span>Balance</span>
                   {sortBy === 'balance' && (
                     <FiChevronDown className={`ml-1 transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />

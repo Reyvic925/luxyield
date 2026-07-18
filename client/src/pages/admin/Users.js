@@ -62,8 +62,8 @@ const AdminUsers = () => {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gray-900 overflow-auto">
-      <div className="p-3 sm:p-4 md:p-6">
+    <div className="w-full min-h-screen bg-gray-900 overflow-x-hidden">
+      <div className="p-3 sm:p-4 md:p-6 max-w-full">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">User Management</h1>
