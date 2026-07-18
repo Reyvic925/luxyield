@@ -194,73 +194,71 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
 
       {/* Table */}
       {/* Desktop/table view (hidden on small screens) */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full table-auto min-w-full">
+      <div className="hidden md:block overflow-x-auto min-w-0">
+        <table className="w-full table-auto min-w-full whitespace-normal">
           <thead>
             <tr className="border-b border-gray-700 text-left">
-              <th className="pb-4 cursor-pointer" onClick={() => handleSort('name')}>
-                <div className="flex items-center">
+              <th className="py-4 px-4 min-w-0 cursor-pointer" onClick={() => handleSort('name')}>
+                <div className="flex items-center gap-2">
                   <span>User</span>
                   {sortBy === 'name' && (
                     <FiChevronDown className={`ml-1 transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
                   )}
                 </div>
               </th>
-              <th className="pb-4 cursor-pointer" onClick={() => handleSort('email')}>
-                <div className="flex items-center">
+              <th className="py-4 px-4 min-w-0 cursor-pointer" onClick={() => handleSort('email')}>
+                <div className="flex items-center gap-2">
                   <span>Email</span>
                   {sortBy === 'email' && (
                     <FiChevronDown className={`ml-1 transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
                   )}
                 </div>
               </th>
-              <th className="pb-4">Tier</th>
-              <th className="pb-4">KYC Status</th>
-              <th className="pb-4 cursor-pointer" onClick={() => handleSort('balance')}>
-                <div className="flex items-center">
+              <th className="py-4 px-4 min-w-0">Tier</th>
+              <th className="py-4 px-4 min-w-0">KYC Status</th>
+              <th className="py-4 px-4 min-w-0 cursor-pointer" onClick={() => handleSort('balance')}>
+                <div className="flex items-center gap-2">
                   <span>Balance</span>
                   {sortBy === 'balance' && (
                     <FiChevronDown className={`ml-1 transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
                   )}
                 </div>
               </th>
-              <th className="pb-4">Actions</th>
+              <th className="py-4 px-4 min-w-0">Actions</th>
             </tr>
           </thead>
           <tbody>
             {uniqueUsers.map(user => (
               <tr key={user.id || user._id} className="border-b border-gray-700 hover:bg-gray-700/50 transition-colors">
-                <td className="py-4 min-w-0">
-                  <div className="flex items-center min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3 flex-shrink-0">
+                <td className="py-4 px-4 min-w-0">
+                  <div className="flex items-center min-w-0 gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center flex-shrink-0">
                       {user.avatar ? (
                         <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
                       ) : (
                         <FiUser className="w-5 h-5 text-gray-400" />
                       )}
                     </div>
-                    <div className="min-w-0">
-                      <div className="font-medium truncate">{user.name}</div>
+                    <div className="min-w-0 overflow-hidden">
+                      <div className="font-medium truncate">{user.name || 'No name'}</div>
                       <div className="text-xs text-gray-400 truncate">ID: {user.id || user._id}</div>
                     </div>
                   </div>
                 </td>
-                <td className="py-4 truncate max-w-xs">{user.email}</td>
-                <td className="py-4">
+                <td className="py-4 px-4 min-w-0 break-words max-w-[16rem]">{user.email || 'N/A'}</td>
+                <td className="py-4 px-4 min-w-0">
                   <span className={`px-3 py-1 rounded-full text-xs ${getTierColor(user.tier)}`}>
-                    {user.tier}
+                    {user.tier || 'Unknown'}
                   </span>
                 </td>
-                <td className="py-4">
+                <td className="py-4 px-4 min-w-0">
                   <span className={`px-3 py-1 rounded-full text-xs ${getKYCStatusColor(user.kycStatus)}`}>
                     {user.kycStatus || 'Not Submitted'}
                   </span>
                 </td>
-                <td className="py-4 font-mono">
-                  {typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}
-                </td>
-                <td className="py-4">
-                  <div className="flex space-x-2">
+                <td className="py-4 px-4 min-w-0 font-mono">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</td>
+                <td className="py-4 px-4 min-w-0">
+                  <div className="flex flex-wrap gap-2">
                     <button 
                       onClick={() => onSelectUser(user)}
                       className="p-2 bg-gray-700 rounded-lg hover:bg-blue-600 transition-colors"
@@ -295,28 +293,48 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
           </tbody>
         </table>
       </div>
-
+ 
       {/* Mobile card view */}
       <div className="block md:hidden space-y-3">
         {uniqueUsers.map(user => (
-          <div key={user.id || user._id} className="bg-gray-800 rounded-lg p-3">
-            <div className="flex items-start justify-between">
+          <div key={user.id || user._id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <div className="flex flex-col sm:flex-row justify-between gap-3">
               <div className="min-w-0">
-                <div className="font-semibold truncate">{user.name}</div>
-                <div className="text-xs text-gray-400 truncate">{user.email}</div>
+                <div className="font-semibold text-white truncate">{user.name || 'No name'}</div>
+                <div className="text-xs text-gray-400 break-words truncate">{user.email || 'N/A'}</div>
                 <div className="text-xs text-gray-400 mt-1">ID: {user.id || user._id}</div>
               </div>
-              <div className="text-right ml-3">
-                <div className="font-mono">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</div>
-                <div className={`mt-1 px-2 py-0.5 rounded-full text-xs ${getTierColor(user.tier)}`}>{user.tier}</div>
+              <div className="flex flex-col items-start sm:items-end text-right gap-2">
+                <div className="font-mono text-sm">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</div>
+                <div className={`px-2 py-0.5 rounded-full text-xs ${getTierColor(user.tier)}`}>{user.tier || 'Unknown'}</div>
+                <div className={`px-2 py-0.5 rounded-full text-xs ${getKYCStatusColor(user.kycStatus)}`}>{user.kycStatus || 'Not Submitted'}</div>
               </div>
             </div>
-
-            <div className="mt-3 flex space-x-2">
-              <button onClick={() => onSelectUser(user)} className="flex-1 p-2 bg-gray-700 rounded-lg hover:bg-blue-600 transition-colors">View</button>
-              <button className="flex-1 p-2 bg-gray-700 rounded-lg hover:bg-blue-600 transition-colors">Edit</button>
-              <button onClick={() => setSelectedUserForBalance(user)} className="flex-1 p-2 bg-gray-700 rounded-lg hover:bg-green-600 transition-colors">Balance</button>
-              <button onClick={() => setSelectedUserForInvestment(user)} className="flex-1 p-2 bg-gray-700 rounded-lg hover:bg-yellow-600 transition-colors">Invest</button>
+ 
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <div className="rounded-lg bg-gray-900 p-3">
+                <div className="text-gray-400 text-xs">Email</div>
+                <div className="text-sm text-white break-words">{user.email || 'N/A'}</div>
+              </div>
+              <div className="rounded-lg bg-gray-900 p-3">
+                <div className="text-gray-400 text-xs">Tier</div>
+                <div className="text-sm text-white break-words">{user.tier || 'Unknown'}</div>
+              </div>
+              <div className="rounded-lg bg-gray-900 p-3">
+                <div className="text-gray-400 text-xs">KYC Status</div>
+                <div className="text-sm text-white break-words">{user.kycStatus || 'Not Submitted'}</div>
+              </div>
+              <div className="rounded-lg bg-gray-900 p-3">
+                <div className="text-gray-400 text-xs">Balance</div>
+                <div className="text-sm text-white break-words">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</div>
+              </div>
+            </div>
+ 
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button onClick={() => onSelectUser(user)} className="w-full p-2 bg-gray-700 rounded-lg hover:bg-blue-600 transition-colors">View</button>
+              <button className="w-full p-2 bg-gray-700 rounded-lg hover:bg-blue-600 transition-colors">Edit</button>
+              <button onClick={() => setSelectedUserForBalance(user)} className="w-full p-2 bg-gray-700 rounded-lg hover:bg-green-600 transition-colors">Balance</button>
+              <button onClick={() => setSelectedUserForInvestment(user)} className="w-full p-2 bg-gray-700 rounded-lg hover:bg-yellow-600 transition-colors">Invest</button>
             </div>
           </div>
         ))}
