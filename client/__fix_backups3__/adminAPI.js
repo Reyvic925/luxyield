@@ -1,4 +1,4 @@
-// src/services/adminAPI.js
+﻿// src/services/adminAPI.js
 import axios from 'axios';
 
 const base = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
@@ -11,7 +11,7 @@ API.interceptors.request.use((config) => {
   const token = localStorage.getItem('adminToken');
   if (token) {
     config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = Bearer ;
   }
   return config;
 }, (error) => Promise.reject(error));

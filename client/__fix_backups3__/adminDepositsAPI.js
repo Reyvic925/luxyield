@@ -1,9 +1,10 @@
-// src/services/adminDepositsAPI.js
+﻿// src/services/adminDepositsAPI.js
 import axios from 'axios';
 
 const API = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL + '/api/admin/deposits',
 });
+
 
 // Attach admin token if present
 API.interceptors.request.use((config) => {
@@ -26,9 +27,10 @@ export const getAdminDeposits = async () => {
 
 export const updateAdminDeposit = async (id, data) => {
   try {
-    const response = await API.patch(/, data);
+    const response = await API.patch(`/${id}`, data);
     return response.data;
   } catch (error) {
     throw error.response?.data?.message || 'Failed to update deposit';
   }
 };
+
