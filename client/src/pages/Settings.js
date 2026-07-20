@@ -12,7 +12,9 @@ import { setWithdrawalPin, requestPinReset as requestWithdrawalPinReset, resetPi
 
 export default function Settings({ adminView = false, profile: adminProfile = null }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const { user } = useUser();
+  // Always call hook, but conditionally use the values
+  const userContext = useUser();
+  const { user } = adminView ? { user: null } : userContext;
   const { lastRefresh, refreshUserData } = useUserDataRefresh();
   const [profile, setProfile] = useState(adminView && adminProfile ? adminProfile : null);
   const [edit, setEdit] = useState(false);

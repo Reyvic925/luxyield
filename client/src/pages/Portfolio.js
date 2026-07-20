@@ -24,11 +24,17 @@ const PLANS_API = '/api/plans';
 // Move PLAN_CONFIG to the top, after imports
 
 
-const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => {
+const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profile: adminProfile = null }) => {
   // Dynamically loaded plans
   const [planConfig, setPlanConfig] = useState({});
   const [investmentPlans, setInvestmentPlans] = useState([]);
-  const { kycStatus, isEmailVerified } = useUser();
+  // Always call hook, but conditionally use the values
+  const userContext = useUser();
+  const { kycStatus, isEmailVerified } = adminView && adminProfile ? 
+    { 
+      kycStatus: adminProfile?.kyc?.status || 'pending',
+      isEmailVerified: adminProfile?.isEmailVerified || false 
+    } : userContext;
   const { lastRefresh, refreshUserData } = useUserDataRefresh();
   const [portfolioData, setPortfolioData] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -154,7 +154,7 @@ const AdminMirrorUser = ({ userId, onBack }) => {
               Continue Completed Investment
             </button>
           </div>
-          <Portfolio adminView portfolioData={portfolioData} />
+          <Portfolio adminView portfolioData={portfolioData} profile={profile} />
         </>
       )}
       {tab==='settings' && <Settings adminView profile={profile} />}
