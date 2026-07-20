@@ -12,7 +12,7 @@ const RoiApprovals = () => {
       setError(null);
       try {
         const data = await getRoiWithdrawals();
-        setWithdrawals(data);
+        setWithdrawals(data.map(w => ({ ...w, id: w.id || w._id })));
       } catch (e) {
         setError(e?.message || 'Failed to fetch ROI withdrawals');
       } finally {
@@ -24,11 +24,11 @@ const RoiApprovals = () => {
 
   const handleApprove = async (id) => {
     await approveRoiWithdrawal(id);
-    setWithdrawals(withdrawals.filter(w => w._id !== id));
+    setWithdrawals(withdrawals.filter(w => (w.id || w._id) !== id));
   };
   const handleReject = async (id) => {
     await rejectRoiWithdrawal(id);
-    setWithdrawals(withdrawals.filter(w => w._id !== id));
+    setWithdrawals(withdrawals.filter(w => (w.id || w._id) !== id));
   };
 
   return (
@@ -41,10 +41,10 @@ const RoiApprovals = () => {
             {withdrawals.length === 0 ? (
               <div className="text-gray-400">No ROI withdrawals found.</div>
             ) : withdrawals.map(w => (
-              <div key={w._id} className="rounded-xl border border-gray-700 bg-gray-900 p-4">
+              <div key={w.id || w._id} className="rounded-xl border border-gray-700 bg-gray-900 p-4">
                 <div className="mb-3">
                   <div className="text-sm text-gray-400">User</div>
-                  <div className="text-white font-semibold break-words">{w.userId?.email || w.userId}</div>
+                  <div className="text-white font-semibold break-words">{w.userEmail || w.userId}</div>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm text-gray-300">
                   <div>
@@ -61,8 +61,8 @@ const RoiApprovals = () => {
                   </div>
                 </div>
                 <div className="mt-4 flex flex-col gap-2">
-                  <button className="w-full bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition" onClick={() => handleApprove(w._id)}>Approve</button>
-                  <button className="w-full bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 transition" onClick={() => handleReject(w._id)}>Reject</button>
+                  <button className="w-full bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition" onClick={() => handleApprove(w.id || w._id)}>Approve</button>
+                  <button className="w-full bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 transition" onClick={() => handleReject(w.id || w._id)}>Reject</button>
                 </div>
               </div>
             ))}
@@ -80,14 +80,14 @@ const RoiApprovals = () => {
               </thead>
               <tbody>
                 {withdrawals.map(w => (
-                  <tr key={w._id} className="border-b border-gray-800 hover:bg-gray-800 transition">
-                    <td className="py-3 px-4 break-words max-w-[10rem]">{w.userId?.email || w.userId}</td>
+                  <tr key={w.id || w._id} className="border-b border-gray-800 hover:bg-gray-800 transition">
+                    <td className="py-3 px-4 break-words max-w-[10rem]">{w.userEmail || w.userId}</td>
                     <td className="py-3 px-4 break-words">{w.amount}</td>
                     <td className="py-3 px-4 break-words">{new Date(w.createdAt).toLocaleString()}</td>
                     <td className="py-3 px-4 capitalize break-words">{w.status}</td>
                     <td className="py-3 px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
-                      <button className="bg-green-600 px-3 py-1 rounded text-white font-semibold hover:bg-green-700 transition" onClick={() => handleApprove(w._id)}>Approve</button>
-                      <button className="bg-red-600 px-3 py-1 rounded text-white font-semibold hover:bg-red-700 transition" onClick={() => handleReject(w._id)}>Reject</button>
+                      <button className="bg-green-600 px-3 py-1 rounded text-white font-semibold hover:bg-green-700 transition" onClick={() => handleApprove(w.id || w._id)}>Approve</button>
+                      <button className="bg-red-600 px-3 py-1 rounded text-white font-semibold hover:bg-red-700 transition" onClick={() => handleReject(w.id || w._id)}>Reject</button>
                     </td>
                   </tr>
                 ))}

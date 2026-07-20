@@ -20,7 +20,7 @@ const AdminWithdrawals = () => {
     const fetchWithdrawals = async () => {
       try {
         const data = await getWithdrawals(filters);
-        setWithdrawals(data);
+        setWithdrawals(data.map(w => ({ ...w, id: w.id || w._id })));
       } catch (error) {
         console.error('Failed to fetch withdrawals:', error);
       } finally {
@@ -30,10 +30,64 @@ const AdminWithdrawals = () => {
     fetchWithdrawals();
   }, [filters]);
 
-  const handleUpdateWithdrawal = async (id, status, notes, destination = 'available') => {
+  const getStageActions = (withdrawal) => {
+    if (!withdrawal) return {};
+    const status = withdrawal.status;
+
+    if (['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(status)) {
+      return {
+        approveStatus: 'activation_fee_approved',
+        rejectStatus: 'activation_fee_rejected',
+        approveLabel: 'Approve Activation Fee',
+        rejectLabel: 'Reject Activation Fee',
+        showDestination: false,
+        showTransactionHash: false
+      };
+    }
+
+    if (['awaiting_interest_tax', 'interest_tax_paid', 'interest_tax_rejected'].includes(status)) {
+      return {
+        approveStatus: 'interest_tax_approved',
+        rejectStatus: 'interest_tax_rejected',
+        approveLabel: 'Approve Interest Tax',
+        rejectLabel: 'Reject Interest Tax',
+        showDestination: false,
+        showTransactionHash: false
+      };
+    }
+
+    if (['awaiting_network_fee', 'network_fee_paid', 'network_fee_rejected'].includes(status)) {
+      return {
+        approveStatus: 'network_fee_approved',
+        rejectStatus: 'network_fee_rejected',
+        approveLabel: 'Approve Network Fee',
+        rejectLabel: 'Reject Network Fee',
+        showDestination: false,
+        showTransactionHash: true
+      };
+    }
+
+    if (status === 'pending') {
+      return {
+        approveStatus: 'completed',
+        rejectStatus: 'rejected',
+        approveLabel: 'Approve Withdrawal',
+        rejectLabel: 'Reject Withdrawal',
+        showDestination: true,
+        showTransactionHash: false
+      };
+    }
+
+    return {};
+  };
+
+  const handleUpdateWithdrawal = async (id, status, notes, destination = 'available', transactionHash) => {
     try {
-      const updated = await updateWithdrawal(id, { status, adminNotes: notes, destination });
-      setWithdrawals(withdrawals.map(w => w.id === updated.id ? updated : w));
+      const updates = { status, adminNotes: notes };
+      if (destination) updates.destination = destination;
+      if (transactionHash) updates.transactionHash = transactionHash;
+      const updated = await updateWithdrawal(id, updates);
+      setWithdrawals(withdrawals.map(w => (w.id === updated.id ? { ...w, ...updated } : w)));
       setSelectedWithdrawal(null);
       setExpandedId(null);
     } catch (error) {
@@ -57,7 +111,7 @@ const AdminWithdrawals = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-white">Withdrawal Management</h1>
           <div className="text-sm text-gray-400">
-            Pending: {withdrawals.filter(w => w.status === 'pending').length}
+            Pending: {withdrawals.filter(w => ['pending', 'awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected', 'awaiting_interest_tax', 'interest_tax_paid', 'interest_tax_rejected', 'withdrawal_processing', 'awaiting_network_fee', 'network_fee_paid', 'network_fee_rejected'].includes(w.status)).length}
           </div>
         </div>
 
@@ -106,8 +160,8 @@ const AdminWithdrawals = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${
-                    withdrawal.status === 'completed' ? 'bg-green-900 text-green-200' :
-                    withdrawal.status === 'pending' ? 'bg-yellow-900 text-yellow-200' :
+                    ['completed', 'activation_fee_approved', 'withdrawal_successful'].includes(withdrawal.status) ? 'bg-green-900 text-green-200' :
+                    ['pending', 'awaiting_activation_fee', 'activation_fee_paid', 'awaiting_interest_tax', 'interest_tax_paid', 'withdrawal_processing', 'awaiting_network_fee', 'network_fee_paid'].includes(withdrawal.status) ? 'bg-yellow-900 text-yellow-200' :
                     'bg-red-900 text-red-200'
                   }`}>
                     {withdrawal.status}
@@ -146,22 +200,26 @@ const AdminWithdrawals = () => {
                     </div>
                   </div>
 
-                  {withdrawal.status === 'pending' && (
-                    <div className="flex gap-2 pt-2">
-                      <button
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded font-semibold text-sm transition flex items-center justify-center gap-2"
-                        onClick={() => handleUpdateWithdrawal(withdrawal._id, 'completed', 'Approved')}
-                      >
-                        <FiCheckCircle size={16} /> Approve
-                      </button>
-                      <button
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded font-semibold text-sm transition flex items-center justify-center gap-2"
-                        onClick={() => handleUpdateWithdrawal(withdrawal._id, 'rejected', 'Rejected')}
-                      >
-                        <FiX size={16} /> Reject
-                      </button>
-                    </div>
-                  )}
+                  {(() => {
+                    const { approveStatus, rejectStatus, approveLabel, rejectLabel } = getStageActions(withdrawal);
+                    if (!approveLabel || !rejectLabel) return null;
+                    return (
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded font-semibold text-sm transition flex items-center justify-center gap-2"
+                          onClick={() => handleUpdateWithdrawal(withdrawal._id, approveStatus, 'Approved')}
+                        >
+                          <FiCheckCircle size={16} /> {approveLabel}
+                        </button>
+                        <button
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded font-semibold text-sm transition flex items-center justify-center gap-2"
+                          onClick={() => handleUpdateWithdrawal(withdrawal._id, rejectStatus, 'Rejected')}
+                        >
+                          <FiX size={16} /> {rejectLabel}
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
@@ -180,8 +238,14 @@ const AdminWithdrawals = () => {
       {selectedWithdrawal && (
         <WithdrawalDetail 
           withdrawal={selectedWithdrawal}
-          onApprove={(notes, destination) => handleUpdateWithdrawal(selectedWithdrawal.id, 'completed', notes, destination)}
-          onReject={notes => handleUpdateWithdrawal(selectedWithdrawal.id, 'rejected', notes)}
+          onApprove={(notes, destination, transactionHash) => {
+            const { approveStatus } = getStageActions(selectedWithdrawal);
+            return handleUpdateWithdrawal(selectedWithdrawal.id, approveStatus || 'completed', notes, destination, transactionHash);
+          }}
+          onReject={(notes) => {
+            const { rejectStatus } = getStageActions(selectedWithdrawal);
+            return handleUpdateWithdrawal(selectedWithdrawal.id, rejectStatus || 'rejected', notes);
+          }}
           onClose={() => setSelectedWithdrawal(null)}
         />
       )}

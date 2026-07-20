@@ -208,11 +208,49 @@ router.patch('/users/:id', authAdmin, auditLog('update_user', 'User', req => req
 // Get all withdrawal requests
 router.get('/withdrawals', authAdmin, async (req, res) => {
   try {
-    const withdrawals = await Withdrawal.find().sort('-createdAt');
-    // Return only essential fields to avoid serialization issues with nested structures
+    const { status, type, currency, network, userId } = req.query;
+    const filters = {};
+
+    if (type) filters.type = type;
+    if (currency) filters.currency = currency;
+    if (network) filters.network = network;
+    if (userId) filters.userId = userId;
+
+    if (status) {
+      if (status === 'pending') {
+        filters.status = {
+          $in: [
+            'awaiting_activation_fee',
+            'activation_fee_paid',
+            'activation_fee_rejected',
+            'activation_fee_approved',
+            'awaiting_interest_tax',
+            'interest_tax_paid',
+            'interest_tax_rejected',
+            'withdrawal_processing',
+            'awaiting_network_fee',
+            'network_fee_paid'
+          ]
+        };
+      } else if (status === 'completed') {
+        filters.status = { $in: ['withdrawal_successful', 'completed'] };
+      } else if (status === 'rejected') {
+        filters.status = { $in: ['activation_fee_rejected', 'interest_tax_rejected', 'network_fee_rejected', 'rejected', 'failed'] };
+      } else {
+        filters.status = status;
+      }
+    }
+
+    const withdrawals = await Withdrawal.find(filters)
+      .sort('-createdAt')
+      .populate('userId', 'email name');
+
     const cleanedWithdrawals = withdrawals.map(w => ({
+      id: w._id.toString(),
       _id: w._id,
-      userId: w.userId,
+      userId: w.userId?._id?.toString() || w.userId?.toString(),
+      userEmail: w.userId?.email || '',
+      userFullName: w.userId?.name || '',
       investmentId: w.investmentId,
       amount: w.amount,
       status: w.status,
@@ -220,9 +258,16 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
       walletAddress: w.walletAddress,
       network: w.network,
       currency: w.currency,
+      activationFeeAmount: w.activationFeeAmount,
+      activationFeePaid: w.activationFeePaid,
+      interestTaxAmount: w.interestTaxAmount,
+      interestTaxPaid: w.interestTaxPaid,
+      networkFeeAmount: w.networkFeeAmount,
+      networkFeePaid: w.networkFeePaid,
       createdAt: w.createdAt,
       updatedAt: w.updatedAt
     }));
+
     res.json(cleanedWithdrawals);
   } catch (err) {
     res.status(500).json({ message: err.message });

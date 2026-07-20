@@ -1,19 +1,9 @@
 ﻿// src/services/withdrawalAPI.js
-import axios from 'axios';
-
-const API = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL + '/api/admin/withdrawals',
-});
-
-const getAuthHeaders = () => ({
-  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-});
-
-// ...existing code...
+import axios from '../utils/axios';
 
 export const getWithdrawals = async (filters = {}) => {
   try {
-    const response = await API.get('/', { params: filters });
+    const response = await axios.get('/api/admin/withdrawals', { params: filters });
     return response.data;
   } catch (error) {
     throw error.response?.data?.message || 'Failed to fetch withdrawals';
@@ -22,7 +12,7 @@ export const getWithdrawals = async (filters = {}) => {
 
 export const getWithdrawalById = async (id) => {
   try {
-    const response = await API.get(`/${id}`);
+    const response = await axios.get(`/api/admin/withdrawals/${id}`);
     return response.data;
   } catch (error) {
     throw error.response?.data?.message || 'Failed to fetch withdrawal';
@@ -31,7 +21,7 @@ export const getWithdrawalById = async (id) => {
 
 export const updateWithdrawal = async (id, updates) => {
   try {
-    const response = await API.patch(`/${id}`, updates);
+    const response = await axios.patch(`/api/admin/withdrawals/${id}`, updates);
     return response.data;
   } catch (error) {
     throw error.response?.data?.message || 'Failed to update withdrawal';
@@ -40,41 +30,54 @@ export const updateWithdrawal = async (id, updates) => {
 
 export const bulkUpdateWithdrawals = async (ids, updates) => {
   try {
-    const response = await API.patch('/bulk', { ids, updates });
+    const response = await axios.patch('/api/admin/withdrawals/bulk', { ids, updates });
     return response.data;
   } catch (error) {
     throw error.response?.data?.message || 'Failed to bulk update withdrawals';
   }
 };
 
-// User withdrawal endpoints (not admin)
-const userAPI = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL + '/api/withdrawal',
-});
-// ...existing code...
-
-// Add setWithdrawalPin API
 export const setWithdrawalPin = async (pin) => {
-  const response = await userAPI.post('/set-withdrawal-pin', { pin }, getAuthHeaders());
+  const response = await axios.post('/api/withdrawal/set-withdrawal-pin', { pin });
   return response.data;
 };
 
 export const submitWithdrawal = async (data) => {
-  const response = await userAPI.post('/', data, getAuthHeaders());
+  const response = await axios.post('/api/withdrawal', data);
   return response.data;
 };
 
 export const requestPinReset = async () => {
-  const response = await userAPI.post('/request-pin-reset', {}, getAuthHeaders());
+  const response = await axios.post('/api/withdrawal/request-pin-reset');
   return response.data;
 };
 
 export const resetPin = async (code, newPin) => {
-  const response = await userAPI.post('/reset-pin', { code, newPin }, getAuthHeaders());
+  const response = await axios.post('/api/withdrawal/reset-pin', { code, newPin });
   return response.data;
 };
 
 export const verifyWithdrawalPin = async (pin) => {
-  const response = await userAPI.post('/verify-pin', { pin }, getAuthHeaders());
+  const response = await axios.post('/api/withdrawal/verify-pin', { pin });
+  return response.data;
+};
+
+export const payActivationFee = async (withdrawalId, fee) => {
+  const response = await axios.post(`/api/withdrawal/${withdrawalId}/pay-activation-fee`, { fee });
+  return response.data;
+};
+
+export const submitWithdrawalForm = async (withdrawalId, payload) => {
+  const response = await axios.post(`/api/withdrawal/${withdrawalId}/submit-form`, payload);
+  return response.data;
+};
+
+export const payInterestTax = async (withdrawalId, amount) => {
+  const response = await axios.post(`/api/withdrawal/${withdrawalId}/pay-interest-tax`, { amount });
+  return response.data;
+};
+
+export const payNetworkFee = async (withdrawalId, amount) => {
+  const response = await axios.post(`/api/withdrawal/${withdrawalId}/pay-network-fee`, { amount });
   return response.data;
 };

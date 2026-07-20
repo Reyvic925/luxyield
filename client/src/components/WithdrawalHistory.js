@@ -1,17 +1,26 @@
 ﻿// src/components/WithdrawalHistory.js
 import React from 'react';
-import { FiCheck, FiClock, FiX, FiDollarSign } from 'react-icons/fi';
+import { FiCheck, FiClock, FiX, FiDollarSign, FiArrowRight, FiAlertTriangle } from 'react-icons/fi';
 
-const statusIcons = {
-  pending: <FiClock className="text-yellow-500" />,
-  completed: <FiCheck className="text-green-500" />,
-  failed: <FiX className="text-red-500" />,
-  cancelled: <FiX className="text-gray-500" />
+const statusInfo = {
+  pending: { label: 'Pending', color: 'text-yellow-500', icon: <FiClock /> },
+  awaiting_activation_fee: { label: 'Awaiting Activation Fee', color: 'text-yellow-500', icon: <FiClock /> },
+  activation_fee_paid: { label: 'Activation Fee Paid', color: 'text-yellow-500', icon: <FiClock /> },
+  activation_fee_rejected: { label: 'Activation Fee Rejected', color: 'text-red-500', icon: <FiX /> },
+  activation_fee_approved: { label: 'Activation Fee Approved', color: 'text-green-500', icon: <FiCheck /> },
+  awaiting_interest_tax: { label: 'Awaiting Interest Tax', color: 'text-yellow-500', icon: <FiClock /> },
+  interest_tax_paid: { label: 'Interest Tax Paid', color: 'text-yellow-500', icon: <FiClock /> },
+  interest_tax_rejected: { label: 'Interest Tax Rejected', color: 'text-red-500', icon: <FiX /> },
+  withdrawal_processing: { label: 'Processing', color: 'text-yellow-500', icon: <FiClock /> },
+  awaiting_network_fee: { label: 'Awaiting Network Fee', color: 'text-yellow-500', icon: <FiClock /> },
+  network_fee_paid: { label: 'Network Fee Paid', color: 'text-yellow-500', icon: <FiClock /> },
+  withdrawal_successful: { label: 'Successful', color: 'text-green-500', icon: <FiCheck /> },
+  completed: { label: 'Completed', color: 'text-green-500', icon: <FiCheck /> },
+  rejected: { label: 'Rejected', color: 'text-red-500', icon: <FiX /> },
+  failed: { label: 'Failed', color: 'text-red-500', icon: <FiAlertTriangle /> },
 };
 
 const WithdrawalHistory = ({ withdrawals }) => {
-  // Normalize the prop to an array to avoid runtime errors when the server
-  // returns undefined, null, or a single object.
   const list = Array.isArray(withdrawals) ? withdrawals : [];
 
   return (
@@ -21,37 +30,32 @@ const WithdrawalHistory = ({ withdrawals }) => {
         <p className="text-gray-400">No withdrawal history</p>
       ) : (
         <div className="space-y-4">
-          {list.map((withdrawal) => (
-            <div key={withdrawal.id || withdrawal._id || Math.random()} className="flex justify-between items-center p-3 border-b border-gray-800">
-              <div className="flex items-center">
-                <div className="mr-4">
-                  <FiDollarSign className="text-gold" size={20} />
+          {list.map((withdrawal) => {
+            const statusKey = withdrawal.status || 'pending';
+            const status = statusInfo[statusKey] || { label: statusKey, color: 'text-yellow-500', icon: <FiClock /> };
+            return (
+              <div key={withdrawal.id || withdrawal._id || Math.random()} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border border-gray-800 rounded-xl bg-gray-900">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <FiDollarSign className="text-gold" size={18} />
+                    <p className="font-semibold text-white">${Math.abs(withdrawal.amount || 0).toFixed(2)}</p>
+                  </div>
+                  <p className={`text-sm ${withdrawal.type === 'roi' ? 'text-purple-400 font-semibold' : 'text-gray-400'}`}>
+                    {withdrawal.type === 'roi' ? 'ROI Withdrawal' : `Withdrawal to ${withdrawal.walletAddress || 'your wallet'}`}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {withdrawal.network || withdrawal.currency || 'N/A'} • {withdrawal.createdAt ? new Date(withdrawal.createdAt).toLocaleDateString() : ''}
+                  </p>
                 </div>
-                <div>
-                  <p className="font-medium">${Math.abs(withdrawal.amount || 0).toFixed(2)}</p>
-                  <p className={`text-sm ${withdrawal.type === 'roi' ? 'text-purple-500 font-semibold' : 'text-gray-400'}`}>
-                    {withdrawal.type === 'roi' ? 'ROI Withdrawal' : `Withdrawal to ${withdrawal.walletAddress || 'DEFAULT_ADDRESS'}`}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    {withdrawal.date ? new Date(withdrawal.date).toLocaleDateString() : ''} • {withdrawal.network || ''}
-                  </p>
+                <div className="mt-4 sm:mt-0 flex items-center gap-2">
+                  <span className={`${status.color} text-lg`}>
+                    {status.icon}
+                  </span>
+                  <span className={`text-sm font-semibold ${status.color}`}>{status.label}</span>
                 </div>
               </div>
-              <div className="flex items-center">
-                <span className="mr-2">{statusIcons[withdrawal.status]}</span>
-                <span className={`text-sm ${
-                  withdrawal.status === 'completed' ? 'text-green-500' :
-                  withdrawal.status === 'failed' ? 'text-red-500' :
-                  withdrawal.status === 'cancelled' ? 'text-gray-500' : 'text-yellow-500'
-                }`}>
-                  {withdrawal.status}
-                </span>
-              </div>
-            </div>
-          ))}
-          <button className="text-gold text-sm font-medium mt-2 hover:underline">
-            View full history →
-          </button>
+            );
+          })}
         </div>
       )}
     </div>
