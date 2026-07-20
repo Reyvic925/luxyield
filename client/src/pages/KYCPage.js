@@ -6,7 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FiCamera, FiUpload, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 
-const KYCPage = () => {
+const KYCPage = ({ adminView = false, kyc: adminKyc = null }) => {
   const [step, setStep] = useState(1); // 1: Info, 2: ID, 3: Selfie, 4: Review
   const [country, setCountry] = useState('');
   const [documentType, setDocumentType] = useState('');
@@ -25,10 +25,14 @@ const KYCPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [kycStatus, setKycStatus] = useState('pending');
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [kycStatus, setKycStatus] = useState(adminView && adminKyc ? adminKyc.status || 'pending' : 'pending');
+  const [rejectionReason, setRejectionReason] = useState(adminView && adminKyc ? adminKyc.rejectionReason || '' : '');
 
   useEffect(() => {
+    if (adminView) {
+      // In admin view, kyc data is passed as prop, no need to fetch
+      return;
+    }
     const fetchKYC = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -43,7 +47,7 @@ const KYCPage = () => {
       }
     };
     fetchKYC();
-  }, [success]);
+  }, [success, adminView]);
 
   // Preview for ID front file
   useEffect(() => {
@@ -80,6 +84,10 @@ const KYCPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (adminView) {
+      toast.error('Cannot submit KYC from admin view', { theme: 'dark' });
+      return;
+    }
     setError('');
     setSuccess(false);
     if (!country || !documentType || !selfieFile) {

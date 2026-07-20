@@ -10,13 +10,13 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { setWithdrawalPin, requestPinReset as requestWithdrawalPinReset, resetPin as resetWithdrawalPin } from '../services/withdrawalAPI';
 
-export default function Settings() {
+export default function Settings({ adminView = false, profile: adminProfile = null }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { user } = useUser();
   const { lastRefresh, refreshUserData } = useUserDataRefresh();
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState(adminView && adminProfile ? adminProfile : null);
   const [edit, setEdit] = useState(false);
-  const [form, setForm] = useState(null);
+  const [form, setForm] = useState(adminView && adminProfile ? adminProfile : null);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [changePassCode, setChangePassCode] = useState('');
   const [changePassMsg, setChangePassMsg] = useState('');
@@ -24,7 +24,7 @@ export default function Settings() {
   const [showLinkedAccounts, setShowLinkedAccounts] = useState(false);
   const [sessions, setSessions] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
-  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(adminView && adminProfile ? false : true);
   const [changePassStep, setChangePassStep] = useState(1);
 
   // Withdrawal PIN state
@@ -51,6 +51,10 @@ export default function Settings() {
 
   // Fetch sessions on mount
   useEffect(() => {
+    if (adminView) {
+      setLoadingSessions(false);
+      return;
+    }
     const fetchSessions = async () => {
       try {
         const res = await axios.get('/api/user/sessions', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
@@ -59,7 +63,7 @@ export default function Settings() {
       setLoadingSessions(false);
     };
     fetchSessions();
-  }, []);
+  }, [adminView]);
 
   // Logout session handler
   const handleLogoutSession = async (idx) => {
@@ -78,6 +82,14 @@ export default function Settings() {
   };
 
   const confirmDeleteAccount = async () => {
+    if (adminView) {
+      toast.error('Cannot delete user account from admin view', {
+        position: 'top-center',
+        autoClose: 3000,
+        theme: 'dark',
+      });
+      return;
+    }
     try {
       await axios.delete('/api/user/delete-account', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       toast.success('Account deleted. You will be logged out.', {
@@ -106,6 +118,11 @@ export default function Settings() {
 
   // Fetch real user profile from backend on mount and when KYC status may change
   useEffect(() => {
+    if (adminView) {
+      // In admin view, profile is passed as prop, no need to fetch
+      setLoadingProfile(false);
+      return;
+    }
     async function fetchProfileAndKYC() {
       try {
         // Fetch user profile
@@ -126,7 +143,7 @@ export default function Settings() {
       }
     }
     fetchProfileAndKYC();
-  }, [lastRefresh]);
+  }, [lastRefresh, adminView]);
 
   const navigate = useNavigate();
 
@@ -212,15 +229,18 @@ export default function Settings() {
   return (
     <div className="w-full px-2 sm:px-4 py-6 min-h-screen overflow-x-hidden overflow-y-auto box-border space-y-6">
       <ToastContainer />
-      <ConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={confirmDeleteAccount}
-        title="Delete Account"
-        message="Are you sure you want to delete your account? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-      />
+      {!adminView && (
+        <ConfirmModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={confirmDeleteAccount}
+          title="Delete Account"
+          message="Are you sure you want to delete your account? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+        />
+      )}
+      {adminView && <div className="bg-blue-900 bg-opacity-30 border border-blue-600 rounded-lg p-3 mb-4 text-blue-300 text-sm">Admin View - Settings are read-only</div>}
       <h1 className="text-2xl sm:text-3xl font-bold text-gold-gradient mb-6 flex items-center gap-2"><FiSettings /> Settings</h1>
       {/* Profile Section */}
       <div className="glassmorphic p-3 sm:p-6 rounded-xl w-full space-y-4">
@@ -263,11 +283,11 @@ export default function Settings() {
         <div className="flex flex-col sm:flex-row gap-2 mt-4 w-full">
           {edit ? (
             <>
-              <button className="bg-gold text-black px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-yellow-400" onClick={handleSave}><FiSave /> Save</button>
+              <button className="bg-gold text-black px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-yellow-400" onClick={handleSave} disabled={adminView}><FiSave /> Save</button>
               <button className="bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-600" onClick={() => setEdit(false)}><FiX /> Cancel</button>
             </>
           ) : (
-            <button className="bg-gold text-black px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-yellow-400" onClick={() => setEdit(true)}><FiEdit2 /> Edit</button>
+            <button className="bg-gold text-black px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-yellow-400" onClick={() => setEdit(true)} disabled={adminView}><FiEdit2 /> Edit</button>
           )}
         </div>
       </div>
