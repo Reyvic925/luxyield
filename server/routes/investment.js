@@ -147,90 +147,66 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       console.error('[WITHDRAW ROI] No ROI available to withdraw for investment:', investmentId, 'roi:', roi);
       return res.status(400).json({ success: false, error: 'No ROI available to withdraw.' });
     }
-    // Get wallet info from user or use defaults
-    let { walletAddress, network, currency } = req.body;
+
+    const requestedAmount = Number(req.body.amount) || roi;
+    if (requestedAmount <= 0 || requestedAmount > roi) {
+      return res.status(400).json({ success: false, error: 'Requested withdrawal amount must be greater than 0 and no more than available ROI.' });
+    }
+
     const user = await User.findById(userId);
-    console.log('[WITHDRAW ROI] User found:', !!user, 'wallets:', (user && user.wallets && user.wallets.length) || 0);
-    
     if (!user) {
       console.error('[WITHDRAW ROI] User not found:', userId);
       return res.status(404).json({ success: false, error: 'User not found.' });
     }
-    let wallet = null;
-    if (user.wallets && user.wallets.length > 0) {
-      wallet = user.wallets[0];
-    }
-    walletAddress = walletAddress || wallet?.address || 'DEFAULT_ADDRESS';
-    network = network || wallet?.network || 'ERC20';
-    currency = currency || wallet?.currency || 'USDT';
 
-    // Deduct ROI from investment.currentValue
-    investment.currentValue -= roi;
-    console.log('[WITHDRAW ROI] Deducted ROI from investment. New currentValue:', investment.currentValue);
-    
-    // Add ROI withdrawal transaction to investment history
-    investment.transactions.push({
-      type: 'withdrawal',
-      amount: roi,
-      date: new Date(),
-      description: 'ROI Withdrawal'
+    const existingWithdrawal = await Withdrawal.findOne({
+      investmentId: investment._id,
+      type: 'roi',
+      status: { $in: ['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_approved', 'awaiting_interest_tax', 'interest_tax_paid', 'withdrawal_processing', 'awaiting_network_fee', 'network_fee_paid'] }
     });
-    
-    // Mark ROI as withdrawn
-    investment.roiWithdrawn = true;
-    await investment.save();
-    console.log('[WITHDRAW ROI] Investment updated: ROI deducted and marked as withdrawn');
-    
-    // Create a pending withdrawal for ROI (for admin approval)
+    if (existingWithdrawal) {
+      return res.status(400).json({ success: false, error: 'A withdrawal request is already in progress for this investment.' });
+    }
+
+    const lockedBalance = user.lockedBalance || 0;
+    if (lockedBalance < requestedAmount) {
+      console.error('[WITHDRAW ROI] Insufficient locked balance for ROI withdrawal:', lockedBalance, 'requested:', requestedAmount);
+      return res.status(400).json({ success: false, error: 'Insufficient locked balance for ROI withdrawal.' });
+    }
+
+    user.lockedBalance = lockedBalance - requestedAmount;
+    await user.save();
+
+    if (requestedAmount === roi) {
+      investment.roiWithdrawn = true;
+      await investment.save();
+    }
+
+    // Reserve the requested ROI amount while waiting for activation fee and approval.
     const withdrawal = new Withdrawal({
       userId,
       investmentId,
-      amount: roi,
-      status: 'pending',
+      amount: requestedAmount,
+      reservedAmount: requestedAmount,
+      status: 'awaiting_activation_fee',
       type: 'roi',
-      walletAddress,
-      network,
-      currency,
+      walletAddress: '',
+      network: 'ERC20',
+      currency: 'USDT',
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    console.log('[WITHDRAW ROI] About to save withdrawal with amount:', roi);
     const savedWithdrawal = await withdrawal.save();
-    console.log('[WITHDRAW ROI] Withdrawal saved with ID:', savedWithdrawal._id);
-    
-    // Move ROI directly to lockedBalance (user's money, awaiting admin release)
-    user.lockedBalance = (user.lockedBalance || 0) + roi;
-    await user.save();
-    console.log('[WITHDRAW ROI] ROI amount added to lockedBalance. Awaiting admin approval to move to availableBalance');
-    
-    // Fetch updated locked balance
-    const newLockedBalance = user.lockedBalance;
-    console.log('[WITHDRAW ROI] Sending success response with roi:', roi, 'lockedBalance:', newLockedBalance);
-    
-    // Ensure roi and lockedBalance are valid numbers
-    if (typeof roi !== 'number' || typeof newLockedBalance !== 'number') {
-      console.error('[WITHDRAW ROI] Invalid response data types. roi:', typeof roi, 'lockedBalance:', typeof newLockedBalance);
-      return res.status(500).json({ success: false, error: 'Invalid ROI or balance calculation' });
-    }
+    console.log('[WITHDRAW ROI] Withdrawal created in awaiting_activation_fee with ID:', savedWithdrawal._id);
 
-    // Only return essential fields to avoid serialization issues with large transaction arrays
-    const responseData = { 
-      success: true, 
+    return res.status(200).json({
+      success: true,
+      message: 'ROI withdrawal request created. Awaiting activation fee.',
       withdrawalId: savedWithdrawal._id.toString(),
-      roi: Number(roi),
-      investment: {
-        currentValue: investment.currentValue,
-        roiWithdrawn: true
-      },
-      lockedBalance: Number(newLockedBalance),
-      availableBalance: Number(user.availableBalance || 0),
-      message: 'ROI withdrawn successfully! Amount moved to locked balance awaiting admin approval.'
-    };
-    console.log('[WITHDRAW ROI] About to send response:', JSON.stringify(responseData));
-    console.log('[WITHDRAW ROI] Response data types - roi:', typeof responseData.roi, 'lockedBalance:', typeof responseData.lockedBalance, 'availableBalance:', typeof responseData.availableBalance);
-    
-    // Use res.json which is more reliable than res.send
-    return res.status(200).json(responseData);
+      reservedAmount: requestedAmount,
+      lockedBalance: user.lockedBalance,
+      availableBalance: user.availableBalance || 0
+    });
   } catch (err) {
     console.error('[WITHDRAW ROI] ===== EXCEPTION CAUGHT =====');
     console.error('[WITHDRAW ROI] Error message:', err.message);

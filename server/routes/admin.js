@@ -7,6 +7,7 @@ const MarketEvent = require('../models/MarketEvent');
 const User = require('../models/User');
 const Withdrawal = require('../models/Withdrawal');
 const Deposit = require('../models/Deposit');
+const Config = require('../models/Config');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const auditLog = require('../middleware/auditLog');
@@ -228,17 +229,172 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
   }
 });
 
-// Approve/reject withdrawal
+// Approve/reject withdrawal stages
 router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
   try {
-    const { status, destination } = req.body;
+    const { status, destination, transactionHash } = req.body;
     const withdrawal = await Withdrawal.findById(req.params.id);
     if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
+
+    const user = await User.findById(withdrawal.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const requiredActivationFee = withdrawal.activationFeeAmount || Number(process.env.ACTIVATION_FEE_AMOUNT || 10);
+    const requiredInterestTax = withdrawal.interestTaxAmount || 0;
+    const requiredNetworkFee = withdrawal.networkFeeAmount || 0;
+
+    if (status === 'activation_fee_approved') {
+      if (!['activation_fee_paid', 'activation_fee_rejected'].includes(withdrawal.status)) {
+        return res.status(400).json({ message: 'Activation fee can only be approved after payment or rejection.' });
+      }
+      if ((withdrawal.activationFeePaid || 0) < requiredActivationFee) {
+        return res.status(400).json({ message: 'Activation fee has not been fully paid.' });
+      }
+
+      user.availableBalance = (user.availableBalance || 0) + withdrawal.amount;
+      await user.save();
+
+      withdrawal.status = 'activation_fee_approved';
+      withdrawal.processedAt = new Date();
+      withdrawal.processedBy = req.user.id;
+      await withdrawal.save();
+
+      return res.json({
+        success: true,
+        message: 'Activation fee approved and funds moved to available balance.',
+        withdrawal: {
+          _id: withdrawal._id,
+          amount: withdrawal.amount,
+          status: withdrawal.status,
+          type: withdrawal.type
+        },
+        userBalances: {
+          availableBalance: user.availableBalance,
+          lockedBalance: user.lockedBalance
+        }
+      });
+    }
+
+    if (status === 'activation_fee_rejected') {
+      if (!['activation_fee_paid', 'awaiting_activation_fee', 'activation_fee_rejected'].includes(withdrawal.status)) {
+        return res.status(400).json({ message: 'Activation fee can only be rejected while awaiting review.' });
+      }
+
+      withdrawal.status = 'activation_fee_rejected';
+      withdrawal.processedAt = new Date();
+      withdrawal.processedBy = req.user.id;
+      await withdrawal.save();
+
+      return res.json({
+        success: true,
+        message: 'Activation fee rejected. The withdrawal remains pending and can be resubmitted.',
+        withdrawal: {
+          _id: withdrawal._id,
+          amount: withdrawal.amount,
+          status: withdrawal.status,
+          type: withdrawal.type
+        }
+      });
+    }
+
+    if (status === 'interest_tax_approved') {
+      if (withdrawal.status !== 'interest_tax_paid') {
+        return res.status(400).json({ message: 'Interest tax can only be approved after payment.' });
+      }
+      if ((withdrawal.interestTaxPaid || 0) < requiredInterestTax) {
+        return res.status(400).json({ message: 'Interest tax has not been fully paid.' });
+      }
+
+      withdrawal.status = 'withdrawal_processing';
+      withdrawal.processingStartedAt = new Date();
+      withdrawal.processedAt = new Date();
+      withdrawal.processedBy = req.user.id;
+      await withdrawal.save();
+
+      return res.json({
+        success: true,
+        message: 'Interest tax approved. Withdrawal is now processing.',
+        withdrawal: {
+          _id: withdrawal._id,
+          amount: withdrawal.amount,
+          status: withdrawal.status,
+          type: withdrawal.type
+        }
+      });
+    }
+
+    if (status === 'interest_tax_rejected') {
+      if (!['awaiting_interest_tax', 'interest_tax_paid'].includes(withdrawal.status)) {
+        return res.status(400).json({ message: 'Interest tax can only be rejected during tax review.' });
+      }
+
+      withdrawal.status = 'interest_tax_rejected';
+      withdrawal.processedAt = new Date();
+      withdrawal.processedBy = req.user.id;
+      await withdrawal.save();
+
+      return res.json({
+        success: true,
+        message: 'Interest tax rejected. The withdrawal is paused until the tax payment is completed.',
+        withdrawal: {
+          _id: withdrawal._id,
+          amount: withdrawal.amount,
+          status: withdrawal.status,
+          type: withdrawal.type
+        }
+      });
+    }
+
+    if (status === 'network_fee_approved') {
+      if (withdrawal.status !== 'network_fee_paid') {
+        return res.status(400).json({ message: 'Network fee can only be approved after payment.' });
+      }
+      if ((withdrawal.networkFeePaid || 0) < requiredNetworkFee) {
+        return res.status(400).json({ message: 'Network fee has not been fully paid.' });
+      }
+
+      withdrawal.status = 'withdrawal_successful';
+      withdrawal.transactionHash = transactionHash || withdrawal.transactionHash;
+      withdrawal.processedAt = new Date();
+      withdrawal.processedBy = req.user.id;
+      await withdrawal.save();
+
+      return res.json({
+        success: true,
+        message: 'Network fee approved. Withdrawal has been finalized.',
+        withdrawal: {
+          _id: withdrawal._id,
+          amount: withdrawal.amount,
+          status: withdrawal.status,
+          type: withdrawal.type
+        }
+      });
+    }
+
+    if (status === 'network_fee_rejected') {
+      if (!['awaiting_network_fee', 'network_fee_paid'].includes(withdrawal.status)) {
+        return res.status(400).json({ message: 'Network fee can only be rejected during network fee review.' });
+      }
+
+      withdrawal.status = 'network_fee_rejected';
+      withdrawal.processedAt = new Date();
+      withdrawal.processedBy = req.user.id;
+      await withdrawal.save();
+
+      return res.json({
+        success: true,
+        message: 'Network fee rejected. The withdrawal remains pending until the fee is completed.',
+        withdrawal: {
+          _id: withdrawal._id,
+          amount: withdrawal.amount,
+          status: withdrawal.status,
+          type: withdrawal.type
+        }
+      });
+    }
+
+    // Legacy completion/rejection handling for backward compatibility
     if (status === 'completed' && withdrawal.status === 'pending') {
-      const user = await User.findById(withdrawal.userId);
-      if (!user) return res.status(404).json({ message: 'User not found' });
-      
-      // For ROI withdrawals: always move from locked to available
       if (withdrawal.type === 'roi') {
         if (user.lockedBalance >= withdrawal.amount) {
           user.lockedBalance -= withdrawal.amount;
@@ -247,19 +403,18 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
           return res.status(400).json({ message: 'Insufficient locked balance' });
         }
       } else {
-        // For regular withdrawals: follow destination parameter
         if (destination === 'available') {
           user.depositBalance += withdrawal.amount;
         } else if (destination === 'locked') {
           user.lockedBalance += withdrawal.amount;
         }
       }
-      
+
       withdrawal.status = 'completed';
       withdrawal.destination = destination;
       await user.save();
       await withdrawal.save();
-      // Return essential fields including updated balances
+
       return res.json({ 
         success: true, 
         message: `Withdrawal completed`,
@@ -275,22 +430,20 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
           depositBalance: user.depositBalance
         }
       });
-    } else {
-      // For reject or other status updates
-      withdrawal.status = status;
-      await withdrawal.save();
-      // Return essential fields
-      return res.json({ 
-        success: true, 
-        message: `Withdrawal ${status}`,
-        withdrawal: {
-          _id: withdrawal._id,
-          amount: withdrawal.amount,
-          status: withdrawal.status,
-          type: withdrawal.type
-        }
-      });
     }
+
+    withdrawal.status = status;
+    await withdrawal.save();
+    return res.json({ 
+      success: true, 
+      message: `Withdrawal ${status}`,
+      withdrawal: {
+        _id: withdrawal._id,
+        amount: withdrawal.amount,
+        status: withdrawal.status,
+        type: withdrawal.type
+      }
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
