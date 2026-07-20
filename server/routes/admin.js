@@ -150,9 +150,6 @@ router.get('/test', (req, res) => {
 // Register balance management routes
 router.use(require('./admin/balanceManagement'));
 
-// Register withdrawal management routes
-router.use('/withdrawals', require('./admin/withdrawalManagement'));
-
 // Create market event
 router.post('/market-events', authAdmin, async (req, res) => {
   try {

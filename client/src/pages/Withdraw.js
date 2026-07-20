@@ -1,7 +1,6 @@
-﻿// src/pages/Withdraw.js
-import React, { useState, useEffect } from 'react';
+// src/pages/Withdraw.js
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiCheck, FiInfo, FiClock, FiDollarSign, FiCopy, FiAlertTriangle, FiShield } from 'react-icons/fi';
 import WithdrawalHistory from '../components/WithdrawalHistory';
 import { useUser } from '../contexts/UserContext';
 import { useUserDataRefresh } from '../contexts/UserDataRefreshContext';
@@ -125,7 +124,7 @@ const Withdraw = () => {
       .find((w) => activeStatuses.has(w.status));
   };
 
-  const refreshBalances = async () => {
+  const refreshBalances = useCallback(async () => {
     try {
       const response = await axios.get('/api/portfolio');
       setAvailableBalance(response.data.userInfo?.availableBalance ?? 0);
@@ -133,9 +132,9 @@ const Withdraw = () => {
     } catch (err) {
       console.error('[WITHDRAW] Failed to refresh balances:', err);
     }
-  };
+  }, []);
 
-  const refreshWithdrawals = async () => {
+  const refreshWithdrawals = useCallback(async () => {
     try {
       const data = await getUserWithdrawals();
       setWithdrawals(data);
@@ -146,7 +145,7 @@ const Withdraw = () => {
     } catch (err) {
       console.error('[WITHDRAW] Failed to fetch user withdrawals:', err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const initialize = async () => {
@@ -155,7 +154,7 @@ const Withdraw = () => {
       setLoading(false);
     };
     initialize();
-  }, []);
+  }, [refreshBalances, refreshWithdrawals]);
 
   useEffect(() => {
     if (activeWithdrawal && activeWithdrawal.walletAddress) {
@@ -471,3 +470,4 @@ const Withdraw = () => {
 };
 
 export default Withdraw;
+

@@ -1,5 +1,18 @@
-﻿import React, { useState, useEffect } from 'react';
-import { getRoiWithdrawals, approveRoiWithdrawal, rejectRoiWithdrawal } from '../../services/roiAPI';
+import React, { useState, useEffect } from 'react';
+import { getRoiWithdrawals, updateRoiWithdrawalStatus } from '../../services/roiAPI';
+
+const getRoiActionForStatus = (status) => {
+  if (['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(status)) {
+    return { approve: 'activation_fee_approved', reject: 'activation_fee_rejected', approveLabel: 'Approve Activation Fee', rejectLabel: 'Reject Activation Fee' };
+  }
+  if (['awaiting_interest_tax', 'interest_tax_paid', 'interest_tax_rejected'].includes(status)) {
+    return { approve: 'interest_tax_approved', reject: 'interest_tax_rejected', approveLabel: 'Approve Interest Tax', rejectLabel: 'Reject Interest Tax' };
+  }
+  if (['awaiting_network_fee', 'network_fee_paid', 'network_fee_rejected'].includes(status)) {
+    return { approve: 'network_fee_approved', reject: 'network_fee_rejected', approveLabel: 'Approve Network Fee', rejectLabel: 'Reject Network Fee' };
+  }
+  return null;
+};
 
 const RoiApprovals = () => {
   const [withdrawals, setWithdrawals] = useState([]);
@@ -22,12 +35,8 @@ const RoiApprovals = () => {
     fetchData();
   }, []);
 
-  const handleApprove = async (id) => {
-    await approveRoiWithdrawal(id);
-    setWithdrawals(withdrawals.filter(w => (w.id || w._id) !== id));
-  };
-  const handleReject = async (id) => {
-    await rejectRoiWithdrawal(id);
+  const handleUpdate = async (id, status) => {
+    await updateRoiWithdrawalStatus(id, status);
     setWithdrawals(withdrawals.filter(w => (w.id || w._id) !== id));
   };
 
@@ -61,8 +70,28 @@ const RoiApprovals = () => {
                   </div>
                 </div>
                 <div className="mt-4 flex flex-col gap-2">
-                  <button className="w-full bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition" onClick={() => handleApprove(w.id || w._id)}>Approve</button>
-                  <button className="w-full bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 transition" onClick={() => handleReject(w.id || w._id)}>Reject</button>
+                  {(() => {
+                    const action = getRoiActionForStatus(w.status);
+                    if (!action) {
+                      return <div className="text-gray-400 text-sm">Awaiting next step</div>;
+                    }
+                    return (
+                      <>
+                        <button
+                          className="w-full bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition"
+                          onClick={() => handleUpdate(w.id || w._id, action.approve)}
+                        >
+                          {action.approveLabel}
+                        </button>
+                        <button
+                          className="w-full bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 transition"
+                          onClick={() => handleUpdate(w.id || w._id, action.reject)}
+                        >
+                          {action.rejectLabel}
+                        </button>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             ))}
@@ -86,8 +115,28 @@ const RoiApprovals = () => {
                     <td className="py-3 px-4 break-words">{new Date(w.createdAt).toLocaleString()}</td>
                     <td className="py-3 px-4 capitalize break-words">{w.status}</td>
                     <td className="py-3 px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
-                      <button className="bg-green-600 px-3 py-1 rounded text-white font-semibold hover:bg-green-700 transition" onClick={() => handleApprove(w.id || w._id)}>Approve</button>
-                      <button className="bg-red-600 px-3 py-1 rounded text-white font-semibold hover:bg-red-700 transition" onClick={() => handleReject(w.id || w._id)}>Reject</button>
+                      {(() => {
+                        const action = getRoiActionForStatus(w.status);
+                        if (!action) {
+                          return <span className="text-gray-400 text-sm">Awaiting next step</span>;
+                        }
+                        return (
+                          <>
+                            <button
+                              className="bg-green-600 px-3 py-1 rounded text-white font-semibold hover:bg-green-700 transition"
+                              onClick={() => handleUpdate(w.id || w._id, action.approve)}
+                            >
+                              {action.approveLabel}
+                            </button>
+                            <button
+                              className="bg-red-600 px-3 py-1 rounded text-white font-semibold hover:bg-red-700 transition"
+                              onClick={() => handleUpdate(w.id || w._id, action.reject)}
+                            >
+                              {action.rejectLabel}
+                            </button>
+                          </>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
@@ -101,4 +150,5 @@ const RoiApprovals = () => {
 };
 
 export default RoiApprovals;
+
 

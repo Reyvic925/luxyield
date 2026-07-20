@@ -25,7 +25,6 @@ import AdminPlans from './pages/AdminPlans';
 import UserInvestmentsAdmin from './pages/admin/UserInvestmentsAdmin';
 import AdminIndex from './pages/admin';
 import AdminMirror from './pages/admin/AdminMirror';
-import RoiApprovals from './pages/admin/RoiApprovals';
 import AdminColdWallet from './pages/admin/AdminColdWallet';
 
 // Client imports
@@ -102,7 +101,6 @@ function App() {
                     <Route path="send-email" element={<AdminSendEmail />} />
                     <Route path="announcements" element={<AdminAnnouncements />} />
                     <Route path="mirror" element={<AdminMirror />} />
-                    <Route path="roi-approvals" element={<RoiApprovals />} />
                     {/* <Route path="market-updates" element={<AdminMarketUpdates />} /> */}
                     <Route path="cold-wallet" element={<AdminColdWallet />} />
                   </Route>

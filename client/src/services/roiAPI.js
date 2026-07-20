@@ -1,4 +1,4 @@
-﻿import axios from '../utils/axios';
+import axios from '../utils/axios';
 
 export const getRoiWithdrawals = async () => {
   const res = await axios.get('/api/admin/withdrawals', {
@@ -10,16 +10,9 @@ export const getRoiWithdrawals = async () => {
   return res.data;
 };
 
-export const approveRoiWithdrawal = async (id) => {
+export const updateRoiWithdrawalStatus = async (id, status) => {
   const res = await axios.patch(`/api/admin/withdrawals/${id}`, {
-    status: 'activation_fee_approved'
-  });
-  return res.data;
-};
-
-export const rejectRoiWithdrawal = async (id) => {
-  const res = await axios.patch(`/api/admin/withdrawals/${id}`, {
-    status: 'activation_fee_rejected'
+    status
   });
   return res.data;
 };

@@ -1,8 +1,10 @@
 ﻿// src/components/InvestmentDetail.js
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import { FiX, FiDollarSign, FiPieChart, FiTrendingUp, FiClock } from 'react-icons/fi';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import axios from '../utils/axios';
 
 const BUILD_MARKER = 'axios-switch-20260213';
 console.log('[CLIENT BUILD] InvestmentDetail marker:', BUILD_MARKER);
@@ -68,6 +70,7 @@ const InvestmentDetail = ({ investment, onClose }) => {
         setAdjustLoading(false);
       }
     };
+  const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState('');
   const [tab, setTab] = useState('gains');
   const [liveInvestment, setLiveInvestment] = useState(investment);
@@ -168,6 +171,33 @@ const InvestmentDetail = ({ investment, onClose }) => {
   // Use liveInvestment for gains/losses, not stale investment prop
   const gainTxs = (liveInvestment.transactions || []).filter(t => (t.type === 'roi' || t.type === 'gain') && t.amount > 0);
   const lossTxs = (liveInvestment.transactions || []).filter(t => (t.type === 'roi' && t.amount < 0) || t.type === 'loss');
+
+  const handleWithdrawRoi = async () => {
+    if (!investment || investment.status !== 'completed') {
+      toast.error('You can only start an ROI withdrawal from a completed investment.');
+      return;
+    }
+
+    if (investment.roiWithdrawn) {
+      toast.info('ROI has already been withdrawn for this investment.');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`/api/investment/withdraw-roi/${investment.id || investment._id}`);
+      if (response?.data?.success) {
+        toast.success('ROI withdrawal request created. Continue in the withdrawal center to complete the staged flow.');
+        onClose?.();
+        navigate('/dashboard/withdraw', { replace: true });
+        return;
+      }
+
+      toast.error(response?.data?.error || response?.data?.message || 'Failed to start the ROI withdrawal flow.');
+    } catch (error) {
+      const message = error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Unable to start the ROI withdrawal flow.';
+      toast.error(message);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
@@ -340,151 +370,7 @@ const InvestmentDetail = ({ investment, onClose }) => {
             </button>
             <button
               className="px-6 py-2 bg-gold text-black rounded-lg hover:bg-yellow-600 transition"
-              onClick={async () => {
-                // Allow withdrawal if investment is completed, regardless of due date
-                if (investment.status !== 'completed') {
-                  alert('You cannot withdraw before the investment is completed.');
-                  return;
-                }
-                if (investment.roiWithdrawn) {
-                  alert('ROI has already been withdrawn for this investment.');
-                  return;
-                }
-                try {
-                  const token = localStorage.getItem('token');
-                  console.log('[INVEST_DETAIL] Starting ROI withdrawal for investment:', investment.id);
-
-                  // Capture user's lockedBalance snapshot using axios so auth headers and baseURL are applied
-                  let prevLocked = null;
-                  try {
-                    const axios = require('../utils/axios').default;
-                    const pResp = await axios.get('/api/portfolio');
-                    prevLocked = pResp?.data?.userInfo?.lockedBalance ?? null;
-                    console.log('[INVEST_DETAIL] Previous lockedBalance snapshot (axios):', prevLocked);
-                  } catch (snapErr) {
-                    console.warn('[INVEST_DETAIL] Could not fetch pre-withdraw portfolio snapshot (axios):', snapErr);
-                  }
-
-                  // Use axios.post so the request goes to the configured API base URL and includes auth headers
-                  const axios = require('../utils/axios').default;
-                  let res = null;
-                  let data = null;
-                  try {
-                    res = await axios.post(`/api/investment/withdraw-roi/${investment.id}`);
-                    console.log('[INVEST_DETAIL] Axios response received. Status:', res.status);
-                    data = res.data;
-                    if (!data || (typeof data === 'string' && data.trim() === '')) {
-                      console.warn('[INVEST_DETAIL] Axios response body empty or invalid');
-                      data = { success: false, error: 'Empty response from server' };
-                    }
-                  } catch (axiosErr) {
-                    // axios throws for non-2xx status codes; normalize into `res`/`data` so downstream logic still works
-                    console.error('[INVEST_DETAIL] Axios POST error:', axiosErr?.response?.status, axiosErr?.message);
-                    if (axiosErr.response) {
-                      res = axiosErr.response;
-                      data = axiosErr.response.data || { success: false, error: axiosErr.message };
-                    } else {
-                      res = { status: 0, ok: false };
-                      data = { success: false, error: axiosErr.message || 'Network error' };
-                    }
-                  }
-
-                  // If we got an empty response (or server returned an error-like payload) but status is 200, verify by checking the specific investment (more reliable)
-                  if ((res && res.status >= 200 && res.status < 300) && ((data == null) || (data && data.error && data.error.toString().toLowerCase().includes('empty response')))) {
-                    try {
-                      // Prefer checking the single-investment endpoint for roiWithdrawn flag
-                      const investmentVerifyRes = await fetch(`/api/portfolio/investment/${investment.id}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                      if (investmentVerifyRes.ok) {
-                        const invJson = await investmentVerifyRes.json();
-                        const roiFlag = invJson?.investment?.roiWithdrawn ?? null;
-                        console.log('[INVEST_DETAIL] Verification (investment) roiWithdrawn:', roiFlag);
-                        if (roiFlag === true) {
-                          console.log('[INVEST_DETAIL] Withdrawal likely succeeded (investment.roiWithdrawn=true) — treating as success');
-                          toast.success('ROI withdrawal submitted for admin review (verified).', { position: 'top-center', autoClose: 4000 });
-                          setTimeout(() => window.location.reload(), 1500);
-                          return;
-                        }
-                      }
-
-                      // Fallback: verify by checking portfolio lockedBalance if investment check didn't confirm
-                      const verifyRes = await fetch('/api/portfolio', { headers: { 'Authorization': `Bearer ${token}` } });
-                      if (verifyRes.ok) {
-                        const verifyJson = await verifyRes.json();
-                        const newLocked = verifyJson?.userInfo?.lockedBalance ?? null;
-                        console.log('[INVEST_DETAIL] Fallback verification lockedBalance:', newLocked, 'previous:', prevLocked);
-                        if (prevLocked !== null && newLocked !== null && newLocked > prevLocked) {
-                          console.log('[INVEST_DETAIL] Withdrawal likely succeeded (lockedBalance increased) — treating as success');
-                          toast.success('ROI withdrawal submitted for admin review (verified).', { position: 'top-center', autoClose: 4000 });
-                          setTimeout(() => window.location.reload(), 1500);
-                          return;
-                        }
-
-                        // If we cannot verify but status was 200, show a neutral message and suggest retry/check
-                        toast.error('Failed to withdraw ROI: Empty server response (please check portfolio or try again).', { position: 'top-center', autoClose: 6000 });
-                        return;
-                      }
-                    } catch (verifyErr) {
-                      console.warn('[INVEST_DETAIL] Verification fetch failed:', verifyErr);
-                      toast.error('Failed to withdraw ROI: Empty server response (verification failed).', { position: 'top-center', autoClose: 6000 });
-                      return;
-                    }
-                  }
-
-                  // Log headers for debugging when response body is unexpected
-                  try { console.debug('[INVEST_DETAIL] Response headers:', Object.fromEntries(res.headers.entries())); } catch (hErr) { /* ignore */ }
-
-                  // Check HTTP response status first
-                  if (!(res && res.status >= 200 && res.status < 300)) {
-                    const errorMsg = (data && (data.error || data.message)) || `HTTP ${res?.status || 0}`;
-                    console.error('[INVEST_DETAIL] Withdrawal failed with status', res?.status || 'N/A', ':', errorMsg);
-                    toast.error(`Failed to withdraw ROI: ${errorMsg}`, {
-                      position: 'top-center',
-                      autoClose: 5000
-                    });
-                    return;
-                  }
-
-                  if (data && data.success) {
-const roiAmount = typeof data.roi === 'number' ? data.roi.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.roi || '0';
-const availableBalance = typeof data.availableBalance === 'number' ? data.availableBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) : data.availableBalance || '0';
-console.log('[INVEST_DETAIL] Withdrawal successful!');
-toast.success(`ROI of $${roiAmount} withdrawn! Available balance: $${availableBalance}`, {
-  position: 'top-center',
-  autoClose: 5000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  progress: undefined,
-  style: {
-    background: 'linear-gradient(90deg, #FFD700 0%, #FFF8DC 100%)',
-    color: '#222',
-    fontWeight: 'bold',
-    fontSize: '1.2rem',
-    borderRadius: '12px',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.12)'
-  }
-});
-                  setTimeout(() => window.location.reload(), 5200);
-                  } else {
-                    console.log('[INVEST_DETAIL] Response object:', JSON.stringify(data, null, 2));
-                    console.log('[INVEST_DETAIL] data.success:', data?.success);
-                    console.log('[INVEST_DETAIL] data.error:', data?.error);
-                    console.log('[INVEST_DETAIL] data.message:', data?.message);
-                    const errorMsg = (data && (data.error || data.message)) || 'Withdrawal failed - no error details returned from server';
-                    toast.error(`Failed to withdraw ROI: ${errorMsg}`, {
-                      position: 'top-center',
-                      autoClose: 5000
-                    });
-                  }
-                } catch (err) {
-                  console.error('[INVEST_DETAIL] Withdraw ROI error:', err);
-                  toast.error(`Error withdrawing ROI: ${err.message || 'Network error'}`, {
-                    position: 'top-center',
-                    autoClose: 5000
-                  });
-                }
-              }}
+              onClick={handleWithdrawRoi}
               disabled={investment.roiWithdrawn}
             >
               {investment.roiWithdrawn ? 'ROI Withdrawn' : 'Withdraw'}

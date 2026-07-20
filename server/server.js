@@ -147,7 +147,6 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/admin/plans', require('./routes/admin/plans'));
 app.use('/api/admin/deposits', require('./routes/admin/deposits'));
 app.use('/api/market-updates', require('./routes/market-updates'));
-app.use('/api/admin/roi-approvals', require('./routes/admin/roi-approvals'));
 app.use('/api/admin/user-investments', require('./routes/admin/userInvestments'));
 app.use('/uploads', require('./routes/uploads'));
 app.use(require('./routes/sendTestEmail'));
