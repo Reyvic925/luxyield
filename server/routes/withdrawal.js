@@ -243,35 +243,6 @@ router.post('/verify-pin', auth, async (req, res) => {
   }
 });
 
-async function refundActivationFee(withdrawalId) {
-  try {
-    const withdrawal = await Withdrawal.findById(withdrawalId);
-    if (!withdrawal || withdrawal.activationFeeRefunded || !withdrawal.activationFeePaid) {
-      return;
-    }
-
-    const now = Date.now();
-    const paidAt = withdrawal.activationFeePaidAt ? withdrawal.activationFeePaidAt.getTime() : 0;
-    if (now - paidAt < 30000) {
-      return;
-    }
-
-    const user = await User.findById(withdrawal.userId);
-    if (!user) {
-      return;
-    }
-
-    user.availableBalance = (user.availableBalance || 0) + withdrawal.activationFeePaid;
-    await user.save();
-
-    withdrawal.activationFeeRefunded = true;
-    withdrawal.activationFeeRefundedAt = new Date();
-    await withdrawal.save();
-  } catch (err) {
-    console.error('[WITHDRAWAL] Activation fee refund failed:', err);
-  }
-}
-
 async function refreshWithdrawalProcessingStatus(withdrawal) {
   if (!withdrawal) return withdrawal;
   if (withdrawal.status !== 'withdrawal_processing' || !withdrawal.processingStartedAt) {
@@ -313,6 +284,16 @@ router.post('/:withdrawalId/pay-activation-fee', auth, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ success: false, error: 'User not found.' });
 
+    const defaultActivationFee = await getActivationFeeAmount();
+    withdrawal.activationFeeAmount = withdrawal.activationFeeAmount || defaultActivationFee;
+    const remainingFee = Math.max(withdrawal.activationFeeAmount - (withdrawal.activationFeePaid || 0), 0);
+    if (remainingFee === 0) {
+      return res.status(400).json({ success: false, error: 'Activation fee is already fully paid. Please wait for admin approval.' });
+    }
+    if (feePaid > remainingFee) {
+      return res.status(400).json({ success: false, error: `Please pay the remaining activation fee amount of $${remainingFee.toFixed(2)}.` });
+    }
+
     if ((user.availableBalance || 0) < feePaid) {
       return res.status(400).json({ success: false, error: 'Insufficient available balance for activation fee.' });
     }
@@ -320,18 +301,14 @@ router.post('/:withdrawalId/pay-activation-fee', auth, async (req, res) => {
     user.availableBalance -= feePaid;
     await user.save();
 
-    const defaultActivationFee = await getActivationFeeAmount();
-    withdrawal.activationFeeAmount = withdrawal.activationFeeAmount || defaultActivationFee;
     withdrawal.activationFeePaid = (withdrawal.activationFeePaid || 0) + feePaid;
     withdrawal.activationFeePaidAt = new Date();
     withdrawal.status = 'activation_fee_paid';
     await withdrawal.save();
 
-    setTimeout(() => refundActivationFee(withdrawal._id), 30000);
-
     return res.json({
       success: true,
-      message: 'Activation fee payment received. It will be refunded automatically after 30 seconds.',
+      message: 'Activation fee payment received. Waiting for admin approval.',
       withdrawal: {
         id: withdrawal._id.toString(),
         status: withdrawal.status,
@@ -348,9 +325,13 @@ router.post('/:withdrawalId/pay-activation-fee', auth, async (req, res) => {
 
 router.post('/:withdrawalId/submit-form', auth, async (req, res) => {
   try {
-    const { walletAddress, currency, network } = req.body;
-    if (!walletAddress || !currency || !network) {
-      return res.status(400).json({ success: false, error: 'Wallet address, currency, and network are required.' });
+    const { walletAddress, currency, network, pin } = req.body;
+    if (!walletAddress || !currency || !network || !pin) {
+      return res.status(400).json({ success: false, error: 'Wallet address, currency, network, and withdrawal PIN are required.' });
+    }
+
+    if (!/^[0-9]{6}$/.test(String(pin))) {
+      return res.status(400).json({ success: false, error: 'Withdrawal PIN must be exactly 6 digits.' });
     }
 
     const currencyInput = String(currency).toUpperCase();
@@ -367,9 +348,13 @@ router.post('/:withdrawalId/submit-form', auth, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Withdrawal form is not available until the activation fee is approved.' });
     }
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).select('+withdrawalPin');
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found.' });
+    }
+
+    if (!matchesStoredPin(user.withdrawalPin, String(pin).trim())) {
+      return res.status(400).json({ success: false, error: 'Invalid withdrawal PIN.' });
     }
 
     const taxPercent = await getInterestTaxPercent();
@@ -379,7 +364,7 @@ router.post('/:withdrawalId/submit-form', auth, async (req, res) => {
     withdrawal.currency = currencyInput;
     withdrawal.network = networkInput;
     withdrawal.interestTaxAmount = interestTaxAmount;
-    withdrawal.networkFeeAmount = await getNetworkFeeAmount(currency);
+    withdrawal.networkFeeAmount = await getNetworkFeeAmount(currencyInput);
     withdrawal.status = 'awaiting_interest_tax';
     await withdrawal.save();
 
@@ -389,9 +374,9 @@ router.post('/:withdrawalId/submit-form', auth, async (req, res) => {
       withdrawal: {
         id: withdrawal._id.toString(),
         status: withdrawal.status,
-        interestTaxAmount: interestTaxAmount,
+        interestTaxAmount,
         networkFeeAmount: withdrawal.networkFeeAmount,
-        networkFeeLabel: getNetworkFeeLabel(currency)
+        networkFeeLabel: getNetworkFeeLabel(currencyInput)
       }
     });
   } catch (err) {
@@ -420,6 +405,15 @@ router.post('/:withdrawalId/pay-interest-tax', auth, async (req, res) => {
 
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ success: false, error: 'User not found.' });
+
+    const remainingTax = Math.max((withdrawal.interestTaxAmount || 0) - (withdrawal.interestTaxPaid || 0), 0);
+    if (remainingTax === 0) {
+      return res.status(400).json({ success: false, error: 'Interest tax is already fully paid. Please wait for admin approval.' });
+    }
+    if (amount > remainingTax) {
+      return res.status(400).json({ success: false, error: `Please pay the remaining tax amount of $${remainingTax.toFixed(2)}.` });
+    }
+
     if ((user.availableBalance || 0) < amount) {
       return res.status(400).json({ success: false, error: 'Insufficient available balance for interest tax.' });
     }
@@ -471,6 +465,15 @@ router.post('/:withdrawalId/pay-network-fee', auth, async (req, res) => {
 
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ success: false, error: 'User not found.' });
+
+    const remainingNetworkFee = Math.max((withdrawal.networkFeeAmount || 0) - (withdrawal.networkFeePaid || 0), 0);
+    if (remainingNetworkFee === 0) {
+      return res.status(400).json({ success: false, error: 'Network fee is already fully paid. Please wait for admin approval.' });
+    }
+    if (amount > remainingNetworkFee) {
+      return res.status(400).json({ success: false, error: `Please pay the remaining network fee amount of $${remainingNetworkFee.toFixed(2)}.` });
+    }
+
     if ((user.availableBalance || 0) < amount) {
       return res.status(400).json({ success: false, error: 'Insufficient available balance for network fee.' });
     }

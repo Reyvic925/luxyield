@@ -293,6 +293,13 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
         return res.status(400).json({ message: 'Activation fee has not been fully paid.' });
       }
 
+      if (withdrawal.type === 'roi' && withdrawal.status === 'activation_fee_rejected') {
+        if ((user.lockedBalance || 0) < withdrawal.amount) {
+          return res.status(400).json({ message: 'Insufficient locked balance to release funds.' });
+        }
+        user.lockedBalance -= withdrawal.amount;
+      }
+
       user.availableBalance = (user.availableBalance || 0) + withdrawal.amount;
       await user.save();
 
@@ -322,6 +329,11 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
         return res.status(400).json({ message: 'Activation fee can only be rejected while awaiting review.' });
       }
 
+      if (withdrawal.type === 'roi' && ['awaiting_activation_fee', 'activation_fee_paid'].includes(withdrawal.status)) {
+        user.lockedBalance = (user.lockedBalance || 0) + withdrawal.amount;
+        await user.save();
+      }
+
       withdrawal.status = 'activation_fee_rejected';
       withdrawal.processedAt = new Date();
       withdrawal.processedBy = req.user.id;
@@ -329,12 +341,16 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
 
       return res.json({
         success: true,
-        message: 'Activation fee rejected. The withdrawal remains pending and can be resubmitted.',
+        message: 'Activation fee rejected. The withdrawal remains pending and funds remain locked until the request is completed.',
         withdrawal: {
           _id: withdrawal._id,
           amount: withdrawal.amount,
           status: withdrawal.status,
           type: withdrawal.type
+        },
+        userBalances: {
+          availableBalance: user.availableBalance,
+          lockedBalance: user.lockedBalance
         }
       });
     }

@@ -18,19 +18,35 @@ async function getPortfolioData(userId) {
   // Get all investments for the user
   const investments = await Investment.find({ user: userId });
   
+  const activeRoiStatuses = [
+    'awaiting_activation_fee',
+    'activation_fee_paid',
+    'activation_fee_rejected',
+    'activation_fee_approved',
+    'awaiting_interest_tax',
+    'interest_tax_paid',
+    'interest_tax_rejected',
+    'withdrawal_processing',
+    'awaiting_network_fee',
+    'network_fee_paid',
+    'network_fee_rejected',
+    'withdrawal_successful',
+    'completed'
+  ];
+
   // Check which investments have pending or confirmed ROI withdrawals
   const allRoiWithdrawals = await Withdrawal.find({
     userId: userId,
     type: 'roi',
-    status: { $in: ['pending', 'confirmed', 'completed'] }
+    status: { $in: activeRoiStatuses }
   }).lean();
   const allWithdrawalIds = new Set(allRoiWithdrawals.map(w => w.investmentId?.toString()));
   
-  // For display purposes, we also track confirmed-only withdrawals (admin approved)
+  // For display purposes, we also track confirmed-only withdrawals (successful or completed)
   const confirmedRoiWithdrawals = await Withdrawal.find({
     userId: userId,
     type: 'roi',
-    status: { $in: ['confirmed', 'completed'] }
+    status: { $in: ['withdrawal_successful', 'completed'] }
   }).lean();
   const confirmedWithdrawalIds = new Set(confirmedRoiWithdrawals.map(w => w.investmentId?.toString()));
   

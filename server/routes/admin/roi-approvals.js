@@ -38,13 +38,18 @@ router.patch('/:id', auth, async (req, res) => {
     const withdrawal = await Withdrawal.findById(req.params.id);
     if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
 
-    if (status === 'completed' && destination === 'available') {
-      if (!['activation_fee_paid', 'activation_fee_rejected'].includes(withdrawal.status)) {
+    if ((status === 'activation_fee_approved' || status === 'completed') && destination === 'available') {
+      if (!['activation_fee_paid', 'activation_fee_rejected', 'awaiting_activation_fee'].includes(withdrawal.status)) {
         return res.status(400).json({ message: 'Activation fee can only be approved after payment or review.' });
       }
       const user = await User.findById(withdrawal.userId);
       if (!user) return res.status(404).json({ message: 'User not found' });
 
+      if ((user.lockedBalance || 0) < withdrawal.amount) {
+        return res.status(400).json({ message: 'Insufficient locked balance' });
+      }
+
+      user.lockedBalance -= withdrawal.amount;
       user.availableBalance = (user.availableBalance || 0) + withdrawal.amount;
       await user.save();
 
