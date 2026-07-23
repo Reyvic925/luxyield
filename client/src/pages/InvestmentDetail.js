@@ -1,17 +1,18 @@
 ﻿// src/pages/InvestmentDetail.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useNavigate, useParams } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { simulatePerformance, simulateTestimonials, simulateActivity } from '../utils/simulateData';
-import WithdrawalModal from '../components/WithdrawalModal';
 
 const InvestmentDetail = () => {
   const { id } = useParams();
   const [investment, setInvestment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showWithdraw, setShowWithdraw] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const navigate = useNavigate();
   
   useEffect(() => {
     const fetchInvestment = async () => {
@@ -30,7 +31,38 @@ const InvestmentDetail = () => {
     };
     fetchInvestment();
   }, [id]);
-  
+   
+  const handleWithdrawRoi = async () => {
+    if (!investment) {
+      toast.error('Investment data is not available.');
+      return;
+    }
+    const investmentStatus = investment.status ? investment.status.toString().toLowerCase() : '';
+    if (investmentStatus !== 'completed') {
+      toast.error('You can only start an ROI withdrawal from a completed investment.');
+      return;
+    }
+    if (investment.roiWithdrawn) {
+      toast.info('ROI has already been withdrawn for this investment.');
+      return;
+    }
+    setWithdrawing(true);
+    try {
+      const response = await axios.post(`/api/investment/withdraw-roi/${investment._id || investment.id}`);
+      if (response?.data?.success) {
+        toast.success('ROI withdrawal request created. Continue in the withdrawal center to complete the staged flow.');
+        navigate('/dashboard/withdraw', { replace: true });
+        return;
+      }
+      toast.error(response?.data?.error || response?.data?.message || 'Failed to start the ROI withdrawal flow.');
+    } catch (err) {
+      const message = err?.response?.data?.error || err?.response?.data?.message || err.message || 'Unable to start the ROI withdrawal flow.';
+      toast.error(message);
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+   
   // Generate performance data for detail page
   const generatePerformanceData = () => {
     if (!investment) return [];
@@ -215,16 +247,17 @@ const InvestmentDetail = () => {
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
         <button 
-          onClick={() => setShowWithdraw(true)}
-          className="px-6 py-3 bg-red-500 bg-opacity-20 text-red-400 rounded-lg hover:bg-opacity-30 transition"
+          onClick={handleWithdrawRoi}
+          disabled={withdrawing || !investment || investment.status?.toString().toLowerCase() !== 'completed' || investment.roiWithdrawn}
+          className={`px-6 py-3 rounded-lg transition ${withdrawing || !investment || investment.status?.toString().toLowerCase() !== 'completed' || investment.roiWithdrawn ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-red-500 bg-opacity-20 text-red-400 hover:bg-opacity-30'}`}
         >
-          Request Withdrawal
+          {withdrawing ? 'Requesting...' : 'Request Withdrawal'}
         </button>
         <button className="px-6 py-3 bg-gold bg-opacity-20 text-gold rounded-lg hover:bg-opacity-30 transition">
           View Contract
         </button>
       </div>
-      
+       
       {/* Transaction History */}
       <div className="glassmorphic p-4 sm:p-6 rounded-xl">
         <h3 className="text-xl font-bold mb-4">Transaction History</h3>
@@ -250,14 +283,6 @@ const InvestmentDetail = () => {
         </div>
       </div>
       
-      {/* Withdrawal Modal */}
-      {showWithdraw && (
-        <WithdrawalModal 
-          isOpen={showWithdraw}
-          onClose={() => setShowWithdraw(false)}
-          investments={[investment]}
-        />
-      )}
       
       {/* Testimonials Section */}
       <div className="glassmorphic p-4 sm:p-6 rounded-xl">

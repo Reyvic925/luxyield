@@ -1,7 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import DepositModal from '../components/DepositModal';
-import WithdrawalModal from '../components/WithdrawalModal';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CryptoPriceWidget from './CryptoPriceWidget';
@@ -73,9 +72,8 @@ const Dashboard = () => {
       </div>
       {/* Add your dashboard content here, e.g. charts, quick actions, etc. */}
       <button onClick={() => setIsDepositOpen(true)} className="mr-2 px-4 py-2 bg-gold rounded">Deposit</button>
-      <button onClick={() => setIsWithdrawOpen(true)} className="px-4 py-2 bg-blue-500 rounded">Withdraw</button>
+      <button onClick={() => window.location.href = '/dashboard/withdraw'} className="px-4 py-2 bg-blue-500 rounded">Withdraw</button>
       <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} fundTypes={fundTypes} />
-      <WithdrawalModal isOpen={isWithdrawOpen} onClose={() => setIsWithdrawOpen(false)} investments={dashboardData.investments} />
       <ToastContainer position="bottom-right" autoClose={5000} />
     </div>
   );
