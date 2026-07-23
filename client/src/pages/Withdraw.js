@@ -115,6 +115,14 @@ const Withdraw = () => {
   const { kycStatus } = useUser();
   const { refreshUserData } = useUserDataRefresh();
 
+  const getErrorMessage = (error) => {
+    if (!error) return 'An unknown error occurred.';
+    if (error.response && error.response.data) {
+      return error.response.data.msg || error.response.data.error || error.response.data.message || error.message;
+    }
+    return error.message || String(error);
+  };
+
   useEffect(() => {
     if (selectedNetwork === 'BTC') setCurrency('BTC');
     else if (selectedNetwork === 'ETH') setCurrency('ETH');
@@ -127,7 +135,7 @@ const Withdraw = () => {
     if (!Array.isArray(items)) return null;
     return items
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .find((w) => activeStatuses.has(w.status));
+      .find((w) => w.type === 'regular' && activeStatuses.has(w.status));
   };
 
   const refreshBalances = useCallback(async () => {
@@ -177,7 +185,7 @@ const Withdraw = () => {
       await payActivationFee(activeWithdrawal._id || activeWithdrawal.id, fee);
       await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
     } catch (err) {
-      setActionError(err?.message || err?.error || 'Failed to pay activation fee');
+      setActionError(getErrorMessage(err));
     } finally {
       setActionLoading(false);
     }
@@ -216,7 +224,7 @@ const Withdraw = () => {
       setWithdrawPin('');
       await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
     } catch (err) {
-      setCreateError(err?.message || err?.error || err?.msg || 'Failed to create withdrawal request');
+      setCreateError(getErrorMessage(err));
     } finally {
       setCreateLoading(false);
     }
@@ -238,7 +246,7 @@ const Withdraw = () => {
       });
       await Promise.all([refreshWithdrawals(), refreshUserData()]);
     } catch (err) {
-      setActionError(err?.message || err?.error || 'Failed to submit withdrawal form');
+      setActionError(getErrorMessage(err));
     } finally {
       setActionLoading(false);
     }
@@ -252,7 +260,7 @@ const Withdraw = () => {
       await payInterestTax(activeWithdrawal._id || activeWithdrawal.id, activeWithdrawal.interestTaxAmount);
       await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
     } catch (err) {
-      setActionError(err?.message || err?.error || 'Failed to pay interest tax');
+      setActionError(getErrorMessage(err));
     } finally {
       setActionLoading(false);
     }
@@ -266,7 +274,7 @@ const Withdraw = () => {
       await payNetworkFee(activeWithdrawal._id || activeWithdrawal.id, activeWithdrawal.networkFeeAmount);
       await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
     } catch (err) {
-      setActionError(err?.message || err?.error || 'Failed to pay network fee');
+      setActionError(getErrorMessage(err));
     } finally {
       setActionLoading(false);
     }
@@ -324,15 +332,22 @@ const Withdraw = () => {
               <input
                 type="password"
                 value={withdrawPin}
-                onChange={(e) => setWithdrawPin(e.target.value)}
+                onChange={(e) => setWithdrawPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="Enter 6-digit PIN"
                 className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
               />
             </label>
 
             {createError && (
-              <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded-lg">
-                {createError}
+              <div className="space-y-2">
+                <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded-lg">
+                  {createError}
+                </div>
+                {createError.toLowerCase().includes('invalid withdrawal pin') && (
+                  <p className="text-gray-400 text-sm">
+                    If you have not set a withdrawal PIN, please set one in <a href="/dashboard/settings" className="text-gold underline">Settings</a> before creating a withdrawal.
+                  </p>
+                )}
               </div>
             )}
 
@@ -343,8 +358,8 @@ const Withdraw = () => {
             <button
               type="button"
               onClick={handleCreateWithdrawalRequest}
-              disabled={createLoading || !withdrawAmount || !walletAddress || !withdrawPin}
-              className={`w-full py-3 rounded-lg font-bold ${createLoading || !withdrawAmount || !walletAddress || !withdrawPin ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+              disabled={createLoading || !withdrawAmount || !walletAddress || !/^[0-9]{6}$/.test(withdrawPin)}
+              className={`w-full py-3 rounded-lg font-bold ${createLoading || !withdrawAmount || !walletAddress || !/^[0-9]{6}$/.test(withdrawPin) ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
             >
               {createLoading ? 'Creating withdrawal...' : 'Create Withdrawal Request'}
             </button>
@@ -371,9 +386,8 @@ const Withdraw = () => {
               <h3 className="text-2xl font-bold mt-2 text-white">{statusLabels[status] || status}</h3>
             </div>
             <div className="px-3 py-2 rounded-full bg-gray-800 text-sm text-gray-200">
-              {activeWithdrawal.type === 'roi' ? 'ROI Withdrawal' : 'Withdrawal'}
-            </div>
-          </div>
+              Withdrawal
+            </div>          </div>
           <p className="text-gray-400 mt-3 max-w-2xl">{statusDescriptions[status] || 'Follow the prompts to complete your withdrawal.'}</p>
         </div>
 
@@ -382,7 +396,7 @@ const Withdraw = () => {
             <p className="text-gray-400 text-sm">Requested Amount</p>
             <p className="text-white text-3xl font-semibold mt-2">${activeWithdrawal.amount?.toFixed(2) ?? '0.00'}</p>
             <p className="text-gray-500 text-sm mt-2">
-              {activeWithdrawal.type === 'roi' ? 'Reserved from locked balance' : 'Reserved from available balance'}
+              Reserved from your withdrawal request balance.
             </p>
           </div>
           <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">

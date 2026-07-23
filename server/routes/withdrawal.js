@@ -54,21 +54,30 @@ router.post('/', auth, async (req, res) => {
     const { amount, currency, network, address, pin } = req.body;
     const userId = req.user.id;
 
-    // Validate input
-    if (!amount || !currency || !network || !address || !pin) {
+    const addressInput = String(address || '').trim();
+    const pinInput = String(pin || '').trim();
+
+    if (!currency || !network || !addressInput || !pinInput) {
       return res.status(400).json({ msg: 'Please provide all required fields including PIN' });
     }
+
+    const requestedAmount = Number(amount);
+    if (!requestedAmount || requestedAmount <= 0) {
+      return res.status(400).json({ msg: 'Please provide a valid withdrawal amount greater than 0.' });
+    }
+
+    const currencyInput = String(currency).toUpperCase();
+    const networkInput = String(network).toUpperCase();
 
     const user = await User.findById(userId).select('+withdrawalPin');
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    if (!matchesStoredPin(user.withdrawalPin, pin)) {
+    if (!matchesStoredPin(user.withdrawalPin, pinInput)) {
       return res.status(400).json({ msg: 'Invalid withdrawal PIN' });
     }
 
-    const requestedAmount = Number(amount);
     const requestedCurrency = 'USD';
     let cryptoCurrency = '';
     let cryptoAmount = 0;
@@ -77,21 +86,21 @@ router.post('/', auth, async (req, res) => {
     // Fetch live rates
     const rates = await getCryptoUSDPrices();
 
-    if (currency === 'BTC' || network === 'BTC') {
+    if (currencyInput === 'BTC' || networkInput === 'BTC') {
       conversionRate = rates.BTC;
-      cryptoAmount = Number(amount) / conversionRate;
+      cryptoAmount = requestedAmount / conversionRate;
       cryptoCurrency = 'BTC';
-    } else if (currency === 'ETH' || network === 'ETH') {
+    } else if (currencyInput === 'ETH' || networkInput === 'ETH') {
       conversionRate = rates.ETH;
-      cryptoAmount = Number(amount) / conversionRate;
+      cryptoAmount = requestedAmount / conversionRate;
       cryptoCurrency = 'ETH';
-    } else if (currency === 'BNB' || network === 'BEP20') {
+    } else if (currencyInput === 'BNB' || networkInput === 'BEP20') {
       conversionRate = rates.BNB;
-      cryptoAmount = Number(amount) / conversionRate;
+      cryptoAmount = requestedAmount / conversionRate;
       cryptoCurrency = 'BNB';
-    } else if (currency === 'USDT' || ['ERC20', 'TRC20', 'BEP20'].includes(network)) {
+    } else if (currencyInput === 'USDT' || ['ERC20', 'TRC20', 'BEP20'].includes(networkInput)) {
       conversionRate = rates.USDT;
-      cryptoAmount = Number(amount) / conversionRate;
+      cryptoAmount = requestedAmount / conversionRate;
       cryptoCurrency = 'USDT';
     } else {
       return res.status(400).json({ msg: 'Unsupported currency or network.' });
@@ -112,8 +121,8 @@ router.post('/', auth, async (req, res) => {
       amount: requestedAmount,
       reservedAmount: requestedAmount,
       currency: cryptoCurrency,
-      network,
-      walletAddress: address,
+      network: networkInput,
+      walletAddress: addressInput,
       status: 'awaiting_activation_fee',
       activationFeeAmount,
       createdAt: new Date(),
@@ -344,6 +353,9 @@ router.post('/:withdrawalId/submit-form', auth, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Wallet address, currency, and network are required.' });
     }
 
+    const currencyInput = String(currency).toUpperCase();
+    const networkInput = String(network).toUpperCase();
+
     const withdrawal = await Withdrawal.findById(req.params.withdrawalId);
     if (!withdrawal) {
       return res.status(404).json({ success: false, error: 'Withdrawal not found.' });
@@ -363,9 +375,9 @@ router.post('/:withdrawalId/submit-form', auth, async (req, res) => {
     const taxPercent = await getInterestTaxPercent();
     const interestTaxAmount = Number(((user.availableBalance || 0) * taxPercent / 100).toFixed(2));
 
-    withdrawal.walletAddress = walletAddress;
-    withdrawal.currency = currency;
-    withdrawal.network = network;
+    withdrawal.walletAddress = String(walletAddress).trim();
+    withdrawal.currency = currencyInput;
+    withdrawal.network = networkInput;
     withdrawal.interestTaxAmount = interestTaxAmount;
     withdrawal.networkFeeAmount = await getNetworkFeeAmount(currency);
     withdrawal.status = 'awaiting_interest_tax';

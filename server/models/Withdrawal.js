@@ -26,7 +26,7 @@ const WithdrawalSchema = new mongoose.Schema({
   processingStartedAt: { type: Date },
   walletAddress: { type: String, default: '' },
   currency: { type: String, required: true, enum: ['USDT', 'BTC', 'ETH', 'BNB'] },
-  network: { type: String, required: true, enum: ['ERC20', 'TRC20', 'BEP20', 'BTC'] },
+  network: { type: String, required: true, enum: ['ERC20', 'TRC20', 'BEP20', 'BTC', 'ETH'] },
   status: { 
     type: String, 
     required: true, 

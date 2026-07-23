@@ -8,11 +8,12 @@ axios.interceptors.request.use((config) => {
   // Prefer adminToken for admin routes, else use user token
   const adminToken = localStorage.getItem('adminToken');
   const userToken = localStorage.getItem('token');
-  
+  config.headers = config.headers || {};
+
   // For /api/admin routes, always use adminToken
   if (adminToken && config.url && config.url.includes('/api/admin')) {
     config.headers.Authorization = `Bearer ${adminToken}`;
-  } 
+  }
   // For non-admin routes, check if admin is viewing (has adminToken) - they may be viewing user data from mirror
   // In this case, still use adminToken for the API call to user endpoints when accessed from mirror feature
   else if (adminToken && config.url && (config.url.includes('/api/user') || config.url.includes('/api/portfolio'))) {
@@ -35,3 +36,4 @@ axios.interceptors.response.use(
 );
 
 export default axios;
+
