@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axios from '../utils/axios';
 
 const KYCStatus = () => {
   const [status, setStatus] = useState('pending');
@@ -10,10 +10,7 @@ const KYCStatus = () => {
     const fetchKYC = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('/api/auth/kyc/status', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get('/api/auth/kyc/status');
         setStatus(res.data.kyc.status || 'pending');
         setReason(res.data.kyc.rejectionReason || '');
       } catch (err) {

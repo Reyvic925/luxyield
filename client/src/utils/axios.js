@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 
 // Set base URL globally for all axios requests
 axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || '';
@@ -18,7 +18,7 @@ axios.interceptors.request.use((config) => {
   else if (adminToken && config.url && (config.url.includes('/api/user') || config.url.includes('/api/portfolio'))) {
     config.headers.Authorization = `Bearer ${adminToken}`;
   }
-  // Otherwise use user token if available
+  // Otherwise use user token if available - covers /api/auth routes and general user endpoints
   else if (userToken) {
     config.headers.Authorization = `Bearer ${userToken}`;
   }
@@ -34,6 +34,4 @@ axios.interceptors.response.use(
   }
 );
 
-
 export default axios;
-

@@ -11,6 +11,11 @@ export const getWithdrawalById = async (withdrawalId) => {
   return response.data.withdrawal || null;
 };
 
+export const createWithdrawal = async (payload) => {
+  const response = await axios.post('/api/withdrawal', payload);
+  return response.data;
+};
+
 export const payActivationFee = async (withdrawalId, fee) => {
   const response = await axios.post(`/api/withdrawal/${withdrawalId}/pay-activation-fee`, { fee });
   return response.data;

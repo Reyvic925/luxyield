@@ -1,12 +1,12 @@
 // src/pages/Withdraw.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import WithdrawalHistory from '../components/WithdrawalHistory';
 import { useUser } from '../contexts/UserContext';
 import { useUserDataRefresh } from '../contexts/UserDataRefreshContext';
 import axios from '../utils/axios';
 import {
   getUserWithdrawals,
+  createWithdrawal,
   payActivationFee,
   submitWithdrawalForm,
   payInterestTax,
@@ -14,6 +14,7 @@ import {
 } from '../services/userWithdrawalAPI';
 
 const statusLabels = {
+  pending: 'Pending Withdrawal Request',
   awaiting_activation_fee: 'Awaiting Activation Fee',
   activation_fee_paid: 'Activation Fee Paid — Awaiting Admin Review',
   activation_fee_rejected: 'Activation Fee Rejected',
@@ -31,7 +32,8 @@ const statusLabels = {
 };
 
 const statusDescriptions = {
-  awaiting_activation_fee: 'Your ROI withdrawal request is waiting for the activation fee. Pay the fee from your available balance to continue.',
+  pending: 'Your withdrawal request has been received and is ready for activation fee payment.',
+  awaiting_activation_fee: 'Your withdrawal request is waiting for the activation fee. Pay the fee from your available balance to continue.',
   activation_fee_paid: 'Your activation fee has been paid. Please wait for admin approval before submitting the withdrawal form.',
   activation_fee_rejected: 'The activation fee payment was rejected. Pay the full fee again and resubmit.',
   activation_fee_approved: 'Activation fee approved. Submit the withdrawal form with your wallet address and selected cryptocurrency.',
@@ -56,6 +58,7 @@ const networks = [
 ];
 
 const activeStatuses = new Set([
+  'pending',
   'awaiting_activation_fee',
   'activation_fee_paid',
   'activation_fee_rejected',
@@ -102,12 +105,15 @@ const Withdraw = () => {
   const [walletAddress, setWalletAddress] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState('ERC20');
   const [currency, setCurrency] = useState('USDT');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawPin, setWithdrawPin] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [createError, setCreateError] = useState('');
   const { kycStatus } = useUser();
   const { refreshUserData } = useUserDataRefresh();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (selectedNetwork === 'BTC') setCurrency('BTC');
@@ -177,6 +183,45 @@ const Withdraw = () => {
     }
   };
 
+  const handleCreateWithdrawalRequest = async () => {
+    setCreateError('');
+    const amount = Number(withdrawAmount);
+    if (!amount || amount <= 0) {
+      setCreateError('Enter a valid withdrawal amount greater than zero.');
+      return;
+    }
+    if (amount > availableBalance) {
+      setCreateError('Withdrawal amount exceeds your available balance.');
+      return;
+    }
+    if (!walletAddress || !validateWalletAddress(walletAddress, selectedNetwork)) {
+      setCreateError('Enter a valid wallet address for the selected network.');
+      return;
+    }
+    if (!/^[0-9]{6}$/.test(withdrawPin)) {
+      setCreateError('Enter your 6-digit withdrawal PIN.');
+      return;
+    }
+
+    setCreateLoading(true);
+    try {
+      await createWithdrawal({
+        amount,
+        currency,
+        network: selectedNetwork,
+        address: walletAddress,
+        pin: withdrawPin,
+      });
+      setWithdrawAmount('');
+      setWithdrawPin('');
+      await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
+    } catch (err) {
+      setCreateError(err?.message || err?.error || err?.msg || 'Failed to create withdrawal request');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   const handleSubmitWithdrawalForm = async () => {
     if (!activeWithdrawal) return;
     if (!validateWalletAddress(walletAddress, selectedNetwork)) {
@@ -227,25 +272,85 @@ const Withdraw = () => {
     }
   };
 
-  const handleStartWithdrawal = () => {
-    navigate('/dashboard/portfolio');
-  };
-
   const renderActionPanel = () => {
     if (!activeWithdrawal) {
       return (
         <div className="glassmorphic p-6 rounded-xl bg-gray-900 border border-gray-700">
-          <h3 className="text-xl font-bold mb-4">No active ROI withdrawal request</h3>
+          <h3 className="text-xl font-bold mb-4">Start a Withdrawal</h3>
           <p className="text-gray-400 mb-4">
-            Start an ROI withdrawal from your completed investment details page. Once the request is created, you can pay the activation fee, submit the withdrawal form, and pay the tax and network fees here.
+            Initiate a new withdrawal request from your available balance. Your requested amount will be reserved and the withdrawal will proceed through verification, tax, and network fee stages.
           </p>
-          <button
-            type="button"
-            onClick={handleStartWithdrawal}
-            className="bg-gold text-black rounded-lg px-5 py-3 font-bold hover:bg-yellow-600 transition"
-          >
-            Go to Investments
-          </button>
+
+          <div className="grid grid-cols-1 gap-4">
+            <label className="block">
+              <span className="text-gray-400 text-sm">Withdrawal Amount (USD)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                placeholder="e.g. 1500"
+                className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-gray-400 text-sm">Network</span>
+              <select
+                value={selectedNetwork}
+                onChange={(e) => setSelectedNetwork(e.target.value)}
+                className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
+              >
+                {networks.map((network) => (
+                  <option key={network.id} value={network.id}>{network.name}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="text-gray-400 text-sm">Wallet Address</span>
+              <input
+                type="text"
+                value={walletAddress}
+                onChange={(e) => setWalletAddress(e.target.value)}
+                placeholder={selectedNetwork === 'BTC' ? 'e.g. 1A1zP1...' : selectedNetwork === 'ERC20' ? 'e.g. 0x...' : selectedNetwork === 'TRC20' ? 'e.g. T...' : 'e.g. 0x...'}
+                className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-gray-400 text-sm">Withdrawal PIN</span>
+              <input
+                type="password"
+                value={withdrawPin}
+                onChange={(e) => setWithdrawPin(e.target.value)}
+                placeholder="Enter 6-digit PIN"
+                className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
+              />
+            </label>
+
+            {createError && (
+              <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded-lg">
+                {createError}
+              </div>
+            )}
+
+            <p className="text-gray-500 text-sm">
+              Your withdrawal amount will be reserved immediately. You will then be prompted to pay the activation fee to continue.
+            </p>
+
+            <button
+              type="button"
+              onClick={handleCreateWithdrawalRequest}
+              disabled={createLoading || !withdrawAmount || !walletAddress || !withdrawPin}
+              className={`w-full py-3 rounded-lg font-bold ${createLoading || !withdrawAmount || !walletAddress || !withdrawPin ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+            >
+              {createLoading ? 'Creating withdrawal...' : 'Create Withdrawal Request'}
+            </button>
+          </div>
+
+          <p className="text-gray-500 text-sm mt-4">Your withdrawal amount will be reserved from your available balance while the request progresses through the next stages.</p>
         </div>
       );
     }
@@ -276,7 +381,9 @@ const Withdraw = () => {
           <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
             <p className="text-gray-400 text-sm">Requested Amount</p>
             <p className="text-white text-3xl font-semibold mt-2">${activeWithdrawal.amount?.toFixed(2) ?? '0.00'}</p>
-            <p className="text-gray-500 text-sm mt-2">Reserved from locked balance</p>
+            <p className="text-gray-500 text-sm mt-2">
+              {activeWithdrawal.type === 'roi' ? 'Reserved from locked balance' : 'Reserved from available balance'}
+            </p>
           </div>
           <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
             <p className="text-gray-400 text-sm">Available Balance</p>
@@ -443,8 +550,8 @@ const Withdraw = () => {
     <div className="max-w-5xl w-full mx-auto p-2 sm:p-4 overflow-auto">
       <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold">ROI Withdrawal Center</h1>
-          <p className="text-gray-400 mt-2">Manage your staged ROI withdrawal requests, activation fees, tax payments, and network fees in one place.</p>
+          <h1 className="text-3xl font-bold">Withdrawal Center</h1>
+          <p className="text-gray-400 mt-2">Manage your staged withdrawal requests, activation fees, tax payments, and network fees in one place.</p>
         </div>
       </div>
 

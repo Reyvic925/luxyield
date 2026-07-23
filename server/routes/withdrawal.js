@@ -68,7 +68,6 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ msg: 'Invalid withdrawal PIN' });
     }
 
-    // Always return what the user entered and what will be sent
     const requestedAmount = Number(amount);
     const requestedCurrency = 'USD';
     let cryptoCurrency = '';
@@ -78,12 +77,11 @@ router.post('/', auth, async (req, res) => {
     // Fetch live rates
     const rates = await getCryptoUSDPrices();
 
-    // Robust currency selection
     if (currency === 'BTC' || network === 'BTC') {
       conversionRate = rates.BTC;
       cryptoAmount = Number(amount) / conversionRate;
       cryptoCurrency = 'BTC';
-    } else if (currency === 'ETH' || network === 'ERC20') {
+    } else if (currency === 'ETH' || network === 'ETH') {
       conversionRate = rates.ETH;
       cryptoAmount = Number(amount) / conversionRate;
       cryptoCurrency = 'ETH';
@@ -91,7 +89,7 @@ router.post('/', auth, async (req, res) => {
       conversionRate = rates.BNB;
       cryptoAmount = Number(amount) / conversionRate;
       cryptoCurrency = 'BNB';
-    } else if (currency === 'USDT' || network === 'USDT') {
+    } else if (currency === 'USDT' || ['ERC20', 'TRC20', 'BEP20'].includes(network)) {
       conversionRate = rates.USDT;
       cryptoAmount = Number(amount) / conversionRate;
       cryptoCurrency = 'USDT';
@@ -100,27 +98,30 @@ router.post('/', auth, async (req, res) => {
     }
 
     // Check user balance (in USD) - use availableBalance which includes ROI
-    if (user.availableBalance < requestedAmount) {
-      return res.status(400).json({ msg: 'Insufficient balance for withdrawal.' });
+    const activationFeeAmount = await getActivationFeeAmount();
+    if (user.availableBalance < requestedAmount + activationFeeAmount) {
+      return res.status(400).json({ msg: `Insufficient balance for withdrawal. Please keep at least $${activationFeeAmount} available to cover the activation fee.` });
     }
 
     user.availableBalance -= requestedAmount;
     await user.save();
 
-    // Create withdrawal record
     const newWithdrawal = new Withdrawal({
+      type: 'regular',
       userId: userId,
       amount: requestedAmount,
+      reservedAmount: requestedAmount,
       currency: cryptoCurrency,
       network,
       walletAddress: address,
-      status: 'pending',
-      fee: 0
+      status: 'awaiting_activation_fee',
+      activationFeeAmount,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     await newWithdrawal.save();
 
-    // Format cryptoAmount to 8 decimals for display
     const cryptoAmountDisplay = cryptoAmount ? cryptoAmount.toFixed(8) : '0';
 
     console.log('[WITHDRAWAL API] Returning:', {
@@ -132,7 +133,7 @@ router.post('/', auth, async (req, res) => {
     });
     res.json({
       success: true,
-      msg: 'Withdrawal request submitted',
+      msg: 'Withdrawal request created and awaiting activation fee.',
       withdrawal: newWithdrawal,
       requestedAmount,
       requestedCurrency,
