@@ -42,10 +42,10 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
         </button>
       </div>
       <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-800 bg-gray-950">
-        <table className="w-full text-sm min-w-full table-auto">
+        <table className="w-full text-sm min-w-full table-fixed">
         <thead>
           <tr className="bg-gray-900 border-b border-gray-800 text-left">
-            <th className="py-4 px-4 w-40 font-semibold text-gray-300">ID</th>
+            <th className="py-4 px-4 w-36 font-semibold text-gray-300">ID</th>
             <th className="py-4 px-4 w-48 font-semibold text-gray-300">User</th>
             <th className="py-4 px-4 w-36 font-semibold text-gray-300">Amount</th>
             <th className="py-4 px-4 w-36 font-semibold text-gray-300">Activation Fee</th>
@@ -67,33 +67,33 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
             withdrawals.map(wd => (
               <React.Fragment key={wd.id}>
               <tr className="border-b border-gray-800 hover:bg-gray-900 transition">
-                <td className="py-3 px-4 font-mono text-xs text-gray-500 max-w-[160px] truncate break-words whitespace-normal">{wd.id}</td>
+                <td className="py-3 px-4 font-mono text-xs text-gray-500 max-w-[160px] overflow-hidden truncate" title={wd.id}>{wd.id}</td>
                 <td className="py-3 px-4 max-w-[220px]">
-                  <div className="font-semibold text-gray-100 truncate break-words max-w-[220px]">{wd.userId}</div>
+                  <div className="font-semibold text-gray-100 overflow-hidden truncate max-w-[220px]" title={wd.userId}>{wd.userId}</div>
                   {wd.userFullName && (
-                    <div className="text-xs text-gray-400 truncate break-words max-w-[220px]">{wd.userFullName}</div>
+                    <div className="text-xs text-gray-400 overflow-hidden truncate max-w-[220px]" title={wd.userFullName}>{wd.userFullName}</div>
                   )}
-                  <div className="text-xs text-gray-400 truncate break-words max-w-[220px]">{wd.userEmail}</div>
+                  <div className="text-xs text-gray-400 overflow-hidden truncate max-w-[220px]" title={wd.userEmail}>{wd.userEmail}</div>
                 </td>
-                <td className="py-3 px-4 font-mono text-gold font-bold truncate whitespace-normal">{Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {wd.currency}
+                <td className="py-3 px-4 font-mono text-gold font-bold overflow-hidden truncate">{Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {wd.currency}
                   {wd.type === 'roi' && (
                     <span className="ml-2 px-2 py-1 rounded bg-purple-700 text-white text-xs font-bold">ROI</span>
                   )}
                 </td>
-                <td className="py-3 px-4 text-xs text-gray-200">
-                  <div className="font-semibold">{(wd.activationFeeAmount || 0).toFixed(2)}</div>
-                  <div className="text-xs text-gray-400">paid: {(wd.activationFeePaid || 0).toFixed(2)}</div>
+                <td className="py-3 px-4 text-xs text-gray-200 overflow-hidden truncate">
+                  <div className="font-semibold" title={`Activation: ${(wd.activationFeeAmount || 0).toFixed(2)}`}>{(wd.activationFeeAmount || 0).toFixed(2)}</div>
+                  <div className="text-xs text-gray-400" title={`paid: ${(wd.activationFeePaid || 0).toFixed(2)}`}>paid: {(wd.activationFeePaid || 0).toFixed(2)}</div>
                 </td>
-                <td className="py-3 px-4 text-xs text-gray-200">
-                  <div className="font-semibold">{(wd.interestTaxAmount || 0).toFixed(2)}</div>
-                  <div className="text-xs text-gray-400">paid: {(wd.interestTaxPaid || 0).toFixed(2)}</div>
+                <td className="py-3 px-4 text-xs text-gray-200 overflow-hidden truncate">
+                  <div className="font-semibold" title={`Interest: ${(wd.interestTaxAmount || 0).toFixed(2)}`}>{(wd.interestTaxAmount || 0).toFixed(2)}</div>
+                  <div className="text-xs text-gray-400" title={`paid: ${(wd.interestTaxPaid || 0).toFixed(2)}`}>paid: {(wd.interestTaxPaid || 0).toFixed(2)}</div>
                 </td>
-                <td className="py-3 px-4 text-xs text-gray-200">
-                  <div className="font-semibold">{(wd.networkFeeAmount || 0).toFixed(2)}</div>
-                  <div className="text-xs text-gray-400">paid: {(wd.networkFeePaid || 0).toFixed(2)}</div>
+                <td className="py-3 px-4 text-xs text-gray-200 overflow-hidden truncate">
+                  <div className="font-semibold" title={`Network: ${(wd.networkFeeAmount || 0).toFixed(2)}`}>{(wd.networkFeeAmount || 0).toFixed(2)}</div>
+                  <div className="text-xs text-gray-400" title={`paid: ${(wd.networkFeePaid || 0).toFixed(2)}`}>paid: {(wd.networkFeePaid || 0).toFixed(2)}</div>
                 </td>
                 <td className="py-3 px-4 uppercase text-gray-300 truncate">{wd.network}</td>
-                <td className={`py-3 px-4 font-mono text-xs break-all whitespace-normal max-w-[20rem] ${wd.walletAddress === 'DEFAULT_ADDRESS' ? 'text-red-500 font-bold' : 'text-gray-400'}`}>{wd.walletAddress}</td>
+                <td className={`py-3 px-4 font-mono text-xs overflow-hidden truncate max-w-[20rem] ${wd.walletAddress === 'DEFAULT_ADDRESS' ? 'text-red-500 font-bold' : 'text-gray-400'}`} title={wd.walletAddress}>{wd.walletAddress}</td>
                 <td className="py-3 px-4 text-xs text-gray-500 truncate">{new Date(wd.createdAt).toLocaleDateString()}</td>
                 <td className="py-3 px-4">
                   <span className={`px-2 py-1 rounded-full text-xs font-bold ${statusColors[wd.status]}`}>{wd.status}</span>
@@ -159,10 +159,10 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                 <div className="min-w-0">
                   <div className="font-semibold truncate break-words max-w-[12rem]">{wd.userFullName || wd.userId}</div>
                   <div className="text-xs text-gray-400 truncate break-words max-w-[12rem]">{wd.userEmail}</div>
-                  <div className="text-xs text-gray-400 mt-1 break-all max-w-[12rem]">ID: {wd.id}</div>
+                  <div className="text-xs text-gray-400 mt-1 overflow-hidden truncate max-w-[12rem]" title={`ID: ${wd.id}`}>ID: {wd.id}</div>
                 </div>
                 <div className="text-right ml-3">
-                  <div className="font-mono text-gold">{Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {wd.currency}</div>
+                  <div className="font-mono text-gold overflow-hidden truncate max-w-[10rem]" title={`${Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${wd.currency}`}>{Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {wd.currency}</div>
                   <div className={`mt-1 px-2 py-0.5 rounded-full text-xs ${statusColors[wd.status]}`}>{wd.status}</div>
                 </div>
               </div>
