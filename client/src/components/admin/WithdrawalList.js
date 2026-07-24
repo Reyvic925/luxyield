@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { FiDownload } from 'react-icons/fi';
 import axios from '../../utils/axios';
+import { toast } from 'react-toastify';
+import ConfirmModal from '../ConfirmModal';
 
 const statusColors = {
   pending: 'bg-yellow-500 bg-opacity-20 text-yellow-400',
@@ -12,6 +14,15 @@ const statusColors = {
 const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
   const [expandedRows, setExpandedRows] = useState({});
   const [expandedAudits, setExpandedAudits] = useState({});
+  const [loadingActions, setLoadingActions] = useState({});
+  const [localWithdrawals, setLocalWithdrawals] = useState(withdrawals);
+
+  const [actionModal, setActionModal] = useState({ isOpen: false, type: null, id: null }); // type: 'approve'|'reject'
+  const [rejectReason, setRejectReason] = useState('');
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+
+  // keep local copy in sync when prop updates
+  React.useEffect(() => { setLocalWithdrawals(withdrawals); }, [withdrawals]);
 
   const toggleAudit = async (id) => {
     // toggle collapsed/expanded
@@ -27,6 +38,47 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
         setExpandedAudits(prev => ({ ...prev, [id]: { loading: false, items: [] } }));
         console.error('Failed to load audit', err);
       }
+    }
+  };
+
+  const setActionLoading = (id, value) => setLoadingActions(prev => ({ ...prev, [id]: value }));
+
+  const closeActionModal = () => { setActionModal({ isOpen: false, type: null, id: null }); setRejectReason(''); };
+
+  const openApproveModal = (id) => setActionModal({ isOpen: true, type: 'approve', id });
+  const openRejectModal = (id) => setActionModal({ isOpen: true, type: 'reject', id });
+
+  const submitAction = async () => {
+    const { id, type } = actionModal;
+    if (!id || !type) return;
+    setIsSubmittingAction(true);
+    setActionLoading(id, true);
+    try {
+      if (type === 'approve') {
+        await axios.patch(`/api/admin/withdrawals/${id}`, { status: 'activation_fee_approved' });
+        toast.success('Activation approved');
+      } else if (type === 'reject') {
+        await axios.patch(`/api/admin/withdrawals/${id}`, { status: 'activation_fee_rejected', reason: rejectReason });
+        toast.success('Activation rejected');
+      }
+
+      // fetch updated withdrawal and replace in local list
+      try {
+        const res = await axios.get(`/api/admin/withdrawals/${id}`);
+        const updated = res.data;
+        setLocalWithdrawals(prev => prev.map(w => (w.id === updated.id || w._id === updated._id ? ({ ...w, ...updated }) : w)));
+      } catch (fetchErr) {
+        console.warn('Failed to refresh updated withdrawal, will reload list as fallback', fetchErr);
+        // fallback: remove or reload page
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error('Action submit error', err);
+      toast.error(err?.response?.data?.message || 'Failed to process action');
+    } finally {
+      setIsSubmittingAction(false);
+      setActionLoading(id, false);
+      closeActionModal();
     }
   };
 
@@ -104,7 +156,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                   })()}
                 </td>
                 <td className="py-3 px-4 flex items-center gap-2">
-                  {wd.status === 'pending' ? (
+                  {(['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
                     <>
                       <button
                         onClick={() => onSelect(wd)}
@@ -112,6 +164,15 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                       >
                         Review
                       </button>
+
+                      <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+                        Approve
+                      </button>
+
+                      <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50">
+                        Reject
+                      </button>
+
                       <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded">History</button>
                     </>
                   ) : (
@@ -153,6 +214,37 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
       </table>
       </div>
 
+      {/* Action modal for approve/reject */}
+      <ConfirmModal
+        isOpen={actionModal.isOpen && actionModal.type === 'approve'}
+        title={actionModal.type === 'approve' ? 'Approve Activation Fee' : ''}
+        message={actionModal.type === 'approve' ? 'Approve activation fee and unlock funds for this withdrawal?' : ''}
+        confirmText="Approve"
+        cancelText="Cancel"
+        onClose={closeActionModal}
+        onConfirm={submitAction}
+      />
+
+      {/* Reject modal - custom with reason input */}
+      {actionModal.isOpen && actionModal.type === 'reject' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-gray-900 rounded-xl shadow-xl p-6 max-w-md w-full text-center border border-gray-700 mx-4">
+            <h2 className="text-xl font-bold mb-2 text-red-400">Reject Activation Fee</h2>
+            <p className="mb-4 text-gray-200">Provide a reason for rejection (optional). This will be stored in the audit log.</p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              className="w-full p-3 rounded bg-gray-800 text-gray-100 border border-gray-700 mb-4"
+              placeholder="Rejection reason (optional)"
+            />
+            <div className="flex gap-3 justify-center">
+              <button onClick={submitAction} disabled={isSubmittingAction} className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded disabled:opacity-50">{isSubmittingAction ? 'Processing...' : 'Reject'}</button>
+              <button onClick={closeActionModal} className="bg-gray-700 hover:bg-gray-600 text-gray-200 font-semibold py-2 px-4 rounded">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile list */}
       <div className="block md:hidden space-y-3">
         {withdrawals.length === 0 ? (
@@ -171,7 +263,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                   <div className={`mt-1 px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${statusColors[wd.status]}`} style={{whiteSpace: 'normal'}}>{(wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
                 </div>
               </div>
-          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2">
             <div className="text-xs">
               <div className="font-semibold">Activation: {(wd.activationFeeAmount || 0).toFixed(2)}</div>
               <div className="text-gray-400 text-xs">paid: {(wd.activationFeePaid || 0).toFixed(2)}</div>
@@ -184,11 +276,19 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
               <div className="font-semibold">Network: {(wd.networkFeeAmount || 0).toFixed(2)}</div>
               <div className="text-gray-400 text-xs">paid: {(wd.networkFeePaid || 0).toFixed(2)}</div>
             </div>
-            <div className="text-right">
-              {wd.status === 'pending' ? (
-                <button onClick={() => onSelect(wd)} className="px-4 py-2 bg-gold text-black rounded-lg font-semibold">Review</button>
+            <div className="text-right space-y-2">
+              {(['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
+                <>
+                  <button onClick={() => onSelect(wd)} className="w-full px-4 py-2 bg-gold text-black rounded-lg font-semibold">Review</button>
+                  <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="w-full px-4 py-2 bg-green-600 text-white rounded mt-1 disabled:opacity-50">{loadingActions[wd.id] ? 'Processing...' : 'Approve'}</button>
+                  <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="w-full px-4 py-2 bg-red-600 text-white rounded mt-1 disabled:opacity-50">{loadingActions[wd.id] ? 'Processing...' : 'Reject'}</button>
+                  <button onClick={() => toggleAudit(wd.id)} className="w-full px-3 py-2 bg-gray-700 text-gray-200 rounded mt-1">History</button>
+                </>
               ) : (
-                <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded">History</button>
+                <>
+                  <button className="w-full px-3 py-2 bg-gray-700 text-gray-300 rounded-lg">Details</button>
+                  <button onClick={() => toggleAudit(wd.id)} className="w-full px-3 py-2 bg-gray-700 rounded-lg mt-1">Export</button>
+                </>
               )}
             </div>
           </div>
