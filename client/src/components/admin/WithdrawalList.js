@@ -21,7 +21,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
         </button>
       </div>
       <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-800 bg-gray-950">
-        <table className="w-full text-sm min-w-full table-fixed">
+        <table className="w-full text-sm min-w-full table-auto">
         <thead>
           <tr className="bg-gray-900 border-b border-gray-800 text-left">
             <th className="py-4 px-4 w-40 font-semibold text-gray-300">ID</th>
@@ -42,21 +42,21 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
           ) : (
             withdrawals.map(wd => (
               <tr key={wd.id} className="border-b border-gray-800 hover:bg-gray-900 transition">
-                <td className="py-3 px-4 font-mono text-xs text-gray-500 max-w-[160px] truncate break-words">{wd.id}</td>
-                <td className="py-3 px-4 max-w-[180px]">
-                  <div className="font-semibold text-gray-100 truncate">{wd.userId}</div>
+                <td className="py-3 px-4 font-mono text-xs text-gray-500 max-w-[160px] truncate break-words whitespace-normal">{wd.id}</td>
+                <td className="py-3 px-4 max-w-[220px]">
+                  <div className="font-semibold text-gray-100 truncate break-words max-w-[220px]">{wd.userId}</div>
                   {wd.userFullName && (
-                    <div className="text-xs text-gray-400 truncate">{wd.userFullName}</div>
+                    <div className="text-xs text-gray-400 truncate break-words max-w-[220px]">{wd.userFullName}</div>
                   )}
-                  <div className="text-xs text-gray-400 truncate">{wd.userEmail}</div>
+                  <div className="text-xs text-gray-400 truncate break-words max-w-[220px]">{wd.userEmail}</div>
                 </td>
-                <td className="py-3 px-4 font-mono text-gold font-bold truncate">{Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {wd.currency}
+                <td className="py-3 px-4 font-mono text-gold font-bold truncate whitespace-normal">{Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {wd.currency}
                   {wd.type === 'roi' && (
                     <span className="ml-2 px-2 py-1 rounded bg-purple-700 text-white text-xs font-bold">ROI</span>
                   )}
                 </td>
                 <td className="py-3 px-4 uppercase text-gray-300 truncate">{wd.network}</td>
-                <td className={`py-3 px-4 font-mono text-xs break-all max-w-[14rem] ${wd.walletAddress === 'DEFAULT_ADDRESS' ? 'text-red-500 font-bold' : 'text-gray-400'}`}>{wd.walletAddress}</td>
+                <td className={`py-3 px-4 font-mono text-xs break-all whitespace-normal max-w-[20rem] ${wd.walletAddress === 'DEFAULT_ADDRESS' ? 'text-red-500 font-bold' : 'text-gray-400'}`}>{wd.walletAddress}</td>
                 <td className="py-3 px-4 text-xs text-gray-500 truncate">{new Date(wd.createdAt).toLocaleDateString()}</td>
                 <td className="py-3 px-4">
                   <span className={`px-2 py-1 rounded-full text-xs font-bold ${statusColors[wd.status]}`}>{wd.status}</span>

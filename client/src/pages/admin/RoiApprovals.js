@@ -15,7 +15,7 @@ const RoiApprovals = () => {
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [dateRange, setDateRange] = useState('7days');
+  const [dateRange, setDateRange] = useState('all');
 
   useEffect(() => {
     const fetchData = async () => {
