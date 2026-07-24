@@ -205,7 +205,7 @@ router.patch('/users/:id', authAdmin, auditLog('update_user', 'User', req => req
 // Get all withdrawal requests
 router.get('/withdrawals', authAdmin, async (req, res) => {
   try {
-    const { status, type, currency, network, userId } = req.query;
+    const { status, type, currency, network, userId, dateRange } = req.query;
     const filters = {};
 
     if (type) filters.type = type;
@@ -213,6 +213,18 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
     if (currency && currency !== 'all') filters.currency = currency;
     if (network && network !== 'all') filters.network = network;
     if (userId) filters.userId = userId;
+
+    // Date range filtering: supports '7days', '30days', or 'all' (default no filter)
+    if (dateRange && dateRange !== 'all') {
+      const now = new Date();
+      if (dateRange === '7days') {
+        const from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filters.createdAt = { $gte: from };
+      } else if (dateRange === '30days') {
+        const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        filters.createdAt = { $gte: from };
+      }
+    }
 
     if (status) {
       if (status === 'pending') {

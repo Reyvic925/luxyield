@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { getRoiWithdrawals, updateRoiWithdrawalStatus } from '../../services/roiAPI';
+import axios from '../../utils/axios';
 
 // Only show activation fee (unlock) actions on the ROI approvals page
 const getRoiActionForStatus = (status) => {
-  if (['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(status)) {
+  if (['pending', 'awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(status)) {
     return { approve: 'activation_fee_approved', reject: 'activation_fee_rejected', approveLabel: 'Approve Activation Fee (Unlock)', rejectLabel: 'Reject Activation Fee' };
   }
   // For interest tax / network fee stages, do not show actions here — these belong on the main Withdrawals page
@@ -14,13 +15,14 @@ const RoiApprovals = () => {
   const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [dateRange, setDateRange] = useState('7days');
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getRoiWithdrawals();
+        const data = await getRoiWithdrawals(dateRange);
         setWithdrawals(data.map(w => ({ ...w, id: w.id || w._id })));
       } catch (e) {
         setError(e?.message || 'Failed to fetch ROI withdrawals');
@@ -29,16 +31,42 @@ const RoiApprovals = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [dateRange]);
 
   const handleUpdate = async (id, status) => {
     await updateRoiWithdrawalStatus(id, status);
     setWithdrawals(withdrawals.filter(w => (w.id || w._id) !== id));
   };
 
+  const handleMarkActivationPaid = async (id) => {
+    const input = window.prompt('Enter activation fee amount to mark as paid');
+    const amt = Number(input);
+    if (!amt || amt <= 0) return alert('Invalid amount');
+    try {
+      await axios.post(`/api/admin/withdrawals/${id}/mark-activation-paid`, { amount: amt });
+      // refresh list
+      const data = await getRoiWithdrawals(dateRange);
+      setWithdrawals(data.map(w => ({ ...w, id: w.id || w._id })));
+      alert('Marked activation fee as paid');
+    } catch (err) {
+      console.error('Mark activation fee failed', err.response || err.message);
+      alert('Failed to mark activation fee: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
   return (
     <div className="p-2 sm:p-4 md:p-6 w-full max-w-full sm:max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">ROI Withdrawals Pending Approval</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold">ROI Withdrawals Pending Approval</h2>
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-400">Date Range</label>
+          <select value={dateRange} onChange={e => setDateRange(e.target.value)} className="bg-gray-800 text-white p-2 rounded">
+            <option value="7days">Last 7 days</option>
+            <option value="30days">Last 30 days</option>
+            <option value="all">All</option>
+          </select>
+        </div>
+      </div>
       {error && <div className="text-red-400 mb-4">{error}</div>}
       {loading ? <div>Loading...</div> : (
         <>
@@ -85,6 +113,12 @@ const RoiApprovals = () => {
                         >
                           {action.rejectLabel}
                         </button>
+                        <button
+                          className="w-full bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition"
+                          onClick={() => handleMarkActivationPaid(w.id || w._id)}
+                        >
+                          Mark Activation Paid
+                        </button>
                       </>
                     );
                   })()}
@@ -129,6 +163,12 @@ const RoiApprovals = () => {
                               onClick={() => handleUpdate(w.id || w._id, action.reject)}
                             >
                               {action.rejectLabel}
+                            </button>
+                            <button
+                              className="bg-blue-600 px-3 py-1 rounded text-white font-semibold hover:bg-blue-700 transition"
+                              onClick={() => handleMarkActivationPaid(w.id || w._id)}
+                            >
+                              Mark Activation Paid
                             </button>
                           </>
                         );
