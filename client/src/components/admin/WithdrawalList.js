@@ -54,7 +54,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
             <th className="py-4 px-4 w-28 font-semibold text-gray-300">Network</th>
             <th className="py-4 px-4 w-64 font-semibold text-gray-300">Wallet</th>
             <th className="py-4 px-4 w-28 font-semibold text-gray-300">Date</th>
-            <th className="py-4 px-4 w-48 font-semibold text-gray-300">Status</th>
+            <th className="py-4 px-4 w-64 font-semibold text-gray-300">Status</th>
             <th className="py-4 px-4 w-28 font-semibold text-gray-300">Actions</th>
           </tr>
         </thead>
@@ -68,7 +68,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
               <React.Fragment key={wd.id}>
               <tr className="border-b border-gray-800 hover:bg-gray-900 transition">
                 <td className="py-3 px-4 font-mono text-xs text-gray-500 max-w-[160px] overflow-hidden truncate" title={wd.id}>{wd.id}</td>
-                <td className="py-3 px-4 max-w-[220px]">
+                <td className="py-3 px-4 max-w-[220px] pr-6">
                   <div className="font-semibold text-gray-100 overflow-hidden truncate max-w-[220px]" title={wd.userId}>{wd.userId}</div>
                   {wd.userFullName && (
                     <div className="text-xs text-gray-400 overflow-hidden truncate max-w-[220px]" title={wd.userFullName}>{wd.userFullName}</div>
@@ -80,26 +80,26 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                     <span className="ml-2 px-2 py-1 rounded bg-purple-700 text-white text-xs font-bold">ROI</span>
                   )}
                 </td>
-                <td className="py-3 px-4 text-xs text-gray-200 overflow-hidden truncate">
-                  <div className="font-semibold" title={`Activation: ${(wd.activationFeeAmount || 0).toFixed(2)}`}>{(wd.activationFeeAmount || 0).toFixed(2)}</div>
+                <td className="py-3 px-4 pr-6 text-xs text-gray-200 whitespace-normal break-words">
+                  <div className="font-semibold mb-1" title={`Activation: ${(wd.activationFeeAmount || 0).toFixed(2)}`}>{(wd.activationFeeAmount || 0).toFixed(2)}</div>
                   <div className="text-xs text-gray-400" title={`paid: ${(wd.activationFeePaid || 0).toFixed(2)}`}>paid: {(wd.activationFeePaid || 0).toFixed(2)}</div>
                 </td>
-                <td className="py-3 px-4 text-xs text-gray-200 overflow-hidden truncate">
-                  <div className="font-semibold" title={`Interest: ${(wd.interestTaxAmount || 0).toFixed(2)}`}>{(wd.interestTaxAmount || 0).toFixed(2)}</div>
+                <td className="py-3 px-4 pr-6 text-xs text-gray-200 whitespace-normal break-words">
+                  <div className="font-semibold mb-1" title={`Interest: ${(wd.interestTaxAmount || 0).toFixed(2)}`}>{(wd.interestTaxAmount || 0).toFixed(2)}</div>
                   <div className="text-xs text-gray-400" title={`paid: ${(wd.interestTaxPaid || 0).toFixed(2)}`}>paid: {(wd.interestTaxPaid || 0).toFixed(2)}</div>
                 </td>
-                <td className="py-3 px-4 text-xs text-gray-200 overflow-hidden truncate">
-                  <div className="font-semibold" title={`Network: ${(wd.networkFeeAmount || 0).toFixed(2)}`}>{(wd.networkFeeAmount || 0).toFixed(2)}</div>
+                <td className="py-3 px-4 pr-6 text-xs text-gray-200 whitespace-normal break-words">
+                  <div className="font-semibold mb-1" title={`Network: ${(wd.networkFeeAmount || 0).toFixed(2)}`}>{(wd.networkFeeAmount || 0).toFixed(2)}</div>
                   <div className="text-xs text-gray-400" title={`paid: ${(wd.networkFeePaid || 0).toFixed(2)}`}>paid: {(wd.networkFeePaid || 0).toFixed(2)}</div>
                 </td>
                 <td className="py-3 px-4 uppercase text-gray-300 truncate">{wd.network}</td>
-                <td className={`py-3 px-4 font-mono text-xs overflow-hidden truncate max-w-[20rem] ${wd.walletAddress === 'DEFAULT_ADDRESS' ? 'text-red-500 font-bold' : 'text-gray-400'}`} title={wd.walletAddress}>{wd.walletAddress}</td>
+                <td className={`py-3 px-4 pr-6 font-mono text-xs overflow-hidden truncate max-w-[20rem] ${wd.walletAddress === 'DEFAULT_ADDRESS' ? 'text-red-500 font-bold' : 'text-gray-400'}`} title={wd.walletAddress}>{wd.walletAddress}</td>
                 <td className="py-3 px-4 text-xs text-gray-500 truncate">{new Date(wd.createdAt).toLocaleDateString()}</td>
-                <td className="py-3 px-4 align-middle">
+                <td className="py-3 px-4 align-middle max-w-[14rem]">
                   {(() => {
                     const displayStatus = (wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
                     return (
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold inline-block ${statusColors[wd.status]}`} style={{whiteSpace: 'normal'}}>{displayStatus}</span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${statusColors[wd.status]}`} style={{whiteSpace: 'normal'}}>{displayStatus}</span>
                     );
                   })()}
                 </td>
@@ -168,7 +168,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                 </div>
                 <div className="text-right ml-3">
                   <div className="font-mono text-gold overflow-hidden truncate max-w-[10rem]" title={`${Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${wd.currency}`}>{Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {wd.currency}</div>
-                  <div className={`mt-1 px-3 py-1 rounded-full text-sm font-semibold inline-block ${statusColors[wd.status]}`} style={{whiteSpace: 'normal'}}>{(wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
+                  <div className={`mt-1 px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${statusColors[wd.status]}`} style={{whiteSpace: 'normal'}}>{(wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
                 </div>
               </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
