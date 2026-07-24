@@ -54,7 +54,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
             <th className="py-4 px-4 w-28 font-semibold text-gray-300">Network</th>
             <th className="py-4 px-4 w-64 font-semibold text-gray-300">Wallet</th>
             <th className="py-4 px-4 w-28 font-semibold text-gray-300">Date</th>
-            <th className="py-4 px-4 w-36 font-semibold text-gray-300">Status</th>
+            <th className="py-4 px-4 w-48 font-semibold text-gray-300">Status</th>
             <th className="py-4 px-4 w-28 font-semibold text-gray-300">Actions</th>
           </tr>
         </thead>
@@ -95,8 +95,13 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                 <td className="py-3 px-4 uppercase text-gray-300 truncate">{wd.network}</td>
                 <td className={`py-3 px-4 font-mono text-xs overflow-hidden truncate max-w-[20rem] ${wd.walletAddress === 'DEFAULT_ADDRESS' ? 'text-red-500 font-bold' : 'text-gray-400'}`} title={wd.walletAddress}>{wd.walletAddress}</td>
                 <td className="py-3 px-4 text-xs text-gray-500 truncate">{new Date(wd.createdAt).toLocaleDateString()}</td>
-                <td className="py-3 px-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${statusColors[wd.status]}`}>{wd.status}</span>
+                <td className="py-3 px-4 align-middle">
+                  {(() => {
+                    const displayStatus = (wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    return (
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold inline-block ${statusColors[wd.status]}`} style={{whiteSpace: 'normal'}}>{displayStatus}</span>
+                    );
+                  })()}
                 </td>
                 <td className="py-3 px-4 flex items-center gap-2">
                   {wd.status === 'pending' ? (
@@ -163,7 +168,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                 </div>
                 <div className="text-right ml-3">
                   <div className="font-mono text-gold overflow-hidden truncate max-w-[10rem]" title={`${Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${wd.currency}`}>{Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {wd.currency}</div>
-                  <div className={`mt-1 px-2 py-0.5 rounded-full text-xs ${statusColors[wd.status]}`}>{wd.status}</div>
+                  <div className={`mt-1 px-3 py-1 rounded-full text-sm font-semibold inline-block ${statusColors[wd.status]}`} style={{whiteSpace: 'normal'}}>{(wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
                 </div>
               </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
