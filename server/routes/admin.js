@@ -217,6 +217,7 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
       if (status === 'pending') {
         filters.status = {
           $in: [
+            'pending',
             'awaiting_activation_fee',
             'activation_fee_paid',
             'activation_fee_rejected',
