@@ -271,6 +271,138 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
   }
 });
 
+// Get single withdrawal details
+router.get('/withdrawals/:id', authAdmin, async (req, res) => {
+  try {
+    const w = await Withdrawal.findById(req.params.id).populate('userId', 'email name');
+    if (!w) return res.status(404).json({ message: 'Withdrawal not found' });
+    const cleaned = {
+      id: w._id.toString(),
+      _id: w._id,
+      userId: w.userId?._id?.toString() || w.userId?.toString(),
+      userEmail: w.userId?.email || '',
+      userFullName: w.userId?.name || '',
+      investmentId: w.investmentId,
+      amount: w.amount,
+      status: w.status,
+      type: w.type,
+      walletAddress: w.walletAddress,
+      network: w.network,
+      currency: w.currency,
+      activationFeeAmount: w.activationFeeAmount,
+      activationFeePaid: w.activationFeePaid,
+      interestTaxAmount: w.interestTaxAmount,
+      interestTaxPaid: w.interestTaxPaid,
+      networkFeeAmount: w.networkFeeAmount,
+      networkFeePaid: w.networkFeePaid,
+      createdAt: w.createdAt,
+      updatedAt: w.updatedAt,
+      transactionHash: w.transactionHash || ''
+    };
+    res.json(cleaned);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Admin helper routes to mark fees as paid (admin records external/off-chain payments)
+const AuditLogModel = require('../models/AuditLog');
+
+// Get audit history for a withdrawal
+router.get('/withdrawals/:id/audit', authAdmin, async (req, res) => {
+  try {
+    const id = req.params.id.toString();
+    const logs = await AuditLogModel.find({ entity: 'Withdrawal', entityId: id }).sort('-createdAt').lean().exec();
+    return res.json(logs.map(l => ({ id: l._id, admin: l.admin, action: l.action, metadata: l.metadata, createdAt: l.createdAt })));
+  } catch (err) {
+    console.error('[ADMIN] Error fetching audit logs:', err);
+    return res.status(500).json({ message: 'Failed to fetch audit logs' });
+  }
+});
+
+// Mark activation fee as paid (admin)
+router.post('/withdrawals/:id/mark-activation-paid', authAdmin, async (req, res) => {
+  try {
+    const amount = Number(req.body.amount);
+    if (!amount || amount <= 0) return res.status(400).json({ message: 'Valid amount required' });
+    const withdrawal = await Withdrawal.findById(req.params.id);
+    if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
+
+    // Only allow marking when in activation fee stages
+    if (!['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(withdrawal.status)) {
+      return res.status(400).json({ message: 'Activation fee cannot be marked paid at this stage' });
+    }
+
+    withdrawal.activationFeeAmount = withdrawal.activationFeeAmount || amount;
+    withdrawal.activationFeePaid = (withdrawal.activationFeePaid || 0) + amount;
+    withdrawal.activationFeePaidAt = new Date();
+    withdrawal.status = 'activation_fee_paid';
+    await withdrawal.save();
+
+    // Audit log
+    await new AuditLogModel({ admin: req.user.id, action: 'mark_activation_fee_paid', entity: 'Withdrawal', entityId: withdrawal._id.toString(), metadata: { amount } }).save();
+
+    return res.json({ success: true, message: 'Activation fee marked as paid', withdrawal: { id: withdrawal._id.toString(), activationFeePaid: withdrawal.activationFeePaid, status: withdrawal.status } });
+  } catch (err) {
+    console.error('[ADMIN] mark-activation-paid error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Mark interest tax paid (admin)
+router.post('/withdrawals/:id/mark-interest-paid', authAdmin, async (req, res) => {
+  try {
+    const amount = Number(req.body.amount);
+    if (!amount || amount <= 0) return res.status(400).json({ message: 'Valid amount required' });
+    const withdrawal = await Withdrawal.findById(req.params.id);
+    if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
+
+    if (!['awaiting_interest_tax', 'interest_tax_rejected', 'interest_tax_paid'].includes(withdrawal.status)) {
+      return res.status(400).json({ message: 'Interest tax cannot be marked paid at this stage' });
+    }
+
+    withdrawal.interestTaxAmount = withdrawal.interestTaxAmount || amount;
+    withdrawal.interestTaxPaid = (withdrawal.interestTaxPaid || 0) + amount;
+    withdrawal.interestTaxPaidAt = new Date();
+    withdrawal.status = 'interest_tax_paid';
+    await withdrawal.save();
+
+    await new AuditLogModel({ admin: req.user.id, action: 'mark_interest_tax_paid', entity: 'Withdrawal', entityId: withdrawal._id.toString(), metadata: { amount } }).save();
+
+    return res.json({ success: true, message: 'Interest tax marked as paid', withdrawal: { id: withdrawal._id.toString(), interestTaxPaid: withdrawal.interestTaxPaid, status: withdrawal.status } });
+  } catch (err) {
+    console.error('[ADMIN] mark-interest-paid error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Mark network fee paid (admin)
+router.post('/withdrawals/:id/mark-network-paid', authAdmin, async (req, res) => {
+  try {
+    const amount = Number(req.body.amount);
+    if (!amount || amount <= 0) return res.status(400).json({ message: 'Valid amount required' });
+    let withdrawal = await Withdrawal.findById(req.params.id);
+    if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
+
+    if (!['awaiting_network_fee', 'network_fee_rejected', 'network_fee_paid'].includes(withdrawal.status)) {
+      return res.status(400).json({ message: 'Network fee cannot be marked paid at this stage' });
+    }
+
+    withdrawal.networkFeeAmount = withdrawal.networkFeeAmount || amount;
+    withdrawal.networkFeePaid = (withdrawal.networkFeePaid || 0) + amount;
+    withdrawal.networkFeePaidAt = new Date();
+    withdrawal.status = 'network_fee_paid';
+    await withdrawal.save();
+
+    await new AuditLogModel({ admin: req.user.id, action: 'mark_network_fee_paid', entity: 'Withdrawal', entityId: withdrawal._id.toString(), metadata: { amount } }).save();
+
+    return res.json({ success: true, message: 'Network fee marked as paid', withdrawal: { id: withdrawal._id.toString(), networkFeePaid: withdrawal.networkFeePaid, status: withdrawal.status } });
+  } catch (err) {
+    console.error('[ADMIN] mark-network-paid error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Approve/reject withdrawal stages
 router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
   try {
@@ -285,7 +417,16 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
     const requiredInterestTax = withdrawal.interestTaxAmount || 0;
     const requiredNetworkFee = withdrawal.networkFeeAmount || 0;
 
+    // Helper to log audit
+    const logAudit = async (action, metadata) => {
+      try { await new AuditLogModel({ admin: req.user.id, action, entity: 'Withdrawal', entityId: withdrawal._id.toString(), metadata }).save(); } catch (e) { console.error('Audit log error', e); }
+    };
+
+    // Prevent double approval for same stage
     if (status === 'activation_fee_approved') {
+      if (['activation_fee_approved', 'withdrawal_successful', 'completed'].includes(withdrawal.status)) {
+        return res.status(409).json({ message: 'Activation fee already approved' });
+      }
       if (!['activation_fee_paid', 'activation_fee_rejected'].includes(withdrawal.status)) {
         return res.status(400).json({ message: 'Activation fee can only be approved after payment or rejection.' });
       }
@@ -308,6 +449,22 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       withdrawal.processedBy = req.user.id;
       await withdrawal.save();
 
+      await logAudit('approve_activation_fee', { amount: withdrawal.activationFeePaid || 0, previousStatus: withdrawal.status });
+
+      // Send notification email to user
+      try {
+        const mailer = require('../utils/mailer');
+        await mailer.sendMail({
+          to: user.email,
+          subject: 'Activation fee approved — funds unlocked',
+          html: `<p>Dear ${user.name || user.email},</p>
+                 <p>Your withdrawal request for ${withdrawal.amount} ${withdrawal.currency || ''} has had the activation fee approved by an administrator. The funds are now available in your account.</p>
+                 <p>Regards,<br/>Admin Team</p>`
+        });
+      } catch (e) {
+        console.error('[ADMIN] Failed to send activation approval email:', e);
+      }
+
       return res.json({
         success: true,
         message: 'Activation fee approved and funds moved to available balance.',
@@ -325,6 +482,9 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
     }
 
     if (status === 'activation_fee_rejected') {
+      if (['activation_fee_rejected', 'activation_fee_approved'].includes(withdrawal.status)) {
+        return res.status(409).json({ message: 'Activation fee already rejected/approved' });
+      }
       if (!['activation_fee_paid', 'awaiting_activation_fee', 'activation_fee_rejected'].includes(withdrawal.status)) {
         return res.status(400).json({ message: 'Activation fee can only be rejected while awaiting review.' });
       }
@@ -338,6 +498,8 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       withdrawal.processedAt = new Date();
       withdrawal.processedBy = req.user.id;
       await withdrawal.save();
+
+      await logAudit('reject_activation_fee', { previousStatus: withdrawal.status });
 
       return res.json({
         success: true,
@@ -356,6 +518,9 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
     }
 
     if (status === 'interest_tax_approved') {
+      if (['withdrawal_processing', 'interest_tax_approved'].includes(withdrawal.status)) {
+        return res.status(409).json({ message: 'Interest tax already approved/processing' });
+      }
       if (withdrawal.status !== 'interest_tax_paid') {
         return res.status(400).json({ message: 'Interest tax can only be approved after payment.' });
       }
@@ -368,6 +533,22 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       withdrawal.processedAt = new Date();
       withdrawal.processedBy = req.user.id;
       await withdrawal.save();
+
+      await logAudit('approve_interest_tax', { previousStatus: withdrawal.status });
+
+      // Send notification email to user
+      try {
+        const mailer = require('../utils/mailer');
+        await mailer.sendMail({
+          to: user.email,
+          subject: 'Interest tax approved — withdrawal processing',
+          html: `<p>Dear ${user.name || user.email},</p>
+                 <p>Your withdrawal request for ${withdrawal.amount} ${withdrawal.currency || ''} has had the interest tax approved by an administrator. The withdrawal is now being processed.</p>
+                 <p>Regards,<br/>Admin Team</p>`
+        });
+      } catch (e) {
+        console.error('[ADMIN] Failed to send interest tax approval email:', e);
+      }
 
       return res.json({
         success: true,
@@ -382,6 +563,9 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
     }
 
     if (status === 'interest_tax_rejected') {
+      if (['interest_tax_rejected'].includes(withdrawal.status)) {
+        return res.status(409).json({ message: 'Interest tax already rejected' });
+      }
       if (!['awaiting_interest_tax', 'interest_tax_paid'].includes(withdrawal.status)) {
         return res.status(400).json({ message: 'Interest tax can only be rejected during tax review.' });
       }
@@ -390,6 +574,8 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       withdrawal.processedAt = new Date();
       withdrawal.processedBy = req.user.id;
       await withdrawal.save();
+
+      await logAudit('reject_interest_tax', { previousStatus: withdrawal.status });
 
       return res.json({
         success: true,
@@ -404,6 +590,9 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
     }
 
     if (status === 'network_fee_approved') {
+      if (['withdrawal_successful', 'network_fee_approved'].includes(withdrawal.status)) {
+        return res.status(409).json({ message: 'Network fee already approved/finalized' });
+      }
       if (withdrawal.status !== 'network_fee_paid') {
         return res.status(400).json({ message: 'Network fee can only be approved after payment.' });
       }
@@ -416,6 +605,22 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       withdrawal.processedAt = new Date();
       withdrawal.processedBy = req.user.id;
       await withdrawal.save();
+
+      await logAudit('approve_network_fee', { transactionHash: withdrawal.transactionHash });
+
+      // Send notification email to user about finalization
+      try {
+        const mailer = require('../utils/mailer');
+        await mailer.sendMail({
+          to: user.email,
+          subject: 'Withdrawal finalized',
+          html: `<p>Dear ${user.name || user.email},</p>
+                 <p>Your withdrawal request for ${withdrawal.amount} ${withdrawal.currency || ''} has been finalized. Transaction hash: ${withdrawal.transactionHash || 'N/A'}.</p>
+                 <p>Regards,<br/>Admin Team</p>`
+        });
+      } catch (e) {
+        console.error('[ADMIN] Failed to send network fee approval email:', e);
+      }
 
       return res.json({
         success: true,
@@ -430,6 +635,9 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
     }
 
     if (status === 'network_fee_rejected') {
+      if (['network_fee_rejected'].includes(withdrawal.status)) {
+        return res.status(409).json({ message: 'Network fee already rejected' });
+      }
       if (!['awaiting_network_fee', 'network_fee_paid'].includes(withdrawal.status)) {
         return res.status(400).json({ message: 'Network fee can only be rejected during network fee review.' });
       }
@@ -438,6 +646,8 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       withdrawal.processedAt = new Date();
       withdrawal.processedBy = req.user.id;
       await withdrawal.save();
+
+      await logAudit('reject_network_fee', { previousStatus: withdrawal.status });
 
       return res.json({
         success: true,
@@ -473,6 +683,8 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       await user.save();
       await withdrawal.save();
 
+      await logAudit('complete_withdrawal', { destination });
+
       return res.json({ 
         success: true, 
         message: `Withdrawal completed`,
@@ -492,6 +704,7 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
 
     withdrawal.status = status;
     await withdrawal.save();
+    await logAudit('update_withdrawal_status', { newStatus: status, previousStatus: withdrawal.status });
     return res.json({ 
       success: true, 
       message: `Withdrawal ${status}`,

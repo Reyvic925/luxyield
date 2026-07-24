@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { getRoiWithdrawals, updateRoiWithdrawalStatus } from '../../services/roiAPI';
 
+// Only show activation fee (unlock) actions on the ROI approvals page
 const getRoiActionForStatus = (status) => {
   if (['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(status)) {
-    return { approve: 'activation_fee_approved', reject: 'activation_fee_rejected', approveLabel: 'Approve Activation Fee', rejectLabel: 'Reject Activation Fee' };
+    return { approve: 'activation_fee_approved', reject: 'activation_fee_rejected', approveLabel: 'Approve Activation Fee (Unlock)', rejectLabel: 'Reject Activation Fee' };
   }
-  if (['awaiting_interest_tax', 'interest_tax_paid', 'interest_tax_rejected'].includes(status)) {
-    return { approve: 'interest_tax_approved', reject: 'interest_tax_rejected', approveLabel: 'Approve Interest Tax', rejectLabel: 'Reject Interest Tax' };
-  }
-  if (['awaiting_network_fee', 'network_fee_paid', 'network_fee_rejected'].includes(status)) {
-    return { approve: 'network_fee_approved', reject: 'network_fee_rejected', approveLabel: 'Approve Network Fee', rejectLabel: 'Reject Network Fee' };
-  }
+  // For interest tax / network fee stages, do not show actions here — these belong on the main Withdrawals page
   return null;
 };
 

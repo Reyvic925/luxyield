@@ -26,6 +26,7 @@ import UserInvestmentsAdmin from './pages/admin/UserInvestmentsAdmin';
 import AdminIndex from './pages/admin';
 import AdminMirror from './pages/admin/AdminMirror';
 import AdminColdWallet from './pages/admin/AdminColdWallet';
+import RoiApprovals from './pages/admin/RoiApprovals';
 
 // Client imports
 import Dashboard from './pages/Dashboard';
@@ -95,6 +96,7 @@ function App() {
                     <Route path="user-investments" element={<UserInvestmentsAdmin />} />
                     <Route path="users" element={<AdminUsers />} />
                     <Route path="funds" element={<AdminFunds />} />
+                    <Route path="roi-approvals" element={<RoiApprovals />} />
                     <Route path="withdrawals" element={<AdminWithdrawals />} />
                     <Route path="deposits" element={<AdminDeposits />} />
                     <Route path="settings" element={<AdminSettings />} />

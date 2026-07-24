@@ -1,6 +1,8 @@
 // src/components/admin/WithdrawalDetail.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiX, FiClock, FiCopy } from 'react-icons/fi';
+import API from '../../services/api';
+import { getWithdrawalById } from '../../services/withdrawalAPI';
 
 const statusColors = {
   pending: 'bg-yellow-900 bg-opacity-30 text-yellow-400',
@@ -26,6 +28,39 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
   const [destination, setDestination] = useState('available');
   const [transactionHash, setTransactionHash] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [localWithdrawal, setLocalWithdrawal] = useState(withdrawal);
+
+  // Modals and audit state
+  const [showActivationModal, setShowActivationModal] = useState(false);
+  const [showInterestModal, setShowInterestModal] = useState(false);
+  const [showNetworkModal, setShowNetworkModal] = useState(false);
+  const [modalAmount, setModalAmount] = useState('');
+  const [isSubmittingModal, setIsSubmittingModal] = useState(false);
+
+  const [auditHistory, setAuditHistory] = useState([]);
+  const [loadingAudit, setLoadingAudit] = useState(false);
+
+  useEffect(() => {
+    setLocalWithdrawal(withdrawal);
+  }, [withdrawal]);
+
+  useEffect(() => {
+    // fetch audit history whenever the displayed withdrawal changes
+    const fetchAudit = async () => {
+      if (!localWithdrawal || !(localWithdrawal._id || localWithdrawal.id)) return;
+      setLoadingAudit(true);
+      try {
+        const id = localWithdrawal._id || localWithdrawal.id;
+        const res = await API.get(`/admin/withdrawals/${id}/audit`);
+        setAuditHistory(res.data || res);
+      } catch (err) {
+        console.error('Failed to load audit history', err);
+        setAuditHistory([]);
+      }
+      setLoadingAudit(false);
+    };
+    fetchAudit();
+  }, [localWithdrawal]);
 
   const getActionContext = (status) => {
     if (['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(status)) {
@@ -84,6 +119,47 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
     setIsProcessing(false);
   };
 
+  // Modal submit handler for mark-as-paid actions
+  const submitModal = async () => {
+    if (!modalAmount || Number(modalAmount) <= 0) return alert('Enter a valid amount');
+    setIsSubmittingModal(true);
+    const id = localWithdrawal._id || localWithdrawal.id;
+    try {
+      if (showActivationModal) {
+        await API.post(`/admin/withdrawals/${id}/mark-activation-paid`, { amount: Number(modalAmount) });
+      } else if (showInterestModal) {
+        await API.post(`/admin/withdrawals/${id}/mark-interest-paid`, { amount: Number(modalAmount) });
+      } else if (showNetworkModal) {
+        await API.post(`/admin/withdrawals/${id}/mark-network-paid`, { amount: Number(modalAmount) });
+      }
+
+      // Refresh withdrawal and audit history
+      try {
+        const wres = await API.get(`/admin/withdrawals/${id}`);
+        const wdata = wres.data || wres;
+        setLocalWithdrawal(wdata);
+      } catch (e) {
+        console.error('Failed to refresh withdrawal after mark-paid', e);
+      }
+      try {
+        const ares = await API.get(`/admin/withdrawals/${id}/audit`);
+        setAuditHistory(ares.data || ares);
+      } catch (e) {
+        console.error('Failed to refresh audit after mark-paid', e);
+      }
+
+      // close modal
+      setShowActivationModal(false);
+      setShowInterestModal(false);
+      setShowNetworkModal(false);
+      setModalAmount('');
+    } catch (err) {
+      console.error('Mark paid failed', err.response || err.message);
+      alert('Failed to mark paid: ' + (err.response?.data?.message || err.message));
+    }
+    setIsSubmittingModal(false);
+  };
+
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     // You could add a toast notification here
@@ -132,21 +208,21 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
                 <div className="flex justify-between">
                   <span className="text-gray-400">Amount</span>
                   <span className="font-mono">
-                    {withdrawal.amount} {withdrawal.currency}
+                    {localWithdrawal?.amount} {localWithdrawal?.currency}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Network</span>
-                  <span>{withdrawal.network}</span>
+                  <span>{localWithdrawal?.network}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Wallet Address</span>
                   <div className="flex items-center">
                     <span className="font-mono text-sm truncate max-w-xs">
-                      {withdrawal.walletAddress}
+                      {localWithdrawal?.walletAddress}
                     </span>
                     <button
-                      onClick={() => copyToClipboard(withdrawal.walletAddress)}
+                      onClick={() => copyToClipboard(localWithdrawal?.walletAddress)}
                       className="ml-2 text-gray-400 hover:text-gold"
                     >
                       <FiCopy />
@@ -155,9 +231,76 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Status</span>
-                  <span className={`px-2 py-1 rounded-full text-xs ${statusColors[withdrawal.status]}`}>
-                    {withdrawal.status}
+                  <span className={`px-2 py-1 rounded-full text-xs ${statusColors[localWithdrawal?.status]}`}>
+                    {localWithdrawal?.status}
                   </span>
+                </div>
+
+                {/* Fees summary and admin mark-as-paid controls */}
+                <div className="mt-3 border-t border-gray-700 pt-3 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-gray-400 text-sm">Activation Fee</div>
+                      <div className="text-white text-sm">${(localWithdrawal?.activationFeeAmount || 0).toFixed(2)} paid: ${(localWithdrawal?.activationFeePaid || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <button
+                        onClick={() => { setModalAmount(''); setShowActivationModal(true); }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Mark Activation Paid
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-gray-400 text-sm">Interest Tax</div>
+                      <div className="text-white text-sm">${(localWithdrawal?.interestTaxAmount || 0).toFixed(2)} paid: ${(localWithdrawal?.interestTaxPaid || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <button
+                        onClick={() => { setModalAmount(''); setShowInterestModal(true); }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Mark Interest Paid
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-gray-400 text-sm">Network Fee</div>
+                      <div className="text-white text-sm">${(localWithdrawal?.networkFeeAmount || 0).toFixed(2)} paid: ${(localWithdrawal?.networkFeePaid || 0).toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <button
+                        onClick={() => { setModalAmount(''); setShowNetworkModal(true); }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Mark Network Fee Paid
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Audit history quick view */}
+                  <div className="mt-4">
+                    <div className="text-gray-400 text-sm">Audit History</div>
+                    {loadingAudit ? (
+                      <div className="text-gray-400 text-sm">Loading...</div>
+                    ) : (
+                      <div className="mt-2 max-h-40 overflow-y-auto text-sm space-y-2">
+                        {auditHistory.length === 0 && <div className="text-gray-500">No audit records</div>}
+                        {auditHistory.map(a => (
+                          <div key={a.id} className="p-2 bg-gray-900 rounded border border-gray-700">
+                            <div className="text-xs text-gray-400">{new Date(a.createdAt).toLocaleString()} — Admin: {a.admin || 'system'}</div>
+                            <div className="text-white">{a.action}</div>
+                            {a.metadata && <div className="text-gray-300 text-xs">{JSON.stringify(a.metadata)}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -235,6 +378,45 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
             );
           })()}
         </div>
+
+        {/* Mark-as-paid modal */}
+        {(showActivationModal || showInterestModal || showNetworkModal) && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-60">
+            <div className="bg-gray-800 rounded-lg w-full max-w-md p-6">
+              <h3 className="text-lg font-bold mb-3">
+                {showActivationModal && 'Mark Activation Fee Paid'}
+                {showInterestModal && 'Mark Interest Tax Paid'}
+                {showNetworkModal && 'Mark Network Fee Paid'}
+              </h3>
+              <p className="text-sm text-gray-400 mb-3">Enter the amount you want to record as paid for this fee.</p>
+              <input
+                className="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white mb-4"
+                value={modalAmount}
+                onChange={e => setModalAmount(e.target.value)}
+                placeholder="Amount"
+                type="number"
+                step="0.01"
+                min="0"
+              />
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => { setShowActivationModal(false); setShowInterestModal(false); setShowNetworkModal(false); setModalAmount(''); }}
+                  className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitModal}
+                  disabled={isSubmittingModal}
+                  className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 ${isSubmittingModal ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isSubmittingModal ? 'Processing...' : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

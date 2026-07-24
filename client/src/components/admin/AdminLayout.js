@@ -1,7 +1,7 @@
 ﻿// src/components/admin/AdminLayout.js
 import React, { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { FiUsers, FiDollarSign, FiDownload, FiSettings, FiHome, FiBell, FiMail, FiList, FiArrowUpRight, FiDatabase } from 'react-icons/fi';
+import { FiUsers, FiDollarSign, FiDownload, FiSettings, FiHome, FiBell, FiMail, FiList, FiArrowUpRight, FiDatabase, FiShield } from 'react-icons/fi';
 import { useAdminAuth } from '../../auth/AdminAuthProvider';
 
 const AdminLayout = () => {
@@ -13,6 +13,7 @@ const AdminLayout = () => {
     { to: '/admin/users', icon: <FiUsers size={22} />, label: 'Users', description: 'Manage all users' },
     { to: '/admin/funds', icon: <FiDollarSign size={22} />, label: 'Funds', description: 'Fund listings & settings' },
     { to: '/admin/deposits', icon: <FiArrowUpRight size={22} />, label: 'Deposits', description: 'Deposit requests' },
+    { to: '/admin/roi-approvals', icon: <FiShield size={22} />, label: 'ROI Approvals', description: 'Unlock ROI balances' },
     { to: '/admin/withdrawals', icon: <FiDownload size={22} />, label: 'Withdrawals', description: 'Withdrawal requests' },
     { to: '/admin/settings', icon: <FiSettings size={22} />, label: 'Settings', description: 'Platform settings' },
     { to: '/admin/send-email', icon: <FiMail size={22} />, label: 'Send Email', description: 'Email broadcasts' },

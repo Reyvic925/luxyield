@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const Withdrawal = require('../../models/Withdrawal');
-const auth = require('../../middleware/adminAuth');
+const auth = require('../../middleware/authAdmin');
 
 // Get withdrawals with filters
 router.get('/', auth, async (req, res) => {
