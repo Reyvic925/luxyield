@@ -322,12 +322,34 @@ router.get('/withdrawals/:id', authAdmin, async (req, res) => {
 // Admin helper routes to mark fees as paid (admin records external/off-chain payments)
 const AuditLogModel = require('../models/AuditLog');
 
-// Get audit history for a withdrawal
+// Get audit history for a withdrawal (includes admin name when available)
 router.get('/withdrawals/:id/audit', authAdmin, async (req, res) => {
   try {
     const id = req.params.id.toString();
     const logs = await AuditLogModel.find({ entity: 'Withdrawal', entityId: id }).sort('-createdAt').lean().exec();
-    return res.json(logs.map(l => ({ id: l._id, admin: l.admin, action: l.action, metadata: l.metadata, createdAt: l.createdAt })));
+
+    // collect unique admin ids referenced in logs
+    const adminIds = Array.from(new Set(logs.map(l => l.admin).filter(Boolean)));
+    let adminsById = {};
+    if (adminIds.length > 0) {
+      try {
+        const adminDocs = await User.find({ _id: { $in: adminIds } }).select('name email').lean().exec();
+        adminDocs.forEach(a => { adminsById[a._id.toString()] = a; });
+      } catch (e) {
+        console.warn('[ADMIN] Failed to fetch admin user names for audit logs', e);
+      }
+    }
+
+    const mapped = logs.map(l => ({
+      id: l._id,
+      adminId: l.admin,
+      adminName: (l.admin && adminsById[l.admin?.toString()] && (adminsById[l.admin.toString()].name || adminsById[l.admin.toString()].email)) || null,
+      action: l.action,
+      metadata: l.metadata,
+      createdAt: l.createdAt || l.timestamp
+    }));
+
+    return res.json(mapped);
   } catch (err) {
     console.error('[ADMIN] Error fetching audit logs:', err);
     return res.status(500).json({ message: 'Failed to fetch audit logs' });

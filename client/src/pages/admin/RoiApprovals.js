@@ -2,6 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { getRoiWithdrawals, updateRoiWithdrawalStatus } from '../../services/roiAPI';
 import axios from '../../utils/axios';
 
+// Simple modal component
+const Modal = ({ title, children, onClose }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+    <div className="bg-gray-800 rounded-lg w-full max-w-md p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-bold">{title}</h3>
+        <button onClick={onClose} className="text-gray-400 hover:text-white">×</button>
+      </div>
+      {children}
+    </div>
+  </div>
+);
+
 // Only show activation fee (unlock) actions on the ROI approvals page
 const getRoiActionForStatus = (status) => {
   if (['pending', 'awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(status)) {
@@ -16,6 +29,12 @@ const RoiApprovals = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState('all');
+
+  // Modal state for mark-paid
+  const [showModal, setShowModal] = useState(false);
+  const [modalAmount, setModalAmount] = useState('');
+  const [modalTargetId, setModalTargetId] = useState(null);
+  const [isSubmittingModal, setIsSubmittingModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,19 +58,28 @@ const RoiApprovals = () => {
   };
 
   const handleMarkActivationPaid = async (id) => {
-    const input = window.prompt('Enter activation fee amount to mark as paid');
-    const amt = Number(input);
-    if (!amt || amt <= 0) return alert('Invalid amount');
+    setModalTargetId(id);
+    setModalAmount('');
+    setShowModal(true);
+  };
+
+  const confirmMarkActivationPaid = async () => {
+    const id = modalTargetId;
+    const amt = Number(modalAmount);
+    if (!amt || amt <= 0) return alert('Enter a valid amount');
+    setIsSubmittingModal(true);
     try {
       await axios.post(`/api/admin/withdrawals/${id}/mark-activation-paid`, { amount: amt });
-      // refresh list
       const data = await getRoiWithdrawals(dateRange);
       setWithdrawals(data.map(w => ({ ...w, id: w.id || w._id })));
-      alert('Marked activation fee as paid');
+      setShowModal(false);
+      setModalTargetId(null);
+      setModalAmount('');
     } catch (err) {
       console.error('Mark activation fee failed', err.response || err.message);
       alert('Failed to mark activation fee: ' + (err.response?.data?.message || err.message));
     }
+    setIsSubmittingModal(false);
   };
 
   return (
@@ -126,7 +154,7 @@ const RoiApprovals = () => {
               </div>
             ))}
           </div>
-          <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-700 min-w-0">
+          <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-700 min-w-0 relative">
             <table className="w-full min-w-full table-auto text-sm whitespace-normal">
               <thead>
                 <tr className="border-b border-gray-700 bg-gray-900 text-left">
@@ -179,6 +207,20 @@ const RoiApprovals = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Modal for mark-paid */}
+          {showModal && (
+            <Modal title="Mark Activation Fee Paid" onClose={() => setShowModal(false)}>
+              <div>
+                <label className="text-sm text-gray-400">Amount</label>
+                <input value={modalAmount} onChange={e => setModalAmount(e.target.value)} className="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white my-2" placeholder="Amount" type="number" step="0.01" />
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setShowModal(false)} className="px-3 py-2 bg-gray-700 rounded">Cancel</button>
+                  <button onClick={confirmMarkActivationPaid} disabled={isSubmittingModal} className="px-3 py-2 bg-blue-600 text-white rounded">{isSubmittingModal ? 'Processing...' : 'Confirm'}</button>
+                </div>
+              </div>
+            </Modal>
+          )}
         </>
       )}
     </div>
