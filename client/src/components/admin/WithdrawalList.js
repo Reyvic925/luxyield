@@ -1,6 +1,6 @@
 ﻿// src/components/admin/WithdrawalList.js
 import React, { useState } from 'react';
-import { FiDownload } from 'react-icons/fi';
+import { FiDownload, FiCheck, FiX, FiClock } from 'react-icons/fi';
 import axios from '../../utils/axios';
 import { toast } from 'react-toastify';
 import ConfirmModal from '../ConfirmModal';
@@ -107,16 +107,16 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
             <th className="py-4 px-4 w-64 font-semibold text-gray-300">Wallet</th>
             <th className="py-4 px-4 w-28 font-semibold text-gray-300">Date</th>
             <th className="py-4 px-4 w-64 font-semibold text-gray-300">Status</th>
-            <th className="py-4 px-4 w-28 font-semibold text-gray-300">Actions</th>
+            <th className="py-4 px-4 w-48 font-semibold text-gray-300">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {withdrawals.length === 0 ? (
+          {localWithdrawals.length === 0 ? (
             <tr>
               <td colSpan={11} className="py-12 text-center text-gray-500 text-lg">No withdrawals found.</td>
             </tr>
           ) : (
-            withdrawals.map(wd => (
+            localWithdrawals.map(wd => (
               <React.Fragment key={wd.id}>
               <tr className="border-b border-gray-800 hover:bg-gray-900 transition">
                 <td className="py-3 px-4 font-mono text-xs text-gray-500 max-w-[160px] overflow-hidden truncate" title={wd.id}>{wd.id}</td>
@@ -155,7 +155,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                     );
                   })()}
                 </td>
-                <td className="py-3 px-4 flex items-center gap-2">
+                <td className="py-3 px-4 flex items-center gap-2 min-w-[12rem] flex-wrap overflow-visible">
                   {(['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
                     <>
                       <button
@@ -165,15 +165,17 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                         Review
                       </button>
 
-                      <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
-                        Approve
+                      <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
+                        <FiCheck />
+                        <span>Approve</span>
                       </button>
 
-                      <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50">
-                        Reject
+                      <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 flex items-center gap-2">
+                        <FiX />
+                        <span>Reject</span>
                       </button>
 
-                      <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded">History</button>
+                      <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded flex items-center gap-2"><FiClock />History</button>
                     </>
                   ) : (
                     <>
@@ -247,10 +249,10 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
 
       {/* Mobile list */}
       <div className="block md:hidden space-y-3">
-        {withdrawals.length === 0 ? (
+        {localWithdrawals.length === 0 ? (
           <div className="bg-gray-950 rounded-lg p-4 text-center text-gray-400">No withdrawals found.</div>
         ) : (
-          withdrawals.map(wd => (
+          localWithdrawals.map(wd => (
             <div key={wd.id} className="bg-gray-900 p-4 rounded-lg border border-gray-800">
               <div className="flex justify-between items-start">
                 <div className="min-w-0">
@@ -280,9 +282,9 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
               {(['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
                 <>
                   <button onClick={() => onSelect(wd)} className="w-full px-4 py-2 bg-gold text-black rounded-lg font-semibold">Review</button>
-                  <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="w-full px-4 py-2 bg-green-600 text-white rounded mt-1 disabled:opacity-50">{loadingActions[wd.id] ? 'Processing...' : 'Approve'}</button>
-                  <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="w-full px-4 py-2 bg-red-600 text-white rounded mt-1 disabled:opacity-50">{loadingActions[wd.id] ? 'Processing...' : 'Reject'}</button>
-                  <button onClick={() => toggleAudit(wd.id)} className="w-full px-3 py-2 bg-gray-700 text-gray-200 rounded mt-1">History</button>
+                  <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="w-full px-4 py-2 bg-green-600 text-white rounded mt-1 disabled:opacity-50 flex items-center justify-center gap-2">{loadingActions[wd.id] ? 'Processing...' : (<><FiCheck />Approve</>)}</button>
+                  <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="w-full px-4 py-2 bg-red-600 text-white rounded mt-1 disabled:opacity-50 flex items-center justify-center gap-2">{loadingActions[wd.id] ? 'Processing...' : (<><FiX />Reject</>)}</button>
+                  <button onClick={() => toggleAudit(wd.id)} className="w-full px-3 py-2 bg-gray-700 text-gray-200 rounded mt-1 flex items-center justify-center gap-2"><FiClock />History</button>
                 </>
               ) : (
                 <>
