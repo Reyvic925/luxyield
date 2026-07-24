@@ -209,8 +209,9 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
     const filters = {};
 
     if (type) filters.type = type;
-    if (currency) filters.currency = currency;
-    if (network) filters.network = network;
+    // client sometimes sends 'all' for currency/network — treat 'all' as no filter
+    if (currency && currency !== 'all') filters.currency = currency;
+    if (network && network !== 'all') filters.network = network;
     if (userId) filters.userId = userId;
 
     if (status) {
