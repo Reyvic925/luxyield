@@ -93,11 +93,12 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
           <FiDownload /> Export CSV
         </button>
       </div>
-      <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-800 bg-gray-950">
+      <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-800 bg-gray-950 relative">
         <table className="w-full text-sm min-w-full table-fixed">
         <thead>
           <tr className="bg-gray-900 border-b border-gray-800 text-left">
             <th className="py-4 px-4 w-36 font-semibold text-gray-300">ID</th>
+            <th className="py-4 px-4 w-48 font-semibold text-gray-300 sticky right-0 bg-gray-900 z-20">Actions</th>
             <th className="py-4 px-4 w-48 font-semibold text-gray-300">User</th>
             <th className="py-4 px-4 w-36 font-semibold text-gray-300">Amount</th>
             <th className="py-4 px-4 w-36 font-semibold text-gray-300">Activation Fee</th>
@@ -107,7 +108,6 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
             <th className="py-4 px-4 w-64 font-semibold text-gray-300">Wallet</th>
             <th className="py-4 px-4 w-28 font-semibold text-gray-300">Date</th>
             <th className="py-4 px-4 w-64 font-semibold text-gray-300">Status</th>
-            <th className="py-4 px-4 w-48 font-semibold text-gray-300">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -120,6 +120,38 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
               <React.Fragment key={wd.id}>
               <tr className="border-b border-gray-800 hover:bg-gray-900 transition">
                 <td className="py-3 px-4 font-mono text-xs text-gray-500 max-w-[160px] overflow-hidden truncate" title={wd.id}>{wd.id}</td>
+
+                {/* Actions column moved earlier for always-visible controls */}
+                <td className="py-3 px-4 flex items-center gap-2 min-w-[12rem] flex-wrap overflow-visible sticky right-0 bg-gray-950 z-10">
+                  {(['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
+                    <>
+                      <button
+                        onClick={() => onSelect(wd)}
+                        className="px-4 py-1 bg-gold text-black rounded-lg font-semibold shadow hover:bg-yellow-400 transition whitespace-nowrap"
+                      >
+                        Review
+                      </button>
+
+                      <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
+                        <FiCheck />
+                        <span>Approve</span>
+                      </button>
+
+                      <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 flex items-center gap-2">
+                        <FiX />
+                        <span>Reject</span>
+                      </button>
+
+                      <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded flex items-center gap-2"><FiClock />History</button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-gray-500">-</span>
+                      <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded">History</button>
+                    </>
+                  )}
+                </td>
+
                 <td className="py-3 px-4 max-w-[220px] pr-6">
                   <div className="font-semibold text-gray-100 overflow-hidden truncate max-w-[220px]" title={wd.userId}>{wd.userId}</div>
                   {wd.userFullName && (
@@ -154,35 +186,6 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                       <span className={`px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${statusColors[wd.status]}`} style={{whiteSpace: 'normal'}}>{displayStatus}</span>
                     );
                   })()}
-                </td>
-                <td className="py-3 px-4 flex items-center gap-2 min-w-[12rem] flex-wrap overflow-visible">
-                  {(['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
-                    <>
-                      <button
-                        onClick={() => onSelect(wd)}
-                        className="px-4 py-1 bg-gold text-black rounded-lg font-semibold shadow hover:bg-yellow-400 transition whitespace-nowrap"
-                      >
-                        Review
-                      </button>
-
-                      <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
-                        <FiCheck />
-                        <span>Approve</span>
-                      </button>
-
-                      <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 flex items-center gap-2">
-                        <FiX />
-                        <span>Reject</span>
-                      </button>
-
-                      <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded flex items-center gap-2"><FiClock />History</button>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-gray-500">-</span>
-                      <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded">History</button>
-                    </>
-                  )}
                 </td>
               </tr>
 
