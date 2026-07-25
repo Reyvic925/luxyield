@@ -30,10 +30,11 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
   const [investmentPlans, setInvestmentPlans] = useState([]);
   // Always call hook, but conditionally use the values
   const userContext = useUser();
-  const { kycStatus, isEmailVerified } = adminView && adminProfile ? 
+  const { kycStatus, isEmailVerified, kycLoading } = adminView && adminProfile ? 
     { 
       kycStatus: adminProfile?.kyc?.status || 'pending',
-      isEmailVerified: adminProfile?.isEmailVerified || false 
+      isEmailVerified: adminProfile?.isEmailVerified || false,
+      kycLoading: false
     } : userContext;
   const { lastRefresh, refreshUserData } = useUserDataRefresh();
   const [portfolioData, setPortfolioData] = useState(null);
@@ -142,7 +143,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
     activeCurrentValue = value;
   }
 
-  if (loading) {
+  if (loading || kycLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
