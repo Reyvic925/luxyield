@@ -189,10 +189,17 @@ const InvestmentDetail = ({ investment, onClose }) => {
 
             const mergedTxs = Array.from(map.values()).sort((a,b) => new Date(b.date) - new Date(a.date));
 
-            return {
-              ...fetched,
-              transactions: mergedTxs
-            };
+            // Merge fetched fields with prev: prefer fetched when present, otherwise keep previous values
+            const merged = { ...fetched };
+            if (prev) {
+              Object.keys(prev).forEach(k => {
+                if (merged[k] === undefined || merged[k] === null || merged[k] === '') {
+                  merged[k] = prev[k];
+                }
+              });
+            }
+            merged.transactions = mergedTxs;
+            return merged;
           });
         }
       } catch (err) {
