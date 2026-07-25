@@ -5,6 +5,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { FiEye, FiEyeOff, FiShield, FiLock, FiCheckCircle } from 'react-icons/fi';
 import countries from '../utils/countries';
 
 // Defensive helper to render only strings
@@ -17,18 +18,19 @@ function SafeString({ value }) {
 const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const referralFromUrl = searchParams.get('ref') || '';
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState("");
   const [otpSuccess, setOtpSuccess] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [showReferral, setShowReferral] = useState(Boolean(referralFromUrl));
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const AUTH_PATH = `${API_BASE_URL}/api/auth`;
-
-  // Get referral code from ?ref= query param
-  const searchParams = new URLSearchParams(location.search);
-  const referralFromUrl = searchParams.get('ref') || '';
 
   const formik = useFormik({
     initialValues: {
@@ -37,25 +39,29 @@ const Register = () => {
       email: '',
       phone: '',
       country: '',
-      securityQuestion: '',
-      securityAnswer: '',
       password: '',
       confirmPassword: '',
       referralCode: referralFromUrl,
+      acceptedTerms: false,
     },
     validationSchema: Yup.object({
       fullName: Yup.string().required('Required'),
       username: Yup.string().required('Required'),
       email: Yup.string().email('Invalid email').required('Required'),
-      phone: Yup.string().required('Required'),
+      phone: Yup.string(),
       country: Yup.string().required('Required'),
-      securityQuestion: Yup.string().required('Required'),
-      securityAnswer: Yup.string().required('Required'),
-      password: Yup.string().min(8, 'Must be at least 8 characters').required('Required'),
+      password: Yup.string()
+        .required('Required')
+        .min(8, 'Must be at least 8 characters')
+        .matches(/[A-Z]/, 'Must contain an uppercase letter')
+        .matches(/[a-z]/, 'Must contain a lowercase letter')
+        .matches(/[0-9]/, 'Must contain a number')
+        .matches(/[^A-Za-z0-9]/, 'Must contain a special character'),
       confirmPassword: Yup.string()
         .oneOf([Yup.ref('password'), null], 'Passwords must match')
         .required('Required'),
       referralCode: Yup.string(),
+      acceptedTerms: Yup.boolean().oneOf([true], 'You must accept the Terms of Service and Privacy Policy'),
     }),
     onSubmit: async (values) => {
       const registrationPayload = {
@@ -64,8 +70,6 @@ const Register = () => {
         email: values.email,
         phone: values.phone,
         country: values.country,
-        securityQuestion: values.securityQuestion,
-        securityAnswer: values.securityAnswer,
         password: values.password,
         referralCode: values.referralCode,
       };
@@ -91,193 +95,292 @@ const Register = () => {
     },
   });
 
+  const passwordValue = formik.values.password || '';
+  const passwordRules = {
+    length: passwordValue.length >= 8,
+    uppercase: /[A-Z]/.test(passwordValue),
+    lowercase: /[a-z]/.test(passwordValue),
+    number: /[0-9]/.test(passwordValue),
+    special: /[^A-Za-z0-9]/.test(passwordValue),
+  };
+
   return (
     <React.Fragment>
       <div className="min-h-screen flex items-center justify-center bg-dark p-2 sm:p-4">
-        <div className="glassmorphic p-4 sm:p-8 rounded-xl w-full max-w-2xl">
-          {/* ...Logo and other UI... */}
-          <>
-            <h2 className="text-2xl text-gold mb-6">Create Your Account</h2>
-            <form onSubmit={formik.handleSubmit}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-2 sm:mb-4 w-full">
-                <div>
-                  <label htmlFor="register-fullName" className="block mb-2">Full Name</label>
-                  <input
-                    id="register-fullName"
-                    name="fullName"
-                    type="text"
-                    autoComplete="name"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.fullName}
-                    className="w-full bg-dark border border-gray-700 rounded p-2 sm:p-3"
-                  />
-                  {formik.touched.fullName && (
-                    <div className="text-red-500 text-sm"><SafeString value={formik.errors.fullName} /></div>
-                  )}
+        <div className="glassmorphic p-4 sm:p-8 rounded-xl w-full max-w-6xl">
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_1fr] items-stretch">
+            <div className="hidden lg:flex flex-col justify-between rounded-3xl border border-gray-800 bg-gray-950 p-8">
+              <div>
+                <span className="inline-flex items-center rounded-full bg-gold/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-gold">
+                  Investor Signup
+                </span>
+                <h1 className="mt-6 text-3xl font-bold text-white">Grow your wealth with intelligent investing.</h1>
+                <p className="mt-4 text-gray-400 leading-7">
+                  Fast onboarding for new investors: create your account, verify your email, and complete your profile in a secure, trust-focused flow.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <div className="flex gap-3 rounded-3xl border border-gray-800 bg-gray-900 p-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gold/10 text-gold">
+                    <FiShield size={20} />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Encrypted & secure</p>
+                    <p className="text-sm text-gray-400">Your personal information is protected end to end.</p>
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="register-username" className="block mb-2">Username</label>
-                  <input
-                    id="register-username"
-                    name="username"
-                    type="text"
-                    autoComplete="username"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.username}
-                    className="w-full bg-dark border border-gray-700 rounded p-3"
-                  />
-                  {formik.touched.username && (
-                    <div className="text-red-500 text-sm"><SafeString value={formik.errors.username} /></div>
-                  )}
+                <div className="flex gap-3 rounded-3xl border border-gray-800 bg-gray-900 p-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gold/10 text-gold">
+                    <FiLock size={20} />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Email verification first</p>
+                    <p className="text-sm text-gray-400">Verify your email before accessing the dashboard.</p>
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="register-email" className="block mb-2">Email</label>
-                  <input
-                    id="register-email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.email}
-                    className="w-full bg-dark border border-gray-700 rounded p-3"
-                  />
-                  {formik.touched.email && (
-                    <div className="text-red-500 text-sm"><SafeString value={formik.errors.email} /></div>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="register-phone" className="block mb-2">Phone</label>
-                  <input
-                    id="register-phone"
-                    name="phone"
-                    type="tel"
-                    autoComplete="tel"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.phone}
-                    className="w-full bg-dark border border-gray-700 rounded p-3"
-                  />
-                  {formik.touched.phone && (
-                    <div className="text-red-500 text-sm"><SafeString value={formik.errors.phone} /></div>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="register-country" className="block mb-2">Country</label>
-                  <select
-                    id="register-country"
-                    name="country"
-                    autoComplete="country"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.country}
-                    className="w-full bg-dark border border-gray-700 rounded p-3"
-                  >
-                    <option value="">Select Country</option>
-                    {countries.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  {formik.touched.country && (
-                    <div className="text-red-500 text-sm"><SafeString value={formik.errors.country} /></div>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="register-securityQuestion" className="block mb-2">Security Question</label>
-                  <select
-                    id="register-securityQuestion"
-                    name="securityQuestion"
-                    autoComplete="security-question"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.securityQuestion}
-                    className="w-full bg-dark border border-gray-700 rounded p-3"
-                  >
-                    <option value="">Select a question</option>
-                    <option value="pet">What is the name of your first pet?</option>
-                    <option value="school">What is the name of your elementary school?</option>
-                    <option value="city">In what city were you born?</option>
-                    <option value="mother">What is your mother's maiden name?</option>
-                    {/* Add more questions as needed */}
-                  </select>
-                  {formik.touched.securityQuestion && (
-                    <div className="text-red-500 text-sm"><SafeString value={formik.errors.securityQuestion} /></div>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="register-securityAnswer" className="block mb-2">Security Answer</label>
-                  <input
-                    id="register-securityAnswer"
-                    name="securityAnswer"
-                    type="text"
-                    autoComplete="security-answer"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.securityAnswer}
-                    className="w-full bg-dark border border-gray-700 rounded p-3"
-                  />
-                  {formik.touched.securityAnswer && (
-                    <div className="text-red-500 text-sm"><SafeString value={formik.errors.securityAnswer} /></div>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="register-password" className="block mb-2">Password</label>
-                  <input
-                    id="register-password"
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.password}
-                    className="w-full bg-dark border border-gray-700 rounded p-3"
-                  />
-                  {formik.touched.password && (
-                    <div className="text-red-500 text-sm"><SafeString value={formik.errors.password} /></div>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="register-confirmPassword" className="block mb-2">Confirm Password</label>
-                  <input
-                    id="register-confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    autoComplete="new-password"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.confirmPassword}
-                    className="w-full bg-dark border border-gray-700 rounded p-3"
-                  />
-                  {formik.touched.confirmPassword && (
-                    <div className="text-red-500 text-sm"><SafeString value={formik.errors.confirmPassword} /></div>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="register-referralCode" className="block mb-2">Referral Code (optional)</label>
-                  <input
-                    id="register-referralCode"
-                    name="referralCode"
-                    type="text"
-                    autoComplete="off"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.referralCode}
-                    className="w-full bg-dark border border-gray-700 rounded p-3"
-                  />
+                <div className="flex gap-3 rounded-3xl border border-gray-800 bg-gray-900 p-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gold/10 text-gold">
+                    <FiCheckCircle size={20} />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Investor-ready experience</p>
+                    <p className="text-sm text-gray-400">Only essential information now, optional details later.</p>
+                  </div>
                 </div>
               </div>
-              <button
-                type="submit"
-                className="w-full bg-gold text-black font-bold py-3 rounded hover:bg-yellow-600 transition"
-              >
-                Register
-              </button>
-            </form>
-            <div className="mt-4 text-center">
-              Already have an account?{' '}
-              <a href="/login" className="text-gold hover:underline">Sign in</a>
             </div>
-          </>
+            <div className="rounded-3xl border border-gray-800 bg-gray-950 p-8">
+              <div className="mb-6">
+                <div className="text-xs uppercase tracking-[0.3em] text-gold font-semibold">Step 1 of 2</div>
+                <h2 className="mt-3 text-3xl font-bold text-white">Create your account</h2>
+                <p className="mt-2 text-gray-400">A simple signup with strong security and a trusted investment-first experience.</p>
+              </div>
+              <form onSubmit={formik.handleSubmit} noValidate>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="register-fullName" className="block mb-2 text-sm font-medium text-gray-200">Full Name</label>
+                    <input
+                      id="register-fullName"
+                      name="fullName"
+                      type="text"
+                      autoComplete="name"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.fullName}
+                      className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white"
+                    />
+                    {formik.touched.fullName && (
+                      <div className="text-red-500 text-sm"><SafeString value={formik.errors.fullName} /></div>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="register-username" className="block mb-2 text-sm font-medium text-gray-200">Username</label>
+                    <input
+                      id="register-username"
+                      name="username"
+                      type="text"
+                      autoComplete="username"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.username}
+                      className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white"
+                    />
+                    {formik.touched.username && (
+                      <div className="text-red-500 text-sm"><SafeString value={formik.errors.username} /></div>
+                    )}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label htmlFor="register-email" className="block mb-2 text-sm font-medium text-gray-200">Email</label>
+                    <input
+                      id="register-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.email}
+                      className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white"
+                    />
+                    {formik.touched.email && (
+                      <div className="text-red-500 text-sm"><SafeString value={formik.errors.email} /></div>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="register-country" className="block mb-2 text-sm font-medium text-gray-200">Country</label>
+                    <select
+                      id="register-country"
+                      name="country"
+                      autoComplete="country"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.country}
+                      className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white"
+                    >
+                      <option value="">Select country</option>
+                      {countries.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    {formik.touched.country && (
+                      <div className="text-red-500 text-sm"><SafeString value={formik.errors.country} /></div>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="register-phone" className="block mb-2 text-sm font-medium text-gray-200">Phone (optional)</label>
+                    <input
+                      id="register-phone"
+                      name="phone"
+                      type="tel"
+                      autoComplete="tel"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.phone}
+                      className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white"
+                    />
+                    {formik.touched.phone && formik.errors.phone && (
+                      <div className="text-red-500 text-sm"><SafeString value={formik.errors.phone} /></div>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="register-password" className="block mb-2 text-sm font-medium text-gray-200">Password</label>
+                    <div className="relative">
+                      <input
+                        id="register-password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        autoComplete="new-password"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        value={formik.values.password}
+                        className="w-full bg-dark border border-gray-700 rounded-xl p-3 pr-12 text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(prev => !prev)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                      </button>
+                    </div>
+                    {formik.touched.password && (
+                      <div className="text-red-500 text-sm"><SafeString value={formik.errors.password} /></div>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="register-confirmPassword" className="block mb-2 text-sm font-medium text-gray-200">Confirm Password</label>
+                    <div className="relative">
+                      <input
+                        id="register-confirmPassword"
+                        name="confirmPassword"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        autoComplete="new-password"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        value={formik.values.confirmPassword}
+                        className="w-full bg-dark border border-gray-700 rounded-xl p-3 pr-12 text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(prev => !prev)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                      </button>
+                    </div>
+                    {formik.touched.confirmPassword && (
+                      <div className="text-red-500 text-sm"><SafeString value={formik.errors.confirmPassword} /></div>
+                    )}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowReferral(prev => !prev)}
+                      className="text-left text-sm font-semibold text-gold hover:text-yellow-400"
+                    >
+                      {showReferral ? 'Hide referral code' : 'Have a referral code?'}
+                    </button>
+                    {showReferral && (
+                      <div className="mt-3">
+                        <label htmlFor="register-referralCode" className="block mb-2 text-sm font-medium text-gray-200">Referral Code</label>
+                        <input
+                          id="register-referralCode"
+                          name="referralCode"
+                          type="text"
+                          autoComplete="off"
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          value={formik.values.referralCode}
+                          className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-6 rounded-3xl border border-gray-800 bg-gray-900 p-4">
+                  <div className="grid gap-2 text-xs text-gray-300">
+                    <div className="flex items-center gap-2">
+                      <span className={passwordRules.length ? 'text-green-400' : 'text-gray-500'}>•</span>
+                      <span>At least 8 characters</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={passwordRules.uppercase ? 'text-green-400' : 'text-gray-500'}>•</span>
+                      <span>One uppercase letter</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={passwordRules.lowercase ? 'text-green-400' : 'text-gray-500'}>•</span>
+                      <span>One lowercase letter</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={passwordRules.number ? 'text-green-400' : 'text-gray-500'}>•</span>
+                      <span>One number</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={passwordRules.special ? 'text-green-400' : 'text-gray-500'}>•</span>
+                      <span>One special character</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6 flex items-start gap-3">
+                  <label className="relative inline-flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      name="acceptedTerms"
+                      checked={formik.values.acceptedTerms}
+                      onChange={formik.handleChange}
+                      className="peer sr-only"
+                    />
+                    <span className="mt-1 inline-flex h-5 w-5 items-center justify-center rounded border border-gray-700 bg-gray-900 peer-checked:bg-gold peer-checked:border-gold text-xs text-white">
+                      {formik.values.acceptedTerms ? '✓' : ''}
+                    </span>
+                    <span className="text-sm text-gray-300">
+                      I agree to the <a href="/terms" className="text-gold hover:underline">Terms of Service</a> and <a href="/privacy" className="text-gold hover:underline">Privacy Policy</a>.
+                    </span>
+                  </label>
+                </div>
+                {formik.touched.acceptedTerms && formik.errors.acceptedTerms && (
+                  <div className="mt-2 text-red-500 text-sm"><SafeString value={formik.errors.acceptedTerms} /></div>
+                )}
+                <button
+                  type="submit"
+                  className="mt-6 w-full bg-gold text-black font-bold py-3 rounded-xl hover:bg-yellow-600 transition"
+                >
+                  Create My Account
+                </button>
+              </form>
+              <div className="mt-6 text-center text-sm text-gray-400">
+                Already have an account?{' '}
+                <a href="/login" className="text-gold hover:underline">Sign in</a>
+              </div>
+              <div className="mt-8 rounded-3xl border border-gray-800 bg-gray-900 p-4 text-sm text-gray-300 lg:hidden">
+                <div className="font-semibold text-white">Why this is better for investors</div>
+                <ul className="mt-3 space-y-2">
+                  <li>• Minimal required fields to get started quickly.</li>
+                  <li>• Email verification before dashboard access.</li>
+                  <li>• Optional details like phone and referral code later.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       {showVerifyModal && (
