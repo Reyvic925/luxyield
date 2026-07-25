@@ -48,7 +48,7 @@ const Register = () => {
       fullName: Yup.string().required('Required'),
       username: Yup.string().required('Required'),
       email: Yup.string().email('Invalid email').required('Required'),
-      phone: Yup.string(),
+      phone: Yup.string().required('Required'),
       country: Yup.string().required('Required'),
       password: Yup.string()
         .required('Required')
@@ -224,7 +224,7 @@ const Register = () => {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="register-phone" className="block mb-2 text-sm font-medium text-gray-200">Phone (optional)</label>
+                    <label htmlFor="register-phone" className="block mb-2 text-sm font-medium text-gray-200">Phone</label>
                     <input
                       id="register-phone"
                       name="phone"
@@ -370,14 +370,6 @@ const Register = () => {
               <div className="mt-6 text-center text-sm text-gray-400">
                 Already have an account?{' '}
                 <a href="/login" className="text-gold hover:underline">Sign in</a>
-              </div>
-              <div className="mt-8 rounded-3xl border border-gray-800 bg-gray-900 p-4 text-sm text-gray-300 lg:hidden">
-                <div className="font-semibold text-white">Why this is better for investors</div>
-                <ul className="mt-3 space-y-2">
-                  <li>• Minimal required fields to get started quickly.</li>
-                  <li>• Email verification before dashboard access.</li>
-                  <li>• Optional details like phone and referral code later.</li>
-                </ul>
               </div>
             </div>
           </div>
