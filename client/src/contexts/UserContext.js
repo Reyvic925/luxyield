@@ -5,7 +5,6 @@ import axios from 'axios';
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  console.log('UserProvider rendered');
   const [user, setUser] = useState(null);
   const [kycStatus, setKycStatus] = useState(null);
   const [kycLoading, setKycLoading] = useState(true);
@@ -30,7 +29,8 @@ export const UserProvider = ({ children }) => {
       });
       setKycStatus(res.data?.kyc?.status || 'pending');
       setIsEmailVerified(Boolean(res.data?.isEmailVerified));
-    } catch {
+    } catch (err) {
+      console.warn('[UserContext] fetchKycStatus error', err?.message || err);
       setKycStatus('pending');
       setIsEmailVerified(false);
     } finally {
@@ -48,48 +48,11 @@ export const UserProvider = ({ children }) => {
     setKycStatus(null);
     setKycLoading(false);
     setIsEmailVerified(false);
-    return;
-    try {
-        const decoded = jwtDecode(token);
-        setUser(decoded.user);
-        // Fetch KYC and email verification status from backend
-        axios.get('/api/auth/kyc/status', {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(res => {
-          setKycStatus(res.data.kyc.status || 'pending');
-          setIsEmailVerified(res.data.isEmailVerified || false);
-        }).catch(() => {
-          setKycStatus('pending');
-          setIsEmailVerified(false);
-        });
-      } catch {
-        setUser(null);
-        setKycStatus('pending');
-        setIsEmailVerified(false);
-      }
-    } else {
-      setUser(null);
-      setKycStatus('pending');
-      setIsEmailVerified(false);
-    }
   }, []);
 
   const login = (token) => {
     localStorage.setItem('token', token);
     fetchKycStatus(token);
-    return;
-    const decoded = jwtDecode(token);
-    setUser(decoded.user);
-    // Fetch KYC and email verification status after login
-    axios.get('/api/auth/kyc/status', {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(res => {
-      setKycStatus(res.data.kyc.status || 'pending');
-      setIsEmailVerified(res.data.isEmailVerified || false);
-    }).catch(() => {
-      setKycStatus('pending');
-      setIsEmailVerified(false);
-    });
   };
 
   const logout = () => {
@@ -100,7 +63,6 @@ export const UserProvider = ({ children }) => {
     setIsEmailVerified(false);
   };
 
-  // Add a method to force refresh user context from /api/user/dashboard
   const refreshUserContext = async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -112,21 +74,11 @@ export const UserProvider = ({ children }) => {
         setIsEmailVerified(Boolean(res.data.userInfo.isEmailVerified));
       }
       await fetchKycStatus(token);
-      return;
-    } catch {
+    } catch (err) {
+      console.warn('[UserContext] refreshUserContext error', err?.message || err);
       setIsEmailVerified(false);
       setKycStatus('pending');
       setKycLoading(false);
-    }
-    try {
-      const res = await axios.get('/api/user/dashboard', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.data && res.data.userInfo) {
-        setIsEmailVerified(!!res.data.userInfo.isEmailVerified);
-      }
-    } catch {
-      setIsEmailVerified(false);
     }
   };
 
@@ -138,4 +90,3 @@ export const UserProvider = ({ children }) => {
 };
 
 export const useUser = () => useContext(UserContext);
-
