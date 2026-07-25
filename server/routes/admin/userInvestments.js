@@ -11,6 +11,7 @@ router.get('/:userId', authAdmin, async (req, res) => {
   const investments = await Investment.find({ user: req.params.userId }).lean();
   const mapped = investments.map(inv => ({
     id: inv._id,
+    _id: inv._id,
     user: inv.user,
     fundId: inv.fundId,
     fundName: inv.fundName,

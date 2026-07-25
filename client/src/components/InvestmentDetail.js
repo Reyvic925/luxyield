@@ -104,17 +104,19 @@ const InvestmentDetail = ({ investment, onClose }) => {
   // Calculate correct current ROI and value for active investments
   function getCurrentRoiAndValue(investment) {
     if (!investment) return { roi: '0.00', value: '0.00' };
-    // Always use backend values for active and completed investments
-    if (typeof investment.currentValue === 'number' && !isNaN(investment.currentValue)) {
-      const roi = ((investment.currentValue - investment.initialAmount) / investment.initialAmount) * 100;
+    const initial = Number(investment.initialAmount || 0);
+    const current = Number(investment.currentValue ?? investment.currentAmount ?? 0);
+    if (initial > 0 && !isNaN(current)) {
+      const roi = ((current - initial) / initial) * 100;
       return {
-        roi: roi.toFixed(2),
-        value: investment.currentValue.toFixed(2),
+        roi: isFinite(roi) ? roi.toFixed(2) : '0.00',
+        value: isFinite(current) ? current.toFixed(2) : '0.00',
       };
     }
+    const fallbackRoi = Number(investment.roi || 0);
     return {
-      roi: Number(investment.roi).toFixed(2),
-      value: Number(investment.currentValue).toFixed(2),
+      roi: isFinite(fallbackRoi) ? fallbackRoi.toFixed(2) : '0.00',
+      value: isFinite(current) ? current.toFixed(2) : '0.00',
     };
   }
 
@@ -154,23 +156,31 @@ const InvestmentDetail = ({ investment, onClose }) => {
     const interval = setInterval(async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`/api/portfolio/investment/${investment.id}`, {
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(`/api/portfolio/investment/${investment.id || investment._id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
           const text = await res.text();
           let data = null;
           try { data = JSON.parse(text); } catch { data = text; }
-          setLiveInvestment((data && data.investment) ? data.investment : data);
+          const fetched = (data && data.investment) ? data.investment : data;
+          if (fetched && !fetched.transactions && fetched.lastTransactions) {
+            fetched.transactions = fetched.lastTransactions.map(t => ({ type: t.type, amount: Number(t.amount || 0), date: t.date, description: t.description || '' }));
+          }
+          setLiveInvestment(fetched || data);
         }
       } catch {}
     }, 15000); // Refresh every 15 seconds
     return () => clearInterval(interval);
   }, [investment]);
 
-  // Use liveInvestment for gains/losses, not stale investment prop
-  const gainTxs = (liveInvestment.transactions || []).filter(t => (t.type === 'roi' || t.type === 'gain') && t.amount > 0);
-  const lossTxs = (liveInvestment.transactions || []).filter(t => (t.type === 'roi' && t.amount < 0) || t.type === 'loss');
+  // Use liveInvestment.transactions or fallback to lastTransactions
+  const txList = (liveInvestment && (liveInvestment.transactions || liveInvestment.lastTransactions)) || [];
+  const normalizedTxs = txList.map(t => ({ type: t.type, amount: Number(t.amount || 0), date: t.date, description: t.description || '' }));
+  const gainTxs = normalizedTxs.filter(t => (t.type === 'roi' || t.type === 'gain') && Number(t.amount) > 0);
+  const lossTxs = normalizedTxs.filter(t => ((t.type === 'roi' && Number(t.amount) < 0) || t.type === 'loss'));
 
   const handleWithdrawRoi = async () => {
     if (!investment || investment.status !== 'completed') {
@@ -248,7 +258,7 @@ const InvestmentDetail = ({ investment, onClose }) => {
               <h3 className="text-lg font-bold mb-2 flex items-center">
                 <FiDollarSign className="mr-2 text-gold" /> Invested Amount
               </h3>
-              <p className="text-2xl">${investment.initialAmount.toLocaleString()}</p>
+              <p className="text-2xl">${Number(liveInvestment?.initialAmount ?? investment?.initialAmount ?? 0).toLocaleString(undefined, {maximumFractionDigits: 2})}</p>
             </div>
             
             <div className="bg-gray-800 bg-opacity-30 p-4 rounded-lg">
