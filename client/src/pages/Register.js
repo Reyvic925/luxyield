@@ -353,7 +353,7 @@ const Register = () => {
                       {formik.values.acceptedTerms ? '✓' : ''}
                     </span>
                     <span className="text-sm text-gray-300">
-                      I agree to the <a href="/terms" className="text-gold hover:underline">Terms of Service</a> and <a href="/privacy" className="text-gold hover:underline">Privacy Policy</a>.
+                    I agree to the <a href="/legal#terms" className="text-gold hover:underline">Terms of Service</a> and <a href="/legal#privacy" className="text-gold hover:underline">Privacy Policy</a>.
                     </span>
                   </label>
                 </div>
