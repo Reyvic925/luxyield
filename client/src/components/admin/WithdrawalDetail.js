@@ -185,7 +185,7 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Withdrawal ID</span>
-                  <span className="font-mono">{withdrawal.id}</span>
+                  <span className="font-mono">{withdrawal._id || withdrawal.id}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">User ID</span>

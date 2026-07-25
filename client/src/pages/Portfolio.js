@@ -427,10 +427,10 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
               {filteredInvestments.map((investment) => {
                 const { value } = getCurrentRoiAndValue(investment);
                 return (
-                  <tr key={investment.id} className="border-b border-gray-800 hover:bg-gray-800 hover:bg-opacity-30 transition">
+                  <tr key={investment._id || investment.id} className="border-b border-gray-800 hover:bg-gray-800 hover:bg-opacity-30 transition">
                     <td className="py-4">
                       <div className="font-medium">{investment.fundName}</div>
-                      <div className="text-sm text-gray-400">ID: {investment.id}</div>
+                      <div className="text-sm text-gray-400">ID: {investment._id || investment.id}</div>
                     </td>
                     <td className="py-4">
                       <div className="font-medium">{investment.planName}</div>
@@ -474,7 +474,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
           {filteredInvestments.map((investment) => {
             const { value } = getCurrentRoiAndValue(investment);
             return (
-              <div key={investment.id} className="glassmorphic p-4 rounded-xl">
+              <div key={investment._id || investment.id} className="glassmorphic p-4 rounded-xl">
                 <div className="flex justify-between items-center mb-2">
                   <div>
                     <div className="font-bold text-lg">{investment.fundName}</div>

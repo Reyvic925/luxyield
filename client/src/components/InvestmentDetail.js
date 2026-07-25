@@ -22,7 +22,7 @@ const InvestmentDetail = ({ investment, onClose }) => {
       try {
         // use configured axios (ensures correct baseURL and auth headers)
         const axios = require('../utils/axios').default;
-        const url = `/api/admin/investment/${investment.id}/set-gain-loss`;
+        const url = `/api/admin/investment/${investment._id || investment.id}/set-gain-loss`;
         const body = { amount: Number(adjustAmount), type: adjustType };
 
         console.log('[INVEST_DETAIL] About to send request (axios):', { url, body });
@@ -158,20 +158,46 @@ const InvestmentDetail = ({ investment, onClose }) => {
         const token = localStorage.getItem('token');
         const headers = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const res = await fetch(`/api/portfolio/investment/${investment.id || investment._id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await fetch(`/api/portfolio/investment/${investment._id || investment.id}`, { headers });
         if (res.ok) {
           const text = await res.text();
           let data = null;
           try { data = JSON.parse(text); } catch { data = text; }
           const fetched = (data && data.investment) ? data.investment : data;
+
+          // Normalize transactions if server returned lastTransactions only
           if (fetched && !fetched.transactions && fetched.lastTransactions) {
-            fetched.transactions = fetched.lastTransactions.map(t => ({ type: t.type, amount: Number(t.amount || 0), date: t.date, description: t.description || '' }));
+            fetched.transactions = fetched.lastTransactions.map(t => ({ ...t, amount: Number(t.amount || 0), date: t.date, description: t.description || '' }));
           }
-          setLiveInvestment(fetched || data);
+
+          // Merge transactions instead of blindly overwriting so local added txs don't disappear
+          setLiveInvestment(prev => {
+            if (!fetched) return prev;
+            const prevTx = (prev && (prev.transactions || prev.lastTransactions)) ? (prev.transactions || prev.lastTransactions) : [];
+            const fetchedTx = fetched.transactions || [];
+
+            const map = new Map();
+            const addTx = (tx) => {
+              const key = tx._id ? String(tx._id) : `${tx.type}|${Number(tx.amount||0)}|${tx.date}|${tx.description||''}`;
+              if (!map.has(key)) {
+                map.set(key, { ...tx, amount: Number(tx.amount || 0) });
+              }
+            };
+
+            prevTx.forEach(addTx);
+            fetchedTx.forEach(addTx);
+
+            const mergedTxs = Array.from(map.values()).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            return {
+              ...fetched,
+              transactions: mergedTxs
+            };
+          });
         }
-      } catch {}
+      } catch (err) {
+        console.error('[INVEST_DETAIL] periodic fetch error', err);
+      }
     }, 15000); // Refresh every 15 seconds
     return () => clearInterval(interval);
   }, [investment]);
@@ -194,7 +220,7 @@ const InvestmentDetail = ({ investment, onClose }) => {
     }
 
     try {
-      const response = await axios.post(`/api/investment/withdraw-roi/${investment.id || investment._id}`);
+      const response = await axios.post(`/api/investment/withdraw-roi/${investment._id || investment.id}`);
       if (response?.data?.success) {
         toast.success('ROI withdrawal request created. Continue in the withdrawal center to complete the staged flow.');
         onClose?.();
@@ -334,9 +360,7 @@ const InvestmentDetail = ({ investment, onClose }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Status</span>
-                  <span className={`${
-                    (liveInvestment?.status === 'active') ? 'text-green-500' : 'text-gray-400'
-                  }`}>
+                  <span className={`${(liveInvestment?.status === 'active') ? 'text-green-500' : 'text-gray-400'}`}>
                     {(liveInvestment?.status ? (liveInvestment.status.charAt(0).toUpperCase() + liveInvestment.status.slice(1)) : 'N/A')}
                   </span>
                 </div>
@@ -392,4 +416,4 @@ const InvestmentDetail = ({ investment, onClose }) => {
   );
 };
 
-export default InvestmentDetail;
+export default InvestmentDetail

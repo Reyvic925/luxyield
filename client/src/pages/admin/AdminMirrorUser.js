@@ -29,7 +29,7 @@ const AdminMirrorUser = ({ userId, onBack }) => {
     setAdjustLoading(true);
     try {
       // use configured axios so baseURL + auth header are applied consistently
-      const resp = await axios.post(`/api/admin/investment/${activeInvestment.id}/set-gain-loss`, { amount: Number(adjustAmount), type: adjustType });
+      const resp = await axios.post(`/api/admin/investment/${activeInvestment._id || activeInvestment.id}/set-gain-loss`, { amount: Number(adjustAmount), type: adjustType });
       console.log('[ADMIN UI] Axios response:', resp.status, resp.data);
 
       const data = resp.data;

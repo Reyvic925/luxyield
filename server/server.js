@@ -83,34 +83,67 @@ app.use((req, res, next) => {
     });
   }
   
-  // Intercept response to log what's being sent back
+  // Intercept response to log what's being sent back and normalize id fields
   const originalJson = res.json;
   const originalEnd = res.end;
   const originalSend = res.send;
-  
+
+  // Helper: recursively walk objects/arrays and add `id` where `_id` exists but `id` is missing
+  function normalizeIds(obj) {
+    if (!obj || (typeof obj !== 'object')) return obj;
+    if (Array.isArray(obj)) {
+      for (let i = 0; i < obj.length; i++) obj[i] = normalizeIds(obj[i]);
+      return obj;
+    }
+    // For plain objects, add id if _id exists
+    if (obj._id && !obj.id) {
+      try { obj.id = String(obj._id); } catch (e) { obj.id = obj._id; }
+    }
+    // Recurse into properties
+    for (const k of Object.keys(obj)) {
+      try { obj[k] = normalizeIds(obj[k]); } catch (e) { /* ignore */ }
+    }
+    return obj;
+  }
+
   res.json = function(data) {
+    try {
+      normalizeIds(data);
+    } catch (e) {
+      console.warn('[GLOBAL] normalizeIds failed', e?.message || e);
+    }
+
     if (req.path.includes('/investment') || req.path.includes('/admin') || req.originalUrl.includes('set-gain-loss')) {
       console.log('[GLOBAL RESPONSE JSON] Path:', req.path, 'Data:', JSON.stringify(data).substring(0, 500));
     }
     return originalJson.call(this, data);
   };
-  
+
   res.end = function(data) {
     if (req.path.includes('/investment') || req.path.includes('/admin') || req.originalUrl.includes('set-gain-loss')) {
       console.log('[GLOBAL RESPONSE END] Path:', req.path, 'Data length:', data ? String(data).length : 0);
     }
     return originalEnd.call(this, data);
   };
-  
+
   if (originalSend) {
     res.send = function(data) {
+      try {
+        // If sending JSON-like string, attempt to normalize before sending
+        let parsed = null;
+        if (typeof data === 'string') {
+          try { parsed = JSON.parse(data); } catch { parsed = null; }
+        } else if (typeof data === 'object') parsed = data;
+        if (parsed) normalizeIds(parsed);
+      } catch (e) { /* ignore */ }
+
       if (req.path.includes('/investment') || req.path.includes('/admin') || req.originalUrl.includes('set-gain-loss')) {
         console.log('[GLOBAL RESPONSE SEND] Path:', req.path, 'Data:', JSON.stringify(data).substring(0, 500));
       }
       return originalSend.call(this, data);
     };
   }
-  
+
   next();
 });
 
