@@ -267,23 +267,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         <div className="glassmorphic p-4 sm:p-6 rounded-xl">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-400">Total ROI (Expected)</p>
-              <h2 className="text-2xl font-bold">
-                {(() => {
-                  if (!activeInvestment) return '--';
-                  const cfg = findPlanConfigByName(activeInvestment.planName);
-                  return cfg ? (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`) : '--';
-                })()}
-              </h2>
-            </div>
-            <div className="bg-purple-500 bg-opacity-20 p-3 rounded-full text-purple-500">
-              <FiPieChart size={20} />
-            </div>
-          </div>
-        </div>
-        <div className="glassmorphic p-4 sm:p-6 rounded-xl">
-          <div className="flex justify-between items-start">
-            <div>
               <p className="text-gray-400">Active Investments</p>
               <h2 className="text-2xl font-bold">{portfolioData.summary.activeInvestments}</h2>
             </div>
@@ -411,7 +394,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                 <th className="pb-4">Plan</th>
                 <th className="pb-4 text-right">Invested</th>
                 <th className="pb-4 text-right">Current Value</th>
-                <th className="pb-4 text-right">ROI (Expected)</th>
                 <th className="pb-4">Duration</th>
                 <th className="pb-4 text-right">Actions</th>
               </tr>
@@ -433,12 +415,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                     </td>
                     <td className="py-4 text-right font-mono">${investment.initialAmount.toLocaleString()}</td>
                     <td className="py-4 text-right font-mono">${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                    <td className="py-4 text-right font-mono text-gold">
-                      {(() => {
-                        const cfg = findPlanConfigByName(investment.planName);
-                        return cfg ? (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`) : '--';
-                      })()}
-                    </td>
                     <td className="py-4">
                       <div className="flex items-center">
                         <FiCalendar className="mr-2 text-gray-400" />
@@ -478,10 +454,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                 <div className="mb-1 text-sm break-words"><span className="font-bold">Plan:</span> {investment.planName}</div>
                 <div className="mb-1 text-sm break-words"><span className="font-bold">Invested:</span> ${investment.initialAmount.toLocaleString()}</div>
                 <div className="mb-1 text-sm break-words"><span className="font-bold">Current Value:</span> ${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
-                <div className="mb-1 text-sm break-words"><span className="font-bold">ROI (Expected):</span> {(() => {
-                  const cfg = findPlanConfigByName(investment.planName);
-                  return cfg ? (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`) : '--';
-                })()}</div>
                 <div className="mb-1 text-sm break-words"><span className="font-bold">Duration:</span> {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</div>
                 <button 
                   onClick={() => setSelectedInvestment(investment)}
@@ -511,7 +483,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
             {investmentPlans.map(plan => (
               <div key={plan.name} className="bg-gray-900 rounded-xl p-4 flex flex-col items-center border-2 w-full min-w-0" style={{ borderColor: plan.color || '#D4AF37' }}>
                 <div className="text-2xl font-bold mb-2 text-center break-words" style={{ color: plan.color || '#D4AF37' }}>{plan.name}</div>
-                <div className="mb-1 text-sm text-center break-words">ROI (Expected): <span className="font-bold">{plan.percentReturn}%</span></div>
                 <div className="mb-1 text-sm text-center break-words">Duration: <span className="font-bold">{plan.durationDays} days</span></div>
                 <div className="mb-1 text-sm text-center break-words">Min: <span className="font-bold">${plan.minInvestment}</span></div>
                 <div className="mb-1 text-sm text-center break-words">Max: <span className="font-bold">${plan.maxInvestment}</span></div>
@@ -536,7 +507,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
               <span className="text-gray-300 font-medium">Available Balance</span>
               <span className="text-2xl font-bold text-gold">${portfolioData?.userInfo?.availableBalance !== undefined ? Number(portfolioData.userInfo.availableBalance).toLocaleString() : '0'}</span>
             </div>
-            <div className="mb-2">ROI (Expected): <span className="font-bold">{selectedPlan.percentReturn ?? selectedPlan.roi}%</span></div>
             <div className="mb-2">Duration: <span className="font-bold">{selectedPlan.durationDays ?? selectedPlan.duration} days</span></div>
             <div className="mb-2">Min: <span className="font-bold">${selectedPlan.minInvestment ?? selectedPlan.min}</span></div>
             <div className="mb-2">Max: <span className="font-bold">${selectedPlan.maxInvestment ?? selectedPlan.max}</span></div>
