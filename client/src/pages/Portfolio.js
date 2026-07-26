@@ -234,12 +234,12 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
   const hasActiveInvestment = filteredInvestments.some(inv => inv.status === 'active');
 
   return (
-    <div className="w-full max-w-full min-w-0 space-y-8 px-2 sm:px-4 md:px-6 py-6 sm:py-8">
+    <div className="w-full max-w-full min-w-0 overflow-x-hidden space-y-8 px-2 sm:px-4 md:px-6 py-6 sm:py-8">
       {/* Portfolio Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
         <h1 className="text-2xl font-bold break-words">Investment Portfolio</h1>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 w-full sm:w-auto">
-          <button className="flex items-center justify-center text-sm bg-gray-800 bg-opacity-50 hover:bg-opacity-70 px-3 py-2 rounded-lg transition w-full sm:w-auto">
+          <button className="flex items-center justify-center text-sm bg-gray-800 bg-opacity-50 hover:bg-opacity-70 px-3 py-2 rounded-lg transition w-full sm:w-auto whitespace-nowrap">
             <FiRefreshCw className="mr-2" /> Refresh
           </button>
           <select
@@ -371,13 +371,13 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
       </div>
 
       {/* Investments Table */}
-      <div className="glassmorphic p-4 sm:p-6 rounded-xl overflow-x-auto">
+      <div className="glassmorphic p-4 sm:p-6 rounded-xl overflow-hidden">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-6">
           <h3 className="text-xl font-bold">Your Investments</h3>
-          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:justify-end min-w-0">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-3 py-2 rounded-lg text-sm flex-1 sm:flex-none text-center ${
+              className={`px-3 py-2 rounded-lg text-sm flex-1 sm:flex-none text-center whitespace-nowrap min-w-[72px] ${
                 activeTab === 'all' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
               } transition`}
             >
@@ -385,7 +385,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
             </button>
             <button
               onClick={() => setActiveTab('active')}
-              className={`px-3 py-2 rounded-lg text-sm flex-1 sm:flex-none text-center ${
+              className={`px-3 py-2 rounded-lg text-sm flex-1 sm:flex-none text-center whitespace-nowrap min-w-[72px] ${
                 activeTab === 'active' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
               } transition`}
             >
@@ -393,7 +393,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
             </button>
             <button
               onClick={() => setActiveTab('completed')}
-              className={`px-3 py-2 rounded-lg text-sm flex-1 sm:flex-none text-center ${
+              className={`px-3 py-2 rounded-lg text-sm flex-1 sm:flex-none text-center whitespace-nowrap min-w-[72px] ${
                 activeTab === 'completed' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
               } transition`}
             >
@@ -459,21 +459,21 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
           {filteredInvestments.map((investment) => {
             const { value } = getCurrentRoiAndValue(investment);
             return (
-              <div key={investment._id || investment.id} className="glassmorphic p-4 rounded-xl">
+              <div key={investment._id || investment.id} className="glassmorphic p-4 rounded-xl overflow-hidden">
                 <div className="flex justify-between items-start gap-2 mb-2">
                   <div className="min-w-0">
-                    <div className="font-bold text-lg break-words">{investment.fundName}</div>
-                    <div className="text-xs text-gray-400 break-all">ID: {investment._id || investment.id}</div>
+                    <div className="font-bold text-lg break-words" style={{ overflowWrap: 'anywhere' }}>{investment.fundName}</div>
+                    <div className="text-xs text-gray-400 break-all" style={{ overflowWrap: 'anywhere' }}>ID: {investment._id || investment.id}</div>
                   </div>
                   <span className="px-2 py-1 rounded bg-gray-800 text-xs text-gray-200 whitespace-nowrap">{investment.status}</span>
                 </div>
-                <div className="mb-1 text-sm break-words"><span className="font-bold">Plan:</span> {investment.planName}</div>
-                <div className="mb-1 text-sm break-words"><span className="font-bold">Invested:</span> ${investment.initialAmount.toLocaleString()}</div>
-                <div className="mb-1 text-sm break-words"><span className="font-bold">Current Value:</span> ${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
-                <div className="mb-1 text-sm break-words"><span className="font-bold">Duration:</span> {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</div>
+                <div className="mb-1 text-sm break-words" style={{ overflowWrap: 'anywhere' }}><span className="font-bold">Plan:</span> {investment.planName}</div>
+                <div className="mb-1 text-sm break-words" style={{ overflowWrap: 'anywhere' }}><span className="font-bold">Invested:</span> ${investment.initialAmount.toLocaleString()}</div>
+                <div className="mb-1 text-sm break-words" style={{ overflowWrap: 'anywhere' }}><span className="font-bold">Current Value:</span> ${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
+                <div className="mb-1 text-sm break-words" style={{ overflowWrap: 'anywhere' }}><span className="font-bold">Duration:</span> {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</div>
                 <button 
                   onClick={() => setSelectedInvestment(investment)}
-                  className="mt-2 w-full bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition text-sm"
+                  className="mt-2 w-full bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition text-sm whitespace-nowrap"
                 >
                   Details
                 </button>
