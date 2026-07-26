@@ -223,9 +223,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
         <h1 className="text-2xl font-bold">Investment Portfolio</h1>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2">
-          <button className="flex items-center text-sm bg-gray-800 bg-opacity-50 hover:bg-opacity-70 px-3 py-2 rounded-lg transition">
-            <FiRefreshCw className="mr-2" /> Refresh
-          </button>
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
@@ -234,7 +231,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
             <option value="1m">1 Month</option>
             <option value="3m">3 Months</option>
             <option value="6m">6 Months</option>
-            <option value="1y">1 Year</option>
             <option value="all">All Time</option>
           </select>
         </div>
@@ -479,7 +475,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         {investmentPlans.length === 0 ? (
           <div className="text-center py-8 text-gray-400">No plans available</div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
             {investmentPlans.map(plan => (
               <div key={plan.name} className="bg-gray-900 rounded-xl p-4 flex flex-col items-center border-2 w-full min-w-0" style={{ borderColor: plan.color || '#D4AF37' }}>
                 <div className="text-2xl font-bold mb-2 text-center break-words" style={{ color: plan.color || '#D4AF37' }}>{plan.name}</div>
