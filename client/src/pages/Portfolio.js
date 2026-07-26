@@ -507,7 +507,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
               {investmentPlans.slice(0,2).map(plan => (
                 <div key={plan.name} className="bg-gray-900 rounded-xl p-4 flex flex-col items-center border-2" style={{ borderColor: plan.color || '#D4AF37' }}>
                   <div className="text-2xl font-bold mb-2" style={{ color: plan.color || '#D4AF37' }}>{plan.name}</div>
-                  <div className="mb-1">ROI (Expected): <span className="font-bold">{plan.percentReturn}%</span></div>
                   <div className="mb-1">Duration: <span className="font-bold">{plan.durationDays} days</span></div>
                   <div className="mb-1">Min: <span className="font-bold">${plan.minInvestment}</span></div>
                   <div className="mb-1">Max: <span className="font-bold">${plan.maxInvestment}</span></div>
@@ -522,7 +521,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
               {investmentPlans.slice(2,4).map(plan => (
                 <div key={plan.name} className="bg-gray-900 rounded-xl p-4 flex flex-col items-center border-2" style={{ borderColor: plan.color || '#D4AF37' }}>
                   <div className="text-2xl font-bold mb-2" style={{ color: plan.color || '#D4AF37' }}>{plan.name}</div>
-                  <div className="mb-1">ROI (Expected): <span className="font-bold">{plan.percentReturn}%</span></div>
                   <div className="mb-1">Duration: <span className="font-bold">{plan.durationDays} days</span></div>
                   <div className="mb-1">Min: <span className="font-bold">${plan.minInvestment}</span></div>
                   <div className="mb-1">Max: <span className="font-bold">${plan.maxInvestment}</span></div>
