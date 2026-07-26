@@ -429,7 +429,7 @@ const InvestmentDetail = ({ investment, onClose }) => {
             <div className="overflow-y-auto max-h-40">
               {tab === 'gains' && gainTxs.length === 0 && <div className="text-gray-400">No gains yet.</div>}
               {tab === 'losses' && lossTxs.length === 0 && <div className="text-gray-400">No losses yet.</div>}
-              {tab === 'gains' && gainTxs.slice().reverse().map((tx) => {
+              {tab === 'gains' && gainTxs.map((tx) => {
                 const key = tx._id || `${tx.type}-${tx.amount}-${tx.date}`;
                 const dateObj = new Date(tx.date || tx.createdAt || Date.now());
                 const dateStr = isNaN(dateObj.getTime()) ? 'N/A' : dateObj.toLocaleDateString();
@@ -441,7 +441,7 @@ const InvestmentDetail = ({ investment, onClose }) => {
                   </div>
                 );
               })}
-              {tab === 'losses' && lossTxs.slice().reverse().map((tx) => {
+              {tab === 'losses' && lossTxs.map((tx) => {
                 const key = tx._id || `${tx.type}-${tx.amount}-${tx.date}`;
                 const dateObj = new Date(tx.date || tx.createdAt || Date.now());
                 const dateStr = isNaN(dateObj.getTime()) ? 'N/A' : dateObj.toLocaleDateString();
