@@ -1,12 +1,13 @@
 ﻿// src/components/admin/AdminLayout.js
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { FiUsers, FiDollarSign, FiDownload, FiSettings, FiHome, FiBell, FiMail, FiList, FiArrowUpRight, FiDatabase, FiShield } from 'react-icons/fi';
+import { FiUsers, FiDollarSign, FiDownload, FiSettings, FiHome, FiBell, FiMail, FiList, FiArrowUpRight, FiDatabase, FiShield, FiMoon, FiSun } from 'react-icons/fi';
 import { useAdminAuth } from '../../auth/AdminAuthProvider';
+import { useTheme } from '../../hooks/useTheme';
 
 const AdminLayout = () => {
   const { admin, logout } = useAdminAuth();
-  const [darkMode, setDarkMode] = useState(true);
+  const { toggleTheme, isDark } = useTheme();
 
   const navItems = [
     { to: '/admin', icon: <FiHome size={22} />, label: 'Dashboard', description: 'Overview & Quick Links' },
@@ -25,27 +26,47 @@ const AdminLayout = () => {
   ];
 
   return (
-    <div className={`min-h-screen relative transition-colors duration-300 ${darkMode ? 'bg-black text-gray-100' : 'bg-white text-gray-900'}`}>
-      <div className="sticky top-0 z-40 bg-opacity-95 bg-black/80 backdrop-blur-md border-b border-gray-800">
+    <div 
+      className="min-h-screen relative transition-colors duration-300"
+      style={{ 
+        backgroundColor: 'var(--bg-primary)',
+        color: 'var(--text-primary)'
+      }}
+    >
+      {/* Header */}
+      <div 
+        className="sticky top-0 z-40 bg-opacity-95 backdrop-blur-md border-b transition-colors duration-300"
+        style={{ 
+          backgroundColor: `rgba(${isDark ? '15, 15, 15' : '255, 255, 255'}, 0.95)`,
+          borderColor: 'var(--border-primary)'
+        }}
+      >
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-gold text-black flex items-center justify-center font-extrabold text-lg">L</div>
             <div>
               <div className="text-xl font-bold tracking-wider">LuxHedge Admin</div>
-              <div className="text-xs text-gray-400">{admin?.name ? `Logged in as ${admin.name}` : 'Administrator panel'}</div>
+              <div style={{ color: 'var(--text-secondary)' }} className="text-xs">{admin?.name ? `Logged in as ${admin.name}` : 'Administrator panel'}</div>
             </div>
           </div>
           <div className="flex items-center gap-3 justify-end">
             <button
-              onClick={() => setDarkMode((prev) => !prev)}
-              className="px-3 py-2 rounded-lg bg-gray-900 bg-opacity-80 text-gold hover:bg-gray-800 transition"
+              onClick={toggleTheme}
+              className="px-3 py-2 rounded-lg transition-all duration-300 flex items-center gap-2"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                color: '#D4AF37',
+                border: '1px solid var(--border-primary)'
+              }}
               aria-label="Toggle theme"
             >
-              {darkMode ? 'Light' : 'Dark'} mode
+              {isDark ? <FiSun size={18} /> : <FiMoon size={18} />}
+              <span>{isDark ? 'Light' : 'Dark'}</span>
             </button>
             <button
               onClick={logout}
-              className="px-3 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition"
+              className="px-3 py-2 rounded-lg text-white hover:opacity-90 transition-opacity"
+              style={{ backgroundColor: '#DC2626' }}
             >
               Logout
             </button>
@@ -54,23 +75,47 @@ const AdminLayout = () => {
       </div>
 
       <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Navigation Cards */}
         <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-6">
           {navItems.map(({ to, icon, label, description }) => (
             <Link
               key={to}
               to={to}
-              className="group block rounded-3xl border border-gray-800 bg-gray-900 p-5 text-left transition hover:border-gold hover:bg-gray-800"
+              className="group block rounded-3xl p-5 text-left transition-all duration-300"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                border: `1px solid var(--border-primary)`,
+                color: 'var(--text-primary)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#D4AF37';
+                e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-primary)';
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+              }}
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-800 text-gold mb-4 transition group-hover:bg-gold group-hover:text-black">
+              <div 
+                className="flex h-12 w-12 items-center justify-center rounded-2xl text-gold mb-4 transition-all duration-300"
+                style={{ backgroundColor: 'var(--bg-tertiary)' }}
+              >
                 {icon}
               </div>
-              <div className="text-base font-semibold mb-1 transition group-hover:text-gold">{label}</div>
-              <p className="text-sm text-gray-400 leading-5">{description}</p>
+              <div className="text-base font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>{label}</div>
+              <p className="text-sm leading-5" style={{ color: 'var(--text-secondary)' }}>{description}</p>
             </Link>
           ))}
         </section>
 
-        <div className="bg-gray-950 rounded-3xl border border-gray-800 p-4 md:p-6 min-h-[60vh]">
+        {/* Main Content Area */}
+        <div 
+          className="rounded-3xl border p-4 md:p-6 min-h-[60vh] transition-colors duration-300"
+          style={{
+            backgroundColor: 'var(--bg-secondary)',
+            borderColor: 'var(--border-primary)'
+          }}
+        >
           <Outlet />
         </div>
       </main>

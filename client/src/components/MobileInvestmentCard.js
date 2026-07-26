@@ -7,8 +7,8 @@ const MobileInvestmentCard = ({ investment }) => {
     <div className="glassmorphic p-4 rounded-xl mb-4">
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="font-bold">{investment.fundName}</h3>
-          <p className="text-sm text-gray-400">{investment.planName}</p>
+          <h3 className="font-bold text-black dark:text-white">{investment.fundName}</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{investment.planName}</p>
         </div>
         <div className={`flex items-center ${
           investment.roi >= 0 ? 'text-green-500' : 'text-red-500'
@@ -20,20 +20,20 @@ const MobileInvestmentCard = ({ investment }) => {
       
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div>
-          <p className="text-xs text-gray-400">Invested</p>
-          <p className="font-mono">${investment.initialAmount.toLocaleString()}</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">Invested</p>
+          <p className="font-mono text-black dark:text-white">${investment.initialAmount.toLocaleString()}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-400">Current</p>
-          <p className="font-mono">${investment.currentValue.toLocaleString()}</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">Current</p>
+          <p className="font-mono text-black dark:text-white">${investment.currentValue.toLocaleString()}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-400">Start Date</p>
-          <p className="text-sm">{new Date(investment.startDate).toLocaleDateString()}</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">Start Date</p>
+          <p className="text-sm text-black dark:text-white">{new Date(investment.startDate).toLocaleDateString()}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-400">End Date</p>
-          <p className="text-sm">{new Date(investment.endDate).toLocaleDateString()}</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">End Date</p>
+          <p className="text-sm text-black dark:text-white">{new Date(investment.endDate).toLocaleDateString()}</p>
         </div>
       </div>
       

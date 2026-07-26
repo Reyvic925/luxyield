@@ -1,8 +1,17 @@
 ﻿import React from 'react';
+import { useTheme } from '../hooks/useTheme';
 
 export default function PageShell({ title, imageSrc, imageAlt, children }) {
+  const { isDark } = useTheme();
+  
   return (
-    <div className="min-h-screen bg-black text-brand-light/90">
+    <div 
+      className="min-h-screen transition-colors duration-300"
+      style={{ 
+        backgroundColor: 'var(--bg-primary)',
+        color: 'var(--text-secondary)'
+      }}
+    >
       <div className="relative w-full h-64 md:h-80 overflow-hidden flex items-center justify-center">
         {imageSrc && (
           <img

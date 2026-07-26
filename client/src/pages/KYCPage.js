@@ -211,8 +211,8 @@ const KYCPage = ({ adminView = false, kyc: adminKyc = null }) => {
       <div className="flex justify-between mb-8">
         {steps.map((s, i) => (
           <div key={i} className="flex-1 flex flex-col items-center">
-            <div className={`rounded-full w-8 h-8 flex items-center justify-center font-bold text-lg mb-1 border-2 ${step > i+1 ? 'bg-gold text-black border-gold' : step === i+1 ? 'bg-yellow-500 text-black border-yellow-500' : 'bg-gray-800 text-gray-400 border-gray-600'}`}>{i+1}</div>
-            <span className={`text-xs ${step === i+1 ? 'text-yellow-400' : 'text-gray-400'}`}>{s.label}</span>
+            <div className={`rounded-full w-8 h-8 flex items-center justify-center font-bold text-lg mb-1 border-2 ${step > i+1 ? 'bg-gold text-black border-gold' : step === i+1 ? 'bg-yellow-500 text-black border-yellow-500' : 'theme-aware-bg-secondary theme-aware-text-muted theme-aware-border-secondary'}`}>{i+1}</div>
+            <span className={`text-xs ${step === i+1 ? 'text-yellow-400' : 'theme-aware-text-muted'}`}>{s.label}</span>
           </div>
         ))}
       </div>
@@ -224,12 +224,12 @@ const KYCPage = ({ adminView = false, kyc: adminKyc = null }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {step === 1 && (
           <div>
-            <label className="block text-gray-300 mb-1">Country</label>
-            <select value={country} onChange={e => setCountry(e.target.value)} className="w-full p-2 rounded bg-gray-800 text-white mb-4">
+            <label className="block theme-aware-text-secondary mb-1">Country</label>
+            <select value={country} onChange={e => setCountry(e.target.value)} className="w-full p-2 rounded theme-aware-bg-secondary theme-aware-text mb-4">
               <option value="">Select country</option>
               {countries.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            <label className="block text-gray-300 mb-1">Document Type</label>
+            <label className="block theme-aware-text-secondary mb-1">Document Type</label>
             <select value={documentType} onChange={e => setDocumentType(e.target.value)} className="w-full p-2 rounded bg-gray-800 text-white">
               <option value="">Select document type</option>
               <option value="Passport">Passport</option>
@@ -253,9 +253,9 @@ const KYCPage = ({ adminView = false, kyc: adminKyc = null }) => {
             <div className="flex flex-col items-center gap-2 mb-4">
               <span className="text-gray-400 text-xs mb-1">{['Passport','Other (Single Side)'].includes(documentType) ? 'Upload document image' : 'Upload front side'}</span>
               {idFrontPreview ? (
-                <img src={idFrontPreview} alt="ID Front Preview" className="w-48 h-32 object-contain rounded border border-gray-700 mb-2" />
+                              <img src={idFrontPreview} alt="ID Front Preview" className="w-48 h-32 object-contain rounded border theme-aware-border-secondary mb-2" />
               ) : (
-                <div className="w-48 h-32 flex items-center justify-center bg-gray-800 rounded border border-gray-700 mb-2 text-gray-500">No file selected</div>
+                              <div className="w-48 h-32 flex items-center justify-center theme-aware-bg-secondary rounded border theme-aware-border-secondary mb-2 theme-aware-text-muted">No file selected</div>
               )}
               <div className="flex gap-2">
                 <label className="flex items-center gap-2 cursor-pointer bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
@@ -284,9 +284,9 @@ const KYCPage = ({ adminView = false, kyc: adminKyc = null }) => {
               <div className="flex flex-col items-center gap-2 mb-4">
                 <span className="text-gray-400 text-xs mb-1">Upload back side</span>
                 {idBackPreview ? (
-                  <img src={idBackPreview} alt="ID Back Preview" className="w-48 h-32 object-contain rounded border border-gray-700 mb-2" />
+                                  <img src={idBackPreview} alt="ID Back Preview" className="w-48 h-32 object-contain rounded border theme-aware-border-secondary mb-2" />
                 ) : (
-                  <div className="w-48 h-32 flex items-center justify-center bg-gray-800 rounded border border-gray-700 mb-2 text-gray-500">No file selected</div>
+                                  <div className="w-48 h-32 flex items-center justify-center theme-aware-bg-secondary rounded border theme-aware-border-secondary mb-2 theme-aware-text-muted">No file selected</div>
                 )}
                 <div className="flex gap-2">
                   <label className="flex items-center gap-2 cursor-pointer bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">

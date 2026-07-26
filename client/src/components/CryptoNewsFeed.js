@@ -22,15 +22,15 @@ export default function CryptoNewsFeed() {
 
   return (
     <div className="glass-card p-6 rounded-xl mb-6 shadow-lg">
-      <h3 className="font-bold text-lg mb-4">Live Crypto News</h3>
-      {loading ? <div>Loading...</div> : news.length === 0 ? <div>No news found.</div> : (
+      <h3 className="font-bold text-lg mb-4 text-black dark:text-white">Live Crypto News</h3>
+      {loading ? <div className="text-gray-700 dark:text-gray-300">Loading...</div> : news.length === 0 ? <div className="text-gray-700 dark:text-gray-300">No news found.</div> : (
         <ul className="space-y-3">
           {news.map(item => (
             <li key={item.id}>
               <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-gold hover:underline font-semibold">
                 {item.title || item.domain}
               </a>
-              <div className="text-xs text-gray-400">{item.published_at ? new Date(item.published_at).toLocaleString() : ''}</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">{item.published_at ? new Date(item.published_at).toLocaleString() : ''}</div>
             </li>
           ))}
         </ul>

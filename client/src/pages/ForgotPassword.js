@@ -71,7 +71,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black bg-opacity-80">
+    <div className="min-h-screen flex items-center justify-center theme-overlay">
       <div className="glass-card p-8 rounded-xl shadow-lg w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-gold flex items-center gap-2"><FiMail /> Forgot Password</h1>
         {step === 1 ? (

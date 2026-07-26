@@ -1,6 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { 
-  FiPieChart, 
   FiDollarSign, 
   FiTrendingUp, 
   FiClock,
@@ -17,6 +16,14 @@ import InvestmentDetail from '../components/InvestmentDetail';
 import { useUser } from '../contexts/UserContext';
 import { useUserDataRefresh } from '../contexts/UserDataRefreshContext';
 import '../custom-scrollbar.css';
+
+/*
+  Theme refactor notes:
+  - Replaced hard-coded neutral utility classes (text-gray-*, text-white/black, bg-gray-*, bg-black/white)
+    with the centralized theme CSS variables via the project's theme-aware utility classes (.theme-aware-*)
+  - Overlays use document-root CSS variable --overlay-bg to inherit global theme; no local theme state created.
+  - Tabs/plans grid preserved as grid-cols-2 on mobile to ensure 2x2 layout on small screens.
+*/
 
 // API endpoint for plans
 const PLANS_API = '/api/plans';
@@ -159,13 +166,13 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         <h2 className="text-2xl font-bold text-yellow-400 mb-4">Verification Required</h2>
         {!isEmailVerified ? (
           <>
-            <p className="text-white mb-4">You must verify your email before you can invest.</p>
-            <a href="/settings" className="bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition">Go to Email Verification</a>
+            <p className="theme-aware-text mb-4">You must verify your email before you can invest.</p>
+            <a href="/settings" className="bg-gold theme-aware-text px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition">Go to Email Verification</a>
           </>
         ) : (
           <>
-            <p className="text-white mb-4">You must complete KYC verification before you can invest.</p>
-            <a href="/kyc" className="bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition">Go to KYC Verification</a>
+            <p className="theme-aware-text mb-4">You must complete KYC verification before you can invest.</p>
+            <a href="/kyc" className="bg-gold theme-aware-text px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition">Go to KYC Verification</a>
           </>
         )}
       </div>
@@ -207,12 +214,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
     };
   }
 
-  // Helper to find plan config by name (case-insensitive)
-  function findPlanConfigByName(name) {
-    if (!name || typeof name !== 'string') return null;
-    const key = name.trim().toLowerCase();
-    return planConfig[key] || null;
-  }
 
   // Check if user has any active investment
   const hasActiveInvestment = filteredInvestments.some(inv => inv.status === 'active');
@@ -226,7 +227,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="bg-gray-800 bg-opacity-50 hover:bg-opacity-70 px-3 py-2 rounded-lg text-sm focus:outline-none"
+            className="theme-aware-bg-tertiary theme-aware-hover-bg px-3 py-2 rounded-lg text-sm focus:outline-none"
           >
             <option value="1m">1 Month</option>
             <option value="3m">3 Months</option>
@@ -241,7 +242,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         <div className="glassmorphic p-4 sm:p-6 rounded-xl">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-400">Total Invested</p>
+              <p className="theme-aware-text-muted">Total Invested</p>
               <h2 className="text-2xl font-bold">${portfolioData.summary.totalInvested.toLocaleString()}</h2>
             </div>
             <div className="bg-blue-500 bg-opacity-20 p-3 rounded-full text-blue-500">
@@ -252,7 +253,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         <div className="glassmorphic p-4 sm:p-6 rounded-xl">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-400">Current Value</p>
+              <p className="theme-aware-text-muted">Current Value</p>
               <h2 className="text-2xl font-bold">${Number(activeCurrentValue).toLocaleString(undefined, {maximumFractionDigits: 2})}</h2>
             </div>
             <div className="bg-green-500 bg-opacity-20 p-3 rounded-full text-green-500">
@@ -263,7 +264,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         <div className="glassmorphic p-4 sm:p-6 rounded-xl">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-400">Active Investments</p>
+              <p className="theme-aware-text-muted">Active Investments</p>
               <h2 className="text-2xl font-bold">{portfolioData.summary.activeInvestments}</h2>
             </div>
             <div className="bg-yellow-500 bg-opacity-20 p-3 rounded-full text-yellow-500">
@@ -281,19 +282,19 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={portfolioData.performanceData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" />
                 <XAxis 
                   dataKey="name" 
-                  stroke="#aaa" 
+                  stroke="var(--text-tertiary)" 
                   tickFormatter={(name) => name}
                   interval={0} // Show every tick (daily)
                   tick={{ angle: -35, fontSize: 10, dy: 10 }}
                 />
-                <YAxis stroke="#aaa" />
+                <YAxis stroke="var(--text-tertiary)" />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333', borderRadius: '8px' }}
+                  contentClassName="chart-tooltip"
                   formatter={(value) => [`$${value.toLocaleString()}`, 'Value']}
-                  labelStyle={{ color: '#fff' }}
+                  labelStyle={{ color: 'inherit' }}
                 />
                 <Legend />
                 <Line
@@ -339,9 +340,9 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                   ))}
                 </Pie>
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333', borderRadius: '8px' }}
+                  contentClassName="chart-tooltip"
                   formatter={(value) => [`$${value.toLocaleString()}`, 'Value']}
-                  labelStyle={{ color: '#fff' }}
+                  labelStyle={{ color: 'inherit' }}
                 />
                 <Legend />
               </PieChart>
@@ -358,7 +359,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
             <button
               onClick={() => setActiveTab('all')}
               className={`px-4 py-2 rounded-lg text-sm ${
-                activeTab === 'all' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
+                activeTab === 'all' ? 'bg-gold theme-aware-text' : 'theme-aware-bg-tertiary theme-aware-hover-bg'
               } transition`}
             >
               All
@@ -366,7 +367,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
             <button
               onClick={() => setActiveTab('active')}
               className={`px-4 py-2 rounded-lg text-sm ${
-                activeTab === 'active' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
+                activeTab === 'active' ? 'bg-gold theme-aware-text' : 'theme-aware-bg-tertiary theme-aware-hover-bg'
               } transition`}
             >
               Active
@@ -374,7 +375,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
             <button
               onClick={() => setActiveTab('completed')}
               className={`px-4 py-2 rounded-lg text-sm ${
-                activeTab === 'completed' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
+                activeTab === 'completed' ? 'bg-gold theme-aware-text' : 'theme-aware-bg-tertiary theme-aware-hover-bg'
               } transition`}
             >
               Completed
@@ -385,7 +386,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         <div className="hidden sm:block overflow-x-auto w-full">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800 text-gray-400 text-left">
+              <tr className="border-b theme-aware-border-secondary theme-aware-text-secondary text-left">
                 <th className="pb-4">Fund</th>
                 <th className="pb-4">Plan</th>
                 <th className="pb-4 text-right">Invested</th>
@@ -398,14 +399,14 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
               {filteredInvestments.map((investment) => {
                 const { value } = getCurrentRoiAndValue(investment);
                 return (
-                  <tr key={investment.id} className="border-b border-gray-800 hover:bg-gray-800 hover:bg-opacity-30 transition">
+                  <tr key={investment.id} className="border-b theme-aware-border-secondary theme-aware-hover-bg transition">
                     <td className="py-4">
                       <div className="font-medium">{investment.fundName}</div>
-                      <div className="text-sm text-gray-400">ID: {investment.id}</div>
+                      <div className="text-sm theme-aware-text-muted">ID: {investment.id}</div>
                     </td>
                     <td className="py-4">
                       <div className="font-medium">{investment.planName}</div>
-                      <div className="text-sm text-gray-400">
+                      <div className="text-sm theme-aware-text-muted">
                         {investment.status === 'active' ? 'Active' : 'Completed'}
                       </div>
                     </td>
@@ -413,7 +414,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                     <td className="py-4 text-right font-mono">${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
                     <td className="py-4">
                       <div className="flex items-center">
-                        <FiCalendar className="mr-2 text-gray-400" />
+                        <FiCalendar className="mr-2 theme-aware-text-secondary" />
                         <span className="text-sm">
                           {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} -{' '}
                           {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}
@@ -443,9 +444,9 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                 <div className="flex justify-between items-center mb-2">
                   <div>
                     <div className="font-bold text-lg">{investment.fundName}</div>
-                    <div className="text-xs text-gray-400">ID: {investment.id}</div>
+                    <div className="text-xs theme-aware-text-muted">ID: {investment.id}</div>
                   </div>
-                  <span className="px-2 py-1 rounded bg-gray-800 text-xs text-gray-200">{investment.status}</span>
+                  <span className="px-2 py-1 rounded theme-aware-bg-tertiary text-xs theme-aware-text-secondary">{investment.status}</span>
                 </div>
                 <div className="mb-1 text-sm break-words"><span className="font-bold">Plan:</span> {investment.planName}</div>
                 <div className="mb-1 text-sm break-words"><span className="font-bold">Invested:</span> ${investment.initialAmount.toLocaleString()}</div>
@@ -453,7 +454,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                 <div className="mb-1 text-sm break-words"><span className="font-bold">Duration:</span> {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</div>
                 <button 
                   onClick={() => setSelectedInvestment(investment)}
-                  className="mt-2 w-full bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition text-sm"
+                  className="mt-2 w-full bg-gold theme-aware-text px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition text-sm"
                 >
                   Details
                 </button>
@@ -463,7 +464,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         </div>
 
         {filteredInvestments.length === 0 && (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 theme-aware-text-muted">
             No investments found matching your criteria
           </div>
         )}
@@ -473,16 +474,16 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
       <div className="glassmorphic p-4 sm:p-6 rounded-xl mb-8">
         <h2 className="text-xl font-bold mb-4">Investment Plans</h2>
         {investmentPlans.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">No plans available</div>
+          <div className="text-center py-8 theme-aware-text-muted">No plans available</div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
             {investmentPlans.map(plan => (
-              <div key={plan.name} className="bg-gray-900 rounded-xl p-4 flex flex-col items-center border-2 w-full min-w-0" style={{ borderColor: plan.color || '#D4AF37' }}>
+              <div key={plan.name} className="theme-aware-bg-secondary rounded-xl p-4 flex flex-col items-center border-2 w-full min-w-0" style={{ borderColor: plan.color || '#D4AF37' }}>
                 <div className="text-2xl font-bold mb-2 text-center break-words" style={{ color: plan.color || '#D4AF37' }}>{plan.name}</div>
                 <div className="mb-1 text-sm text-center break-words">Duration: <span className="font-bold">{plan.durationDays} days</span></div>
                 <div className="mb-1 text-sm text-center break-words">Min: <span className="font-bold">${plan.minInvestment}</span></div>
                 <div className="mb-1 text-sm text-center break-words">Max: <span className="font-bold">${plan.maxInvestment}</span></div>
-                <button className="mt-2 bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition w-full" onClick={() => { if (!hasActiveInvestment) { setSelectedPlan(plan); setShowPlanModal(true); }}} disabled={hasActiveInvestment}>
+                <button className="mt-2 bg-gold theme-aware-text px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition w-full" onClick={() => { if (!hasActiveInvestment) { setSelectedPlan(plan); setShowPlanModal(true); }}} disabled={hasActiveInvestment}>
                   Start Investment
                 </button>
                 {hasActiveInvestment && <div className="text-xs text-red-400 mt-2 text-center">You can only have one active investment at a time.</div>}
@@ -494,13 +495,13 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
 
       {/* Plan Modal */}
       {showPlanModal && selectedPlan && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-xl p-8 w-full max-w-md relative">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'var(--overlay-bg)' }}>
+          <div className="theme-aware-bg-secondary rounded-xl p-8 w-full max-w-md relative">
             <button className="absolute top-2 right-2 text-gold" onClick={() => setShowPlanModal(false)}>✕</button>
             <h2 className="text-xl font-bold mb-4">Invest in {selectedPlan.name} Plan</h2>
             {/* Available Balance Display */}
-            <div className="mb-4 p-3 rounded-lg bg-gray-800 flex items-center justify-between">
-              <span className="text-gray-300 font-medium">Available Balance</span>
+            <div className="mb-4 p-3 rounded-lg theme-aware-bg-tertiary flex items-center justify-between">
+              <span className="theme-aware-text-muted font-medium">Available Balance</span>
               <span className="text-2xl font-bold text-gold">${portfolioData?.userInfo?.availableBalance !== undefined ? Number(portfolioData.userInfo.availableBalance).toLocaleString() : '0'}</span>
             </div>
             <div className="mb-2">Duration: <span className="font-bold">{selectedPlan.durationDays ?? selectedPlan.duration} days</span></div>
@@ -550,11 +551,11 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                 max={selectedPlan.maxInvestment ?? selectedPlan.max}
                 value={investmentAmount}
                 onChange={e => setInvestmentAmount(e.target.value)}
-                className="w-full p-2 rounded bg-gray-800 text-white mb-2"
+                className="w-full p-2 rounded theme-aware-bg-tertiary theme-aware-text mb-2"
                 placeholder={`Enter amount ($${selectedPlan.minInvestment ?? selectedPlan.min} - $${selectedPlan.maxInvestment ?? selectedPlan.max})`}
               />
               {investError && <div className="text-red-400 mb-2">{investError}</div>}
-              <button type="submit" className="mt-2 bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition w-full" disabled={investLoading}>
+              <button type="submit" className="mt-2 bg-gold theme-aware-text px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition w-full" disabled={investLoading}>
                 {investLoading ? 'Investing...' : 'Confirm Investment'}
               </button>
             </form>
@@ -565,10 +566,10 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
       {/* Recent Activity Section */}
       <div className="glassmorphic p-4 sm:p-6 rounded-xl overflow-x-auto">
         <h3 className="text-xl font-bold mb-4">Recent Activity</h3>
-        <div className="space-y-4 max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
+        <div className="space-y-4 max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gold">
           {portfolioData.recentActivity && portfolioData.recentActivity.length > 0 ? (
             portfolioData.recentActivity.map((activity, idx) => (
-              <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b border-gray-800 last:border-0 gap-3">
+              <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b theme-aware-border-secondary last:border-0 gap-3">
                 <div className="flex items-start sm:items-center gap-3 min-w-0">
                   <div className={`p-2 rounded-lg ${
                     activity.type === 'Investment' ? 'bg-blue-500 bg-opacity-20 text-blue-500' :
@@ -580,7 +581,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium truncate">{activity.type}</p>
-                    <p className="text-sm text-gray-400 break-words">
+                    <p className="text-sm theme-aware-text-muted break-words">
                       {activity.description} {activity.fund ? `• ${activity.fund}` : ''} • {activity.date ? new Date(activity.date).toLocaleDateString() : ''}
                     </p>
                   </div>
@@ -591,12 +592,12 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                   }`}>
                     {activity.type === 'Withdrawal' ? '-' : '+'}${activity.amount}
                   </p>
-                  <span className="text-xs text-gray-400">{activity.status}</span>
+                  <span className="text-xs theme-aware-text-muted">{activity.status}</span>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12 theme-aware-text-muted">
               No recent activity found
             </div>
           )}

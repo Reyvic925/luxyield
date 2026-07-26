@@ -1,5 +1,6 @@
 ﻿import GroupChat from './pages/GroupChat';
 import NotificationProvider from './contexts/NotificationProvider';
+import { ThemeProvider } from './contexts/ThemeContext';
 import AboutPage from './pages/AboutPage';
 import LegalDisclaimerPage from './pages/LegalDisclaimerPage';
 import React, { useState } from 'react';
@@ -82,12 +83,13 @@ function App() {
   return (
     <BrowserRouter>
       <NotificationProvider>
-        <UserDataRefreshProvider>
-          <AdminAuthProvider>
-            <UserProvider>
-              <RefreshProvider>
-                <AppLayout sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} hasNewAnnouncement={hasNewAnnouncement}>
-                  <Routes>
+        <ThemeProvider>
+          <UserDataRefreshProvider>
+            <AdminAuthProvider>
+              <UserProvider>
+                <RefreshProvider>
+                  <AppLayout sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} hasNewAnnouncement={hasNewAnnouncement}>
+                    <Routes>
                     {/* Admin Routes */}
                   <Route path="/admin/login" element={<AdminLogin />} />
                   <Route path="/admin" element={<AdminLayout />}>
@@ -145,6 +147,7 @@ function App() {
             </UserProvider>
           </AdminAuthProvider>
         </UserDataRefreshProvider>
+        </ThemeProvider>
       </NotificationProvider>
     </BrowserRouter>
   );

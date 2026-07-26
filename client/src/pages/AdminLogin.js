@@ -35,25 +35,25 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-dark p-2 sm:p-4">
-      <div className="w-full max-w-md bg-gray-800 rounded-xl shadow-lg p-4 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center theme-aware-bg p-2 sm:p-4">
+      <div className="w-full max-w-md theme-aware-bg-secondary theme-aware-border rounded-xl shadow-lg p-4 sm:p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gold mb-2">LUXYIELD</h1>
-          <h2 className="text-xl text-white">Admin Login</h2>
+          <h2 className="text-xl theme-aware-text">Admin Login</h2>
         </div>
         {error && (
           <div className="mb-4 p-3 bg-red-500 bg-opacity-20 text-red-400 rounded-lg">{error}</div>
         )}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="w-full">
-            <label htmlFor="admin-login-email" className="block text-gray-400 mb-2">Email</label>
+            <label htmlFor="admin-login-email" className="block theme-aware-text-secondary mb-2">Email</label>
             <input
               id="admin-login-email"
               name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              className="w-full px-4 py-3 theme-aware-bg-tertiary theme-aware-border-secondary theme-aware-text rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
               placeholder="admin@email.com"
               required
               autoComplete="email"
@@ -67,7 +67,7 @@ const AdminLogin = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+              className="w-full px-4 py-3 theme-aware-bg-tertiary theme-aware-border-secondary theme-aware-text rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
               placeholder="Password"
               required
               autoComplete="current-password"

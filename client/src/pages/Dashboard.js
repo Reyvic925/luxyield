@@ -387,11 +387,11 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={filteredPerf}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                <XAxis dataKey="name" stroke="#aaa" />
-                <YAxis yAxisId="left" stroke="#aaa" tickFormatter={v => typeof v === 'number' ? `$${v.toLocaleString()}` : '$0'}/>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" />
+                <XAxis dataKey="name" stroke="var(--text-tertiary)" />
+                <YAxis yAxisId="left" stroke="var(--text-tertiary)" tickFormatter={v => typeof v === 'number' ? `$${v.toLocaleString()}` : '$0'}/>
                 <YAxis yAxisId="right" orientation="right" stroke="#4ade80" tickFormatter={v => `${v}%`}/>
-                <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333', borderRadius: '8px' }} formatter={(value, name) => name === 'ROI %' ? `${value}%` : (typeof value === 'number' ? `$${value.toLocaleString()}` : value)}/>
+                <Tooltip contentClassName="chart-tooltip" formatter={(value, name) => name === 'ROI %' ? `${value}%` : (typeof value === 'number' ? `$${value.toLocaleString()}` : value)}/>
                 <Legend />
                 <Line yAxisId="left" type="monotone" dataKey="portfolioValue" stroke="#D4AF37" strokeWidth={2} name="Portfolio Value" dot={false} />
                 <Line yAxisId="right" type="monotone" dataKey="roiPercent" stroke="#4ade80" strokeWidth={2} name="ROI %" dot={false} />
@@ -409,7 +409,7 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333', borderRadius: '8px' }} />
+                <Tooltip contentClassName="chart-tooltip" />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -605,10 +605,10 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         </div>
         <div className="glassmorphic p-6 rounded-xl">
           <h3 className="text-lg font-bold mb-2">Fund Information</h3>
-          <div className="mb-1" style={{fontFamily: 'serif', color: '#e5e7eb'}}>Fund Name: <span className="font-bold">LuxYield Alpha</span></div>
-          <div className="mb-1" style={{fontFamily: 'serif', color: '#e5e7eb'}}>Manager: <span className="font-bold">LuxYield</span></div>
-          <div className="mb-1" style={{fontFamily: 'serif', color: '#e5e7eb'}}>Fees: <span className="font-bold">2% management, 20% performance</span></div>
-          <div className="text-xs text-gray-400 mt-1" style={{fontFamily: 'serif'}}>
+          <div className="mb-1 font-serif text-gray-200 dark:text-gray-300">Fund Name: <span className="font-bold">LuxYield Alpha</span></div>
+          <div className="mb-1 font-serif text-gray-200 dark:text-gray-300">Manager: <span className="font-bold">LuxYield</span></div>
+          <div className="mb-1 font-serif text-gray-200 dark:text-gray-300">Fees: <span className="font-bold">2% management, 20% performance</span></div>
+          <div className="text-xs text-gray-400 mt-1 font-serif">
             Annual management fee on invested capital. Performance fee applies only to net profits.
           </div>
         </div>

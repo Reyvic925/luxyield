@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConfirmModal from '../components/ConfirmModal';
 import { FiUser, FiLock, FiBell, FiGlobe, FiMoon, FiSun, FiEdit2, FiSave, FiX, FiShield, FiKey, FiLogOut, FiSettings, FiTrash2, FiActivity, FiUserX, FiSmartphone, FiMail, FiCreditCard, FiGift, FiUsers, FiHelpCircle } from 'react-icons/fi';
 import axios from 'axios';
@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { setWithdrawalPin, requestPinReset as requestWithdrawalPinReset, resetPin as resetWithdrawalPin } from '../services/withdrawalAPI';
+import { useTheme } from '../hooks/useTheme';
 
 export default function Settings({ adminView = false, profile: adminProfile = null }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -148,6 +149,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
   }, [lastRefresh, adminView]);
 
   const navigate = useNavigate();
+  const { toggleTheme, isDark } = useTheme();
 
   // --- Account & Data Actions ---
   const handleInviteFriends = () => {
@@ -253,20 +255,20 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
         {profile && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-gray-400 text-sm">Name</label>
-              <input className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-gold outline-none" disabled={!edit || kycVerified} value={edit ? (form.name ?? '') : (profile.name ?? '')} onChange={e => setForm({ ...form, name: e.target.value })} />
+              <label className="theme-aware-text-secondary text-sm">Name</label>
+              <input className="w-full p-2 rounded theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary focus:border-gold outline-none" disabled={!edit || kycVerified} value={edit ? (form.name ?? '') : (profile.name ?? '')} onChange={e => setForm({ ...form, name: e.target.value })} />
             </div>
             <div>
-              <label className="text-gray-400 text-sm">Username</label>
-              <input className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-gold outline-none" disabled value={profile.username ?? ''} />
+              <label className="theme-aware-text-secondary text-sm">Username</label>
+              <input className="w-full p-2 rounded theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary focus:border-gold outline-none" disabled value={profile.username ?? ''} />
             </div>
             <div>
-              <label className="text-gray-400 text-sm">Email</label>
-              <input className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-gold outline-none" disabled={!edit} value={edit ? (form.email ?? '') : (profile.email ?? '')} onChange={e => setForm({ ...form, email: e.target.value })} />
+              <label className="theme-aware-text-secondary text-sm">Email</label>
+              <input className="w-full p-2 rounded theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary focus:border-gold outline-none" disabled={!edit} value={edit ? (form.email ?? '') : (profile.email ?? '')} onChange={e => setForm({ ...form, email: e.target.value })} />
             </div>
             <div>
-              <label className="text-gray-400 text-sm">Phone</label>
-              <input className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-gold outline-none" disabled={!edit} value={edit ? (form.phone ?? '') : (profile.phone ?? '')} onChange={e => setForm({ ...form, phone: e.target.value })} />
+              <label className="theme-aware-text-secondary text-sm">Phone</label>
+              <input className="w-full p-2 rounded theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary focus:border-gold outline-none" disabled={!edit} value={edit ? (form.phone ?? '') : (profile.phone ?? '')} onChange={e => setForm({ ...form, phone: e.target.value })} />
             </div>
             <div className="flex items-center gap-2 mt-6 md:mt-0">
               <FiShield className="text-green-400" />
@@ -286,7 +288,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
           {edit ? (
             <>
               <button className="bg-gold text-black px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-yellow-400" onClick={handleSave} disabled={adminView}><FiSave /> Save</button>
-              <button className="bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-600" onClick={() => setEdit(false)}><FiX /> Cancel</button>
+              <button className="theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gold/10" onClick={() => setEdit(false)}><FiX /> Cancel</button>
             </>
           ) : (
             <button className="bg-gold text-black px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-yellow-400" onClick={() => setEdit(true)} disabled={adminView}><FiEdit2 /> Edit</button>
@@ -304,7 +306,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
             type="password"
             value={pin}
             onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            className="p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-gold outline-none"
+            className="p-2 rounded theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary focus:border-gold outline-none"
             placeholder="Enter new 6-digit PIN"
             maxLength={6}
             minLength={6}
@@ -314,7 +316,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
             type="password"
             value={confirmPin}
             onChange={e => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            className="p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-gold outline-none"
+            className="p-2 rounded theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary focus:border-gold outline-none"
             placeholder="Confirm 6-digit PIN"
             maxLength={6}
             minLength={6}
@@ -335,12 +337,12 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
         {pinError && <div className="mt-2 text-red-400">{pinError}</div>}
         {/* PIN Reset Modal */}
         {showPinReset && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 overflow-y-auto">
-            <div className="bg-gray-900 p-3 sm:p-8 rounded-xl shadow-lg w-full max-w-sm mx-2">
+          <div className="fixed inset-0 theme-overlay flex items-center justify-center z-50 overflow-y-auto">
+            <div className="theme-aware-bg-secondary p-3 sm:p-8 rounded-xl shadow-lg w-full max-w-sm mx-2 border theme-aware-border-secondary">
               <h2 className="text-xl font-bold mb-4">Reset Withdrawal PIN</h2>
               {resetStep === 1 && (
                 <>
-                  <p className="mb-4 text-gray-300">A 6-digit code will be sent to your email.</p>
+                  <p className="mb-4 theme-aware-text-muted">A 6-digit code will be sent to your email.</p>
                   <button className="bg-gold text-black px-4 py-2 rounded-lg w-full" onClick={async () => {
                     setResetMsg(''); setResetError('');
                     try {
@@ -355,9 +357,9 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
               {resetStep === 2 && (
                 <>
                   <label className="block mb-2 mt-4">Enter Email Code</label>
-                  <input type="text" value={resetCode} onChange={e => setResetCode(e.target.value.replace(/\D/g, '').slice(0,6))} className="w-full p-2 rounded bg-gray-800 text-white border border-gold focus:outline-none mb-4" maxLength={6} />
+                  <input type="text" value={resetCode} onChange={e => setResetCode(e.target.value.replace(/\D/g, '').slice(0,6))} className="w-full p-2 rounded theme-aware-bg-secondary theme-aware-text border border-gold focus:outline-none mb-4" maxLength={6} />
                   <label className="block mb-2">New 6-digit PIN</label>
-                  <input type="password" value={resetNewPin} onChange={e => setResetNewPin(e.target.value.replace(/\D/g, '').slice(0,6))} className="w-full p-2 rounded bg-gray-800 text-white border border-gold focus:outline-none mb-4" maxLength={6} />
+                  <input type="password" value={resetNewPin} onChange={e => setResetNewPin(e.target.value.replace(/\D/g, '').slice(0,6))} className="w-full p-2 rounded theme-aware-bg-secondary theme-aware-text border border-gold focus:outline-none mb-4" maxLength={6} />
                   <button className="bg-gold text-black px-4 py-2 rounded-lg w-full" onClick={async () => {
                     setResetMsg(''); setResetError('');
                     try {
@@ -375,7 +377,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
               )}
               {resetMsg && <div className="mt-2 text-green-400">{resetMsg}</div>}
               {resetError && <div className="mt-2 text-red-400">{resetError}</div>}
-              <button className="mt-4 text-gray-400 underline w-full" onClick={() => { setShowPinReset(false); setResetStep(1); setResetCode(''); setResetNewPin(''); }}>Cancel</button>
+              <button className="mt-4 theme-aware-text-muted underline w-full" onClick={() => { setShowPinReset(false); setResetStep(1); setResetCode(''); setResetNewPin(''); }}>Cancel</button>
             </div>
           </div>
         )}
@@ -425,7 +427,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
                     }
                   }}
                   id={`change-pass-otp-input-${idx}`}
-                  className="w-10 h-10 text-center text-2xl bg-dark border border-gray-700 rounded-lg focus:border-gold focus:outline-none"
+                  className="w-10 h-10 text-center text-2xl theme-aware-bg-secondary border theme-aware-border-secondary rounded-lg focus:border-gold focus:outline-none"
                   autoFocus={idx === 0}
                 />
               ))}
@@ -452,9 +454,9 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
         )}
         {changePassStep === 2 && otpVerified && (
           <div className="flex flex-col gap-4 mt-2">
-            <input type="password" className="p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-gold outline-none" placeholder="Old password" value={passwords.current} onChange={e => setPasswords({ ...passwords, current: e.target.value })} />
-            <input type="password" className="p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-gold outline-none" placeholder="New password" value={passwords.new} onChange={e => setPasswords({ ...passwords, new: e.target.value })} />
-            <input type="password" className="p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-gold outline-none" placeholder="Confirm new password" value={passwords.confirm} onChange={e => setPasswords({ ...passwords, confirm: e.target.value })} />
+            <input type="password" className="p-2 rounded theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary focus:border-gold outline-none" placeholder="Old password" value={passwords.current} onChange={e => setPasswords({ ...passwords, current: e.target.value })} />
+            <input type="password" className="p-2 rounded theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary focus:border-gold outline-none" placeholder="New password" value={passwords.new} onChange={e => setPasswords({ ...passwords, new: e.target.value })} />
+            <input type="password" className="p-2 rounded theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary focus:border-gold outline-none" placeholder="Confirm new password" value={passwords.confirm} onChange={e => setPasswords({ ...passwords, confirm: e.target.value })} />
             <button className="glass-card glassmorphic bg-gold text-black px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-yellow-400 disabled:opacity-60 transition shadow-lg border border-yellow-400" onClick={async () => {
               setChangePassMsg('Processing...');
               if (!passwords.current || !passwords.new || !passwords.confirm) {
@@ -504,15 +506,23 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
             <span>Notifications</span>
             <input type="checkbox" checked={profile?.notifications} onChange={() => handleToggle('notifications')} className="ml-2" />
           </div>
-          <div className="flex items-center gap-2">
-            {profile?.darkMode ? <FiMoon className="text-xl text-blue-400" /> : <FiSun className="text-xl text-yellow-300" />}
-            <span>Dark Mode</span>
-            <input type="checkbox" checked={profile?.darkMode} onChange={() => handleToggle('darkMode')} className="ml-2" />
+          <div className="flex items-center gap-2 theme-aware-text">
+            {isDark ? <FiSun className="text-xl text-gold" /> : <FiMoon className="text-xl text-gold" />}
+            <label className="flex items-center gap-2">
+              <span>Dark Mode</span>
+              <input
+                type="checkbox"
+                checked={isDark}
+                onChange={() => toggleTheme()}
+                className="ml-2 h-5 w-5 rounded border theme-aware-border-secondary bg-transparent text-gold focus:outline-none focus:ring-2 focus:ring-gold"
+                aria-label="Toggle dark mode"
+              />
+            </label>
           </div>
           <div className="flex items-center gap-2">
             <FiGlobe className="text-xl text-green-400" />
             <span>Language</span>
-            <select value={profile?.language} onChange={e => handleSelect('language', e.target.value)} className="ml-2 bg-gray-800 text-white border border-gray-700 rounded p-1">
+            <select value={profile?.language} onChange={e => handleSelect('language', e.target.value)} className="ml-2 theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary rounded p-1">
               <option>English</option>
               <option>Spanish</option>
               <option>French</option>
@@ -523,7 +533,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
           <div className="flex items-center gap-2">
             <FiCreditCard className="text-xl text-blue-400" />
             <span>Currency</span>
-            <select value={profile?.currency} onChange={e => handleSelect('currency', e.target.value)} className="ml-2 bg-gray-800 text-white border border-gray-700 rounded p-1">
+            <select value={profile?.currency} onChange={e => handleSelect('currency', e.target.value)} className="ml-2 theme-aware-bg-secondary theme-aware-text border theme-aware-border-secondary rounded p-1">
               <option>USD</option>
               <option>EUR</option>
               <option>BTC</option>
@@ -545,27 +555,27 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
           <button onClick={handleContactSupport} className="flex items-center gap-2 text-yellow-400 hover:text-yellow-600"><FiHelpCircle /> Contact Support</button>
         </div>
         {showLinkedAccounts && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 overflow-y-auto">
-            <div className="bg-gray-900 rounded-xl p-3 sm:p-8 w-full max-w-md relative mx-2">
-              <button className="absolute top-2 right-2 text-gold" onClick={() => setShowLinkedAccounts(false)}>✕</button>
+          <div className="fixed inset-0 theme-overlay flex items-center justify-center z-50 overflow-y-auto">
+            <div className="theme-aware-bg-secondary rounded-xl p-3 sm:p-8 w-full max-w-md relative mx-2 border theme-aware-border-secondary">
+              <button className="absolute top-2 right-2 text-gold" onClick={() => setShowLinkedAccounts(false)}>?</button>
               <h2 className="text-xl font-bold mb-4">Manage Linked Accounts</h2>
-              <div className="mb-4 text-gray-300">View and manage your linked accounts (e.g., Google, Facebook, Apple, or other logins). Unlink or add new accounts for easier access and security.</div>
+              <div className="mb-4 theme-aware-text-muted">View and manage your linked accounts (e.g., Google, Facebook, Apple, or other logins). Unlink or add new accounts for easier access and security.</div>
               {/* Example list, replace with real data if available */}
               <ul className="mb-4">
-                <li className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+                <li className="flex items-center justify-between py-2 border-b theme-aware-border-secondary last:border-0">
                   <span><span className="font-bold">Google</span> (linked)</span>
                   <button className="text-red-400 hover:text-red-600 text-sm">Unlink</button>
                 </li>
-                <li className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+                <li className="flex items-center justify-between py-2 border-b theme-aware-border-secondary last:border-0">
                   <span><span className="font-bold">Facebook</span> (not linked)</span>
                   <button className="text-green-400 hover:text-green-600 text-sm">Link</button>
                 </li>
-                <li className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+                <li className="flex items-center justify-between py-2 border-b theme-aware-border-secondary last:border-0">
                   <span><span className="font-bold">Apple</span> (not linked)</span>
                   <button className="text-green-400 hover:text-green-600 text-sm">Link</button>
                 </li>
               </ul>
-              <div className="text-xs text-gray-500">For advanced account linking, contact support.</div>
+              <div className="text-xs theme-aware-text-muted">For advanced account linking, contact support.</div>
             </div>
           </div>
         )}
@@ -597,12 +607,12 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
           </div>
           {loadingSessions ? <div>Loading...</div> : (
             <>
-              {sessions.length === 0 && <div className="text-gray-400">No active sessions found.</div>}
+              {sessions.length === 0 && <div className="theme-aware-text-muted">No active sessions found.</div>}
               {sessions.map((s, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+                <div key={i} className="flex items-center justify-between py-2 border-b theme-aware-border-secondary last:border-0">
                   <div>
                     <div className="font-semibold">{s.browser} on {s.device} ({s.location})</div>
-                    <div className="text-xs text-gray-400">{s.lastActive} {i === 0 && '(Current)'}</div>
+                    <div className="text-xs theme-aware-text-muted">{s.lastActive} {i === 0 && '(Current)'}</div>
                   </div>
                   <button className="text-red-400 hover:text-red-600" onClick={() => handleLogoutSession(i)}>Logout</button>
                 </div>
@@ -629,7 +639,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
             </thead>
             <tbody>
               {loginHistory.length === 0 && (
-                <tr><td colSpan={4} className="text-center text-gray-400 py-6">No login history found</td></tr>
+                <tr><td colSpan={4} className="text-center theme-aware-text-muted py-6">No login history found</td></tr>
               )}
               {loginHistory.map((s, i) => (
                 <tr key={i}>
@@ -645,16 +655,16 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
         {/* Mobile Card Layout */}
         <div className="sm:hidden space-y-4 w-full">
           {loginHistory.length === 0 ? (
-            <div className="text-center text-gray-400 py-6">No login history found</div>
+            <div className="text-center theme-aware-text-muted py-6">No login history found</div>
           ) : (
             loginHistory.map((s, i) => (
-              <div key={i} className="bg-gray-900 rounded-lg shadow p-4 border border-gray-800">
+              <div key={i} className="theme-aware-bg-secondary rounded-lg shadow p-4 border theme-aware-border-secondary">
                 <div className="flex justify-between mb-2">
                   <span className="font-semibold text-gold">{s.date || s.lastActive}</span>
                   <span className={`font-bold ${s.status === 'Success' ? 'text-green-400' : 'text-red-400'}`}>{s.status || 'Success'}</span>
                 </div>
-                <div className="text-xs text-gray-400 mb-1">IP: <span className="text-white">{s.ip || '-'}</span></div>
-                <div className="text-xs text-gray-400">Location: <span className="text-white">{s.location || '-'}</span></div>
+                <div className="text-xs theme-aware-text-muted mb-1">IP: <span className="theme-aware-text">{s.ip || '-'}</span></div>
+                <div className="text-xs theme-aware-text-muted">Location: <span className="theme-aware-text">{s.location || '-'}</span></div>
               </div>
             ))
           )}
@@ -672,4 +682,8 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
     </div>
   );
 }
+
+
+
+
 

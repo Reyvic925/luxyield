@@ -42,7 +42,7 @@ const InAppNotifications = ({ userId }) => {
     <div className="relative">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 relative hover:bg-gray-700 rounded-full"
+        className="p-2 relative theme-aware-hover-bg rounded-full"
       >
         <FiBell size={20} />
         {unreadCount > 0 && (
@@ -53,28 +53,28 @@ const InAppNotifications = ({ userId }) => {
       </button>
       
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-gray-800 rounded-lg shadow-lg z-50 border border-gray-700">
-          <div className="p-3 border-b border-gray-700 flex justify-between items-center">
-            <h3 className="font-bold">Notifications</h3>
-            <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">
+        <div className="absolute right-0 mt-2 w-72 theme-aware-bg-secondary rounded-lg shadow-lg z-50 border theme-aware-border">
+          <div className="p-3 border-b theme-aware-border-secondary flex justify-between items-center">
+            <h3 className="font-bold theme-aware-text">Notifications</h3>
+            <button onClick={() => setIsOpen(false)} className="theme-aware-text-secondary hover:theme-aware-text">
               <FiX />
             </button>
           </div>
           
-          <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
+          <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gold">
             {notifications.length === 0 ? (
-              <div className="p-4 text-center text-gray-400">No notifications</div>
+              <div className="p-4 text-center theme-aware-text-muted">No notifications</div>
             ) : (
               notifications.map(notification => (
                 <div 
                   key={notification.id} 
-                  className={`p-3 border-b border-gray-700 hover:bg-gray-700 cursor-pointer ${
-                    !notification.read ? 'bg-gray-750' : ''
+                  className={`p-3 border-b theme-aware-border-secondary theme-aware-hover-bg cursor-pointer ${
+                    !notification.read ? 'theme-aware-active' : ''
                   }`}
                   onClick={() => markAsRead(notification.id)}
                 >
-                  <p className="text-sm">{notification.message}</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-sm theme-aware-text">{notification.message}</p>
+                  <p className="text-xs theme-aware-text-muted mt-1">
                     {new Date(notification.createdAt).toLocaleString()}
                   </p>
                 </div>
@@ -83,7 +83,7 @@ const InAppNotifications = ({ userId }) => {
           </div>
           
           {notifications.length > 0 && (
-            <div className="p-2 border-t border-gray-700 text-center">
+            <div className="p-2 border-t theme-aware-border-secondary text-center">
               <button className="text-xs text-gold hover:underline">
                 Mark all as read
               </button>

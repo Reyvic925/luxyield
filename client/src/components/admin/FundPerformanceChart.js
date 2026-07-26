@@ -6,16 +6,12 @@ const FundPerformanceChart = ({ data }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data}>
-        <XAxis dataKey="month" stroke="#aaa" />
-        <YAxis stroke="#aaa" unit="%" />
+        <XAxis dataKey="month" stroke="var(--text-tertiary)" />
+        <YAxis stroke="var(--text-tertiary)" unit="%" />
         <Tooltip 
-          contentStyle={{ 
-            backgroundColor: '#1a1a1a', 
-            borderColor: '#333',
-            borderRadius: '8px'
-          }}
+          contentClassName="chart-tooltip"
           formatter={(value) => [`${value}%`, 'ROI']}
-          labelStyle={{ color: '#fff' }}
+          labelStyle={{ color: 'inherit' }}
         />
         <Legend />
         <Line

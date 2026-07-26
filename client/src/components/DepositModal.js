@@ -43,18 +43,18 @@ const DepositModal = ({ isOpen, onClose, fundTypes }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'var(--overlay-bg)' }}>
       <div className="glassmorphic p-6 rounded-xl w-full max-w-full sm:max-w-md mx-4">
         <h2 className="text-2xl font-bold mb-4 text-gold">Simulated Deposit</h2>
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-400 mb-2">Fund Type</label>
+            <label className="block text-neutral-700 dark:text-neutral-300 mb-2 font-medium">Fund Type</label>
             <select
               name="fundType"
               value={formData.fundType}
               onChange={handleChange}
-              className="w-full bg-transparent border border-gray-600 rounded-lg p-2 text-white"
+              className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
               required
             >
               <option value="">Select Fund</option>
@@ -65,7 +65,7 @@ const DepositModal = ({ isOpen, onClose, fundTypes }) => {
           </div>
           
           <div className="mb-4">
-            <label className="block text-gray-400 mb-2">Amount (USD)</label>
+            <label className="block text-neutral-700 dark:text-neutral-300 mb-2 font-medium">Amount (USD)</label>
             <input
               type="number"
               name="amount"
@@ -73,13 +73,13 @@ const DepositModal = ({ isOpen, onClose, fundTypes }) => {
               onChange={handleChange}
               min="100"
               step="100"
-              className="w-full bg-transparent border border-gray-600 rounded-lg p-2 text-white"
+              className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
               required
             />
           </div>
           
           <div className="mb-6">
-            <label className="block text-gray-400 mb-2">Simulation Period (Days)</label>
+            <label className="block text-neutral-700 dark:text-neutral-300 mb-2 font-medium">Simulation Period (Days)</label>
             <input
               type="number"
               name="simulationDays"
@@ -87,7 +87,7 @@ const DepositModal = ({ isOpen, onClose, fundTypes }) => {
               onChange={handleChange}
               min="7"
               max="365"
-              className="w-full bg-transparent border border-gray-600 rounded-lg p-2 text-white"
+              className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
               required
             />
           </div>
@@ -96,7 +96,7 @@ const DepositModal = ({ isOpen, onClose, fundTypes }) => {
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-800 transition"
+              className="w-full sm:w-auto px-4 py-2 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition"
               disabled={loading}
             >
               Cancel

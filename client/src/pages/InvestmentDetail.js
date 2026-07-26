@@ -221,12 +221,12 @@ const InvestmentDetail = () => {
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={performanceData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis dataKey="name" stroke="#aaa" />
-              <YAxis stroke="#aaa" tickFormatter={(value) => `$${value.toFixed(0)}`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" />
+              <XAxis dataKey="name" stroke="var(--text-tertiary)" />
+              <YAxis stroke="var(--text-tertiary)" tickFormatter={(value) => `$${value.toFixed(0)}`} />
               <Tooltip 
-                contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333' }}
-                labelStyle={{ color: '#fff' }}
+                contentClassName="chart-tooltip"
+                labelStyle={{ color: 'inherit' }}
                 formatter={(value, name, props) => [`$${value.toFixed(2)}`, 'Portfolio Value']}
               />
               <Legend />

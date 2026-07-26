@@ -63,13 +63,13 @@ const EmailVerification = ({ email, onVerified }) => {
 
   return (
     <div className="glassmorphic p-8 rounded-xl w-full max-w-md mx-auto mt-12">
-      <h2 className="text-2xl font-bold mb-6 text-center">Verify Your Email</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center dark:text-white text-gray-900">Verify Your Email</h2>
       {success || isEmailVerified ? (
-        <div className="text-green-400 text-center text-lg font-bold">Email verified!</div>
+        <div className="dark:text-green-400 text-green-600 text-center text-lg font-bold">Email verified!</div>
       ) : (
         <form onSubmit={verify}>
           <div className="mb-4">
-            <label className="block mb-2 text-gray-400">Verification Code</label>
+            <label className="block mb-2 dark:text-gray-300 text-gray-700 font-medium">Verification Code</label>
             <div className="flex gap-2 justify-center mb-2">
               {code.map((digit, idx) => (
                 <input
@@ -100,14 +100,14 @@ const EmailVerification = ({ email, onVerified }) => {
                     }
                   }}
                   id={`email-otp-input-${idx}`}
-                  className="w-12 h-12 text-center text-2xl bg-dark border border-gray-700 rounded-lg focus:border-gold focus:outline-none"
+                  className="w-12 h-12 text-center text-2xl dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
                   autoFocus={idx === 0}
                 />
               ))}
             </div>
-            {error && <div className="text-red-400 mb-2">{error}</div>}
+            {error && <div className="dark:text-red-400 text-red-600 mb-2">{error}</div>}
             {sent ? (
-              <div className="text-xs text-gray-400 mb-2">Code sent! <button type="button" className="underline text-gold" onClick={sendCode}>Resend</button></div>
+              <div className="text-xs dark:text-gray-400 text-gray-600 mb-2">Code sent! <button type="button" className="underline text-gold" onClick={sendCode}>Resend</button></div>
             ) : (
               <button type="button" className="underline text-gold text-xs mb-2" onClick={sendCode} disabled={loading}>Send Code</button>
             )}

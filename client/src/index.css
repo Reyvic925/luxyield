@@ -2,25 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #0F0F0F;
-  color: white;
+/* Light mode CSS variables */
+:root {
+  --text-primary: #000000;
+  --text-secondary: #374151;
+  --text-tertiary: #4B5563;
+  --text-muted: #6B7280;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F3F4F6;
+  --bg-tertiary: #E5E7EB;
+  --border-primary: #D1D5DB;
+  --border-secondary: #E5E7EB;
+  --border-tertiary: #F3F4F6;
+  /* Overlay background for modals/portals */
+  --overlay-bg: rgba(0, 0, 0, 0.5);
 }
 
-.glassmorphic {
-  background: rgba(15, 15, 15, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+/* Dark mode CSS variables */
+:root.dark {
+  --text-primary: #FFFFFF;
+  --text-secondary: #D1D5DB;
+  --text-tertiary: #9CA3AF;
+  --text-muted: #6B7280;
+  --bg-primary: #0F0F0F;
+  --bg-secondary: #1F2937;
+  --bg-tertiary: #374151;
+  --border-primary: #4B5563;
+  --border-secondary: #374151;
+  --border-tertiary: #1F2937;
+  /* Slightly darker overlay in dark mode */
+  --overlay-bg: rgba(0, 0, 0, 0.6);
 }
-/* Add to your index.css */
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+
+.glassmorphic {
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+:root .glassmorphic {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+:root.dark .glassmorphic {
+  background: rgba(15, 15, 15, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Glass card base styles */
 .glass-card {
-  background: rgba(15, 15, 15, 0.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+}
+
+:root .glass-card {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+:root.dark .glass-card {
+  background: rgba(15, 15, 15, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-card:hover {
@@ -28,10 +80,97 @@ body {
   box-shadow: 0 4px 30px rgba(212, 175, 55, 0.1);
 }
 
-.chart-tooltip {
+/* Theme-aware utility shims for Settings visuals
+   Map common neutral Tailwind classes used by Settings to theme CSS variables.
+   This keeps Settings visuals theme-aware without wiring the toggle here.
+*/
+.bg-gray-950 { background-color: var(--bg-secondary) !important; }
+.bg-gray-900 { background-color: var(--bg-tertiary) !important; }
+.bg-gray-850 { background-color: var(--bg-tertiary) !important; }
+.bg-gray-800 { background-color: var(--bg-secondary) !important; }
+
+/* Border and neutral text mappings */
+.border-gray-800 { border-color: var(--border-primary) !important; }
+.border-gray-300 { border-color: var(--border-primary) !important; }
+.border-gray-700 { border-color: var(--border-primary) !important; }
+.text-gray-900, .text-gray-800, .text-black, .text-white {
+  color: var(--text-primary) !important;
+}
+.text-gray-700, .text-gray-600, .text-neutral-900, .text-neutral-800, .text-neutral-700 {
+  color: var(--text-secondary) !important;
+}
+.text-gray-500, .text-gray-400, .text-gray-300, .text-gray-200, .text-gray-100,
+.text-gray-50, .text-neutral-600, .text-neutral-500, .text-neutral-400,
+.text-neutral-300, .text-neutral-200, .text-neutral-100, .text-neutral-50 {
+  color: var(--text-muted) !important;
+}
+.text-neutral-900, .text-neutral-800, .text-neutral-700 { color: var(--text-secondary) !important; }
+.bg-white, .bg-black, .bg-gray-50, .bg-gray-100, .bg-neutral-50, .bg-neutral-100 {
+  background-color: var(--bg-primary) !important;
+}
+.bg-gray-200, .bg-gray-300, .bg-neutral-200, .bg-neutral-300 {
+  background-color: var(--bg-secondary) !important;
+}
+.bg-gray-400, .bg-gray-500, .bg-gray-600, .bg-gray-700,
+.bg-gray-800, .bg-gray-900, .bg-neutral-400, .bg-neutral-500,
+.bg-neutral-600, .bg-neutral-700, .bg-neutral-800, .bg-neutral-900 {
+  background-color: var(--bg-tertiary) !important;
+}
+.border-gray-100, .border-gray-200, .border-gray-300, .border-gray-400,
+.border-gray-500, .border-gray-600, .border-gray-700, .border-gray-800,
+.border-gray-900, .border-neutral-100, .border-neutral-200, .border-neutral-300,
+.border-neutral-400, .border-neutral-500, .border-neutral-600, .border-neutral-700,
+.border-neutral-800, .border-neutral-900 {
+  border-color: var(--border-primary) !important;
+}
+.bg-dark { background-color: var(--bg-secondary) !important; }
+
+/* Gradient helpers (map gradient stops to theme-aware surfaces) */
+.from-gray-950 { --tw-gradient-from: var(--bg-secondary) !important; }
+.to-gray-900 { --tw-gradient-to: var(--bg-tertiary) !important; }
+
+
+/* Overlay mappings used by Settings modals - inherit theme via variables */
+.bg-black.bg-opacity-70 { background-color: var(--overlay-bg) !important; }
+.bg-black.bg-opacity-60 { background-color: var(--overlay-bg) !important; }
+
+/* Helper utility for inputs that should follow theme variables */
+.input-theme { background-color: var(--input-bg) !important; color: var(--text-primary) !important; border: 1px solid var(--border-primary) !important; }
+.input-theme::placeholder { color: var(--text-tertiary) !important; }
+
+/* Chart tooltip theme-aware */
+:root .chart-tooltip {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(212, 175, 55, 0.2) !important;
+  color: var(--text-primary) !important;
+}
+
+:root.dark .chart-tooltip {
   background: rgba(30, 30, 30, 0.95) !important;
   border: 1px solid rgba(212, 175, 55, 0.2) !important;
-  border-radius: 4px !important;
+  color: var(--text-primary) !important;
+}
+
+/* Theme-aware modal/overlay variables and helper */
+:root {
+  --overlay: rgba(0, 0, 0, 0.6);
+  --overlay-strong: rgba(0, 0, 0, 0.75);
+}
+:root.dark {
+  --overlay: rgba(0, 0, 0, 0.7);
+  --overlay-strong: rgba(0, 0, 0, 0.85);
+}
+
+.theme-overlay {
+  background-color: var(--overlay);
+}
+
+.theme-overlay-strong {
+  background-color: var(--overlay-strong);
+}
+
+.chart-tooltip {
+  border-radius: 8px !important;
   padding: 8px 12px !important;
 }
 
@@ -41,11 +180,6 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-
-/* Add to your index.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 /* Mobile menu toggle */
 .mobile-menu {
@@ -80,20 +214,54 @@ button, a {
   display: none;
 }
 
-/* Global gold glassmorphic scrollbar for html/body */
+/* Global scrollbar styling - theme aware */
+
+/* Toast (react-toastify) theme-aware */
+:root .Toastify__toast {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-primary) !important;
+}
+
+:root.dark .Toastify__toast {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-primary) !important;
+}
+
+
 html, body {
   scrollbar-width: thin;
+}
+
+:root html,
+:root body {
+  scrollbar-color: #D4AF37 #f3f4f6;
+}
+
+:root.dark html,
+:root.dark body {
   scrollbar-color: #D4AF37 #18181b99;
 }
+
 html::-webkit-scrollbar, body::-webkit-scrollbar {
   width: 10px;
 }
+
 html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb {
   background: linear-gradient(135deg, #D4AF37 60%, #FFD700 100%);
   border-radius: 8px;
   box-shadow: 0 2px 8px #d4af3740;
 }
-html::-webkit-scrollbar-track, body::-webkit-scrollbar-track {
+
+:root html::-webkit-scrollbar-track,
+:root body::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+:root.dark html::-webkit-scrollbar-track,
+:root.dark body::-webkit-scrollbar-track {
   background: #18181b99;
   border-radius: 8px;
 }

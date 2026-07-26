@@ -6,6 +6,14 @@ import { FiX, FiDollarSign, FiPieChart, FiTrendingUp, FiClock } from 'react-icon
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import axios from '../utils/axios';
 
+/*
+  Theme refactor notes (InvestmentDetail):
+  - Neutral Tailwind classes (text-gray-*, text-white, text-black, bg-gray-*, bg-black/white) were replaced with
+    theme-aware utility classes (.theme-aware-*) which use CSS variables defined at :root and :root.dark.
+  - Overlays now use the document root overlay variable (--overlay-bg) so they inherit the global theme.
+  - Expected ROI display was removed as requested.
+*/
+
 const BUILD_MARKER = 'axios-switch-20260213';
 console.log('[CLIENT BUILD] InvestmentDetail marker:', BUILD_MARKER);
 
@@ -287,8 +295,8 @@ const InvestmentDetail = ({ investment, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="glassmorphic rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'var(--overlay-bg)' }}>
+      <div className="glassmorphic rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold">
         <div className="p-6">
                     {/* Admin gain/loss adjustment UI for active investments */}
                     {liveInvestment.status === 'active' && localStorage.getItem('adminToken') && (
@@ -299,20 +307,20 @@ const InvestmentDetail = ({ investment, onClose }) => {
                           value={adjustAmount}
                           onChange={e => setAdjustAmount(e.target.value)}
                           placeholder="Amount"
-                          className="px-2 py-1 rounded border text-black"
+                          className="px-2 py-1 rounded border theme-aware-border-secondary theme-aware-text"
                           disabled={adjustLoading}
                         />
                         <select
                           value={adjustType}
                           onChange={e => setAdjustType(e.target.value)}
-                          className="px-2 py-1 rounded border text-black"
+                          className="px-2 py-1 rounded border theme-aware-border-secondary theme-aware-text"
                           disabled={adjustLoading}
                         >
                           <option value="gain">Gain</option>
                           <option value="loss">Loss</option>
                         </select>
                         <button
-                          className="bg-blue-600 hover:bg-blue-700 text-black px-3 py-1 rounded font-bold"
+                                                  className="bg-blue-600 hover:bg-blue-700 theme-aware-text px-3 py-1 rounded font-bold"
                           onClick={handleAdjustInvestment}
                           disabled={adjustLoading || !adjustAmount}
                         >
@@ -324,39 +332,39 @@ const InvestmentDetail = ({ investment, onClose }) => {
             <h2 className="text-2xl font-bold">{liveInvestment.fundName}</h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-gray-800 transition"
+              className="p-2 rounded-full theme-aware-hover-bg transition"
             >
               <FiX size={24} />
             </button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-gray-800 bg-opacity-30 p-4 rounded-lg">
+            <div className="p-4 rounded-lg theme-aware-bg-tertiary">
               <h3 className="text-lg font-bold mb-2 flex items-center">
                 <FiDollarSign className="mr-2 text-gold" /> Invested Amount
               </h3>
               <p className="text-2xl">${Number(liveInvestment?.initialAmount ?? investment?.initialAmount ?? 0).toLocaleString(undefined, {maximumFractionDigits: 2})}</p>
             </div>
             
-            <div className="bg-gray-800 bg-opacity-30 p-4 rounded-lg">
+            <div className="p-4 rounded-lg theme-aware-bg-tertiary">
               <h3 className="text-lg font-bold mb-2 flex items-center">
                 <FiTrendingUp className="mr-2 text-gold" /> Current Value
               </h3>
               <p className="text-2xl">${Number(displayCurrentValue).toLocaleString(undefined, {maximumFractionDigits: 2})}</p>
             </div>
             
-            <div className="bg-gray-800 bg-opacity-30 p-4 rounded-lg">
+            <div className="p-4 rounded-lg theme-aware-bg-tertiary">
               <h3 className="text-lg font-bold mb-2 flex items-center">
                 <FiPieChart className="mr-2 text-gold" /> ROI
               </h3>
               <p className={`text-2xl ${
                 displayRoi >= 0 ? 'text-green-500' : 'text-red-500'
               }`}>
-                {displayRoi}% {PLAN_CONFIG[liveInvestment.planName]?.roi ? <span className="text-xs text-gray-400">(Expected {PLAN_CONFIG[liveInvestment.planName].roi}%)</span> : null}
+                {displayRoi}%
               </p>
             </div>
             
-            <div className="bg-gray-800 bg-opacity-30 p-4 rounded-lg">
+            <div className="p-4 rounded-lg theme-aware-bg-tertiary">
               <h3 className="text-lg font-bold mb-2 flex items-center">
                 <FiClock className="mr-2 text-gold" /> Time Remaining
               </h3>
@@ -369,16 +377,12 @@ const InvestmentDetail = ({ investment, onClose }) => {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={performanceData}>
-                  <XAxis dataKey="name" stroke="#aaa" />
-                  <YAxis stroke="#aaa" />
+                  <XAxis dataKey="name" stroke="var(--text-tertiary)" />
+                  <YAxis stroke="var(--text-tertiary)" />
                   <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1a1a1a', 
-                      borderColor: '#333',
-                      borderRadius: '8px'
-                    }}
+                    contentClassName="chart-tooltip"
                     formatter={(value) => [`$${value.toLocaleString()}`, 'Value']}
-                    labelStyle={{ color: '#fff' }}
+                    labelStyle={{ color: 'inherit' }}
                   />
                   <Line
                     type="monotone"
@@ -398,20 +402,20 @@ const InvestmentDetail = ({ investment, onClose }) => {
               <h3 className="text-lg font-bold mb-3">Investment Details</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Plan</span>
+                  <span className="theme-aware-text-muted">Plan</span>
                   <span>{liveInvestment.planName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Start Date</span>
+                  <span className="theme-aware-text-muted">Start Date</span>
                   <span>{new Date(liveInvestment.startDate).toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">End Date</span>
+                  <span className="theme-aware-text-muted">End Date</span>
                   <span>{new Date(liveInvestment.endDate).toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Status</span>
-                  <span className={`${(liveInvestment?.status === 'active') ? 'text-green-500' : 'text-gray-400'}`}>
+                  <span className="theme-aware-text-muted">Status</span>
+                  <span className={`${(liveInvestment?.status === 'active') ? 'text-green-500' : 'theme-aware-text-muted'}`}>
                     {(liveInvestment?.status ? (liveInvestment.status.charAt(0).toUpperCase() + liveInvestment.status.slice(1)) : 'N/A')}
                   </span>
                 </div>
@@ -423,12 +427,12 @@ const InvestmentDetail = ({ investment, onClose }) => {
           
           <div className="mb-8">
             <div className="flex space-x-4 mb-2">
-              <button className={`px-4 py-2 rounded-lg font-bold ${tab === 'gains' ? 'bg-green-700 text-white' : 'bg-gray-700 text-gray-300'}`} onClick={() => setTab('gains')}>Gains</button>
-              <button className={`px-4 py-2 rounded-lg font-bold ${tab === 'losses' ? 'bg-red-700 text-white' : 'bg-gray-700 text-gray-300'}`} onClick={() => setTab('losses')}>Losses</button>
+                        <button className={`px-4 py-2 rounded-lg font-bold ${tab === 'gains' ? 'bg-green-700 theme-aware-text' : 'theme-aware-bg-tertiary theme-aware-text-muted'}`} onClick={() => setTab('gains')}>Gains</button>
+                        <button className={`px-4 py-2 rounded-lg font-bold ${tab === 'losses' ? 'bg-red-700 theme-aware-text' : 'theme-aware-bg-tertiary theme-aware-text-muted'}`} onClick={() => setTab('losses')}>Losses</button>
             </div>
             <div className="overflow-y-auto max-h-40">
-              {tab === 'gains' && gainTxs.length === 0 && <div className="text-gray-400">No gains yet.</div>}
-              {tab === 'losses' && lossTxs.length === 0 && <div className="text-gray-400">No losses yet.</div>}
+                        {tab === 'gains' && gainTxs.length === 0 && <div className="theme-aware-text-muted">No gains yet.</div>}
+                        {tab === 'losses' && lossTxs.length === 0 && <div className="theme-aware-text-muted">No losses yet.</div>}
               {tab === 'gains' && gainTxs.map((tx) => {
                 const key = tx._id || `${tx.type}-${tx.amount}-${tx.date}`;
                 const dateObj = new Date(tx.date || tx.createdAt || Date.now());
@@ -457,16 +461,16 @@ const InvestmentDetail = ({ investment, onClose }) => {
           </div>
         </div>
         
-        <div className="bg-gray-800 bg-opacity-50 p-4 rounded-b-xl">
+        <div className="p-4 rounded-b-xl theme-aware-bg-tertiary">
           <div className="flex justify-end space-x-3">
             <button
-              className="px-6 py-2 border border-gray-600 rounded-lg hover:bg-gray-700 transition"
+              className="px-6 py-2 border theme-aware-border-secondary rounded-lg theme-aware-hover-bg transition"
               onClick={() => window.open('/statements', '_blank')}
             >
               Statements
             </button>
             <button
-              className="px-6 py-2 bg-gold text-black rounded-lg hover:bg-yellow-600 transition"
+              className="px-6 py-2 bg-gold theme-aware-text rounded-lg hover:bg-yellow-600 transition"
               onClick={handleWithdrawRoi}
               disabled={investment.roiWithdrawn}
             >

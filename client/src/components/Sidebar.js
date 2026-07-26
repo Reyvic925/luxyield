@@ -49,7 +49,7 @@ const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncemen
     <>
       {/* Hamburger button for mobile (toggle open/close) */}
       <button
-        className="fixed top-4 left-4 z-50 bg-gold text-black p-2 rounded-full shadow-lg md:hidden"
+        className="fixed top-4 left-4 z-50 bg-gold dark:text-black text-black p-2 rounded-full shadow-lg md:hidden"
         onClick={() => setMobileOpen((prev) => !prev)}
         aria-label={mobileOpen ? "Close sidebar" : "Open sidebar"}
       >
@@ -57,11 +57,12 @@ const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncemen
       </button>
       {/* Sidebar for desktop and mobile */}
       <div
-        className={`bg-black bg-opacity-70 text-white glassmorphic transition-all duration-500 ease-in-out
+        className={`dark:bg-black dark:bg-opacity-70 dark:text-white bg-white text-black glassmorphic transition-all duration-500 ease-in-out
           ${collapsed ? 'w-20' : 'w-64'}
-          h-screen md:h-auto min-h-full flex flex-col scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60 sidebar-scrollbar
+          h-screen md:h-auto min-h-full flex flex-col scrollbar-thin dark:scrollbar-thumb-gold dark:scrollbar-track-gray-900/60 scrollbar-thumb-gray-300 scrollbar-track-gray-100 sidebar-scrollbar
           fixed md:static top-0 left-0 z-40
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
+          dark:border-r dark:border-gray-800 border-r border-gray-200
         `}
         style={{ minHeight: '100vh', height: '100%', overflowY: 'auto', transition: 'width 0.5s cubic-bezier(0.4,0,0.2,1)' }}
       >
@@ -69,7 +70,7 @@ const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncemen
         <div className="pt-6 pl-2 pr-2">
           <button
             onClick={handleCollapse}
-            className="hidden md:block mb-4 bg-gold text-black p-2 rounded-full shadow-lg transition-transform duration-300 hover:scale-110"
+            className="hidden md:block mb-4 bg-gold dark:text-black text-black p-2 rounded-full shadow-lg transition-transform duration-300 hover:scale-110"
           >
             {collapsed ? <FiMenu size={22} /> : <FiX size={22} />}
           </button>
@@ -81,7 +82,7 @@ const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncemen
               <li key={index} className="mb-2 w-full transition-all duration-300">
                 <Link
                   to={item.path}
-                  className={`flex items-center p-4 sm:p-3 rounded-lg hover:bg-gold hover:bg-opacity-20 hover:text-gold transition-all duration-300 ${collapsed ? 'justify-center' : 'justify-start'} w-full`}
+                  className={`flex items-center p-4 sm:p-3 rounded-lg dark:hover:bg-gold dark:hover:bg-opacity-20 hover:bg-gold hover:bg-opacity-10 dark:hover:text-gold hover:text-gold transition-all duration-300 dark:text-white text-black ${collapsed ? 'justify-center' : 'justify-start'} w-full`}
                   onClick={() => setMobileOpen(false)}
                 >
                   <span className="mr-3 text-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-110">{item.icon}</span>
@@ -95,7 +96,7 @@ const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncemen
       {/* Overlay for mobile */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          className="fixed inset-0 dark:bg-black dark:bg-opacity-50 bg-black bg-opacity-30 z-30 md:hidden"
           onClick={() => setMobileOpen(false)}
         ></div>
       )}

@@ -106,7 +106,7 @@ const Register = () => {
 
   return (
     <React.Fragment>
-      <div className="min-h-screen flex items-center justify-center bg-dark p-2 sm:p-4">
+      <div className="min-h-screen flex items-center justify-center theme-aware-bg p-2 sm:p-4">
         <div className="glassmorphic p-4 sm:p-8 rounded-xl w-full max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[1.05fr_1fr] items-stretch">
             <div className="hidden lg:flex flex-col justify-between rounded-3xl border border-gray-800 bg-gray-950 p-8">
@@ -376,8 +376,8 @@ const Register = () => {
         </div>
       </div>
       {showVerifyModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-xl p-8 w-full max-w-md relative text-center">
+        <div className="fixed inset-0 flex items-center justify-center z-50 theme-overlay">
+          <div className="rounded-xl p-8 w-full max-w-md relative text-center theme-aware-bg theme-aware-border">
             <h2 className="text-xl font-bold mb-4 text-gold">Verify Your Email</h2>
             <p className="mb-4 text-white">
               A verification link and OTP have been sent to <span className="font-bold">{registeredEmail}</span>.<br/>

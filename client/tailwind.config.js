@@ -1,13 +1,50 @@
 module.exports = {
+  darkMode: 'class',
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
     extend: {
       colors: {
+        // Accent colors (unchanged)
         gold: '#FFD700',
         goldDark: '#B8860B',
         dark: '#0F0F0F',
+        // Neutral text colors with dark mode variants
+        textLight: {
+          primary: '#000000',
+          secondary: '#1F2937',
+          tertiary: '#4B5563',
+          disabled: '#9CA3AF',
+        },
+        textDark: {
+          primary: '#FFFFFF',
+          secondary: '#E5E7EB',
+          tertiary: '#D1D5DB',
+          disabled: '#6B7280',
+        },
+        // Neutral background colors with dark mode variants
+        bgLight: {
+          primary: '#FFFFFF',
+          secondary: '#F9FAFB',
+          tertiary: '#F3F4F6',
+        },
+        bgDark: {
+          primary: '#111827',
+          secondary: '#1F2937',
+          tertiary: '#374151',
+        },
+        // Border colors with dark mode variants
+        borderLight: {
+          primary: '#E5E7EB',
+          secondary: '#D1D5DB',
+          tertiary: '#9CA3AF',
+        },
+        borderDark: {
+          primary: '#374151',
+          secondary: '#4B5563',
+          tertiary: '#6B7280',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui'],

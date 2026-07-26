@@ -125,13 +125,13 @@ const Deposit = () => {
     <div className="max-w-xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Deposit Funds</h1>
       <form onSubmit={handleAmountSubmit} className="glassmorphic p-6 rounded-xl mb-8">
-        <label className="block text-gray-400 mb-2">Amount (USD)</label>
+        <label className="block text-neutral-500 dark:text-neutral-400 mb-2">Amount (USD)</label>
         <input
           type="number"
           min="100"
           value={amount}
           onChange={e => setAmount(e.target.value)}
-          className="w-full bg-dark border border-gray-700 rounded-lg py-3 px-4 mb-2 focus:border-gold focus:outline-none"
+          className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 rounded-lg py-3 px-4 mb-2 focus:border-gold focus:outline-none"
           placeholder="Minimum $100"
           required
         />
@@ -151,12 +151,12 @@ const Deposit = () => {
             {COINS.map(chain => (
               <button
                 key={chain}
-                className={`px-6 py-3 rounded-xl font-bold border-2 shadow-lg text-lg transition-all duration-200 ${selectedChain === chain ? 'bg-gold text-black border-gold scale-105' : 'bg-gray-900 border-gray-600 text-gray-300 hover:border-gold'}`}
+                className={`px-6 py-3 rounded-xl font-bold border-2 shadow-lg text-lg transition-all duration-200 ${selectedChain === chain ? 'bg-gold text-black border-gold scale-105' : 'bg-neutral-900 border-neutral-700 text-neutral-300 hover:border-gold'}`}
                 onClick={() => { setSelectedChain(chain); setSelectedNetwork(null); }}
                 type="button"
               >
                 <div className="text-xl font-extrabold tracking-widest">{chain.toUpperCase()}</div>
-                <div className="text-xs text-gray-400 font-normal mt-1">{CRYPTO_DISPLAY[chain] || chain}</div>
+                <div className="text-xs text-neutral-400 dark:text-neutral-500 font-normal mt-1">{CRYPTO_DISPLAY[chain] || chain}</div>
               </button>
             ))}
           </div>
@@ -168,7 +168,7 @@ const Deposit = () => {
                 {(NETWORKS[selectedChain] || ["Mainnet"]).map(net => (
                   <button
                     key={net}
-                    className={`px-4 py-2 rounded-lg font-bold border transition-all duration-200 ${selectedNetwork === net ? 'bg-gold text-black border-gold scale-105' : 'bg-gray-800 text-gold border-gray-700 hover:border-gold'}`}
+                    className={`px-4 py-2 rounded-lg font-bold border transition-all duration-200 ${selectedNetwork === net ? 'bg-gold text-black border-gold scale-105' : 'bg-neutral-800 dark:bg-neutral-800 text-gold border-neutral-700 hover:border-gold'}`}
                     onClick={() => setSelectedNetwork(net)}
                     type="button"
                   >
@@ -184,17 +184,17 @@ const Deposit = () => {
             const wallet = walletKey ? wallets[walletKey] : null;
             if (!wallet || !wallet.address) {
               return (
-                <div className="flex flex-col items-center mt-6 p-6 rounded-2xl bg-gradient-to-br from-gray-900 to-black shadow-2xl border border-gold">
-                  <div className="font-bold text-lg mb-2 uppercase tracking-widest text-gold">{selectedChain} <span className="text-xs text-gray-400">({selectedNetwork})</span></div>
+                <div className="flex flex-col items-center mt-6 p-6 rounded-2xl bg-gradient-to-br from-neutral-900 to-neutral-800 shadow-2xl border border-gold">
+                  <div className="font-bold text-lg mb-2 uppercase tracking-widest text-gold">{selectedChain} <span className="text-xs text-neutral-400 dark:text-neutral-500">({selectedNetwork})</span></div>
                   <div className="text-red-400 text-center mt-4">Wallet not available. Please contact support.</div>
                 </div>
               );
             }
             return (
-              <div className="flex flex-col items-center mt-6 p-6 rounded-2xl bg-gradient-to-br from-gray-900 to-black shadow-2xl border border-gold">
-                <div className="font-bold text-lg mb-2 uppercase tracking-widest text-gold">{selectedChain} <span className="text-xs text-gray-400">({selectedNetwork})</span></div>
-                <QRCodeSVG value={wallet.address} size={160} className="mb-4 border-4 border-gold rounded-2xl bg-white" />
-                <div className="mb-2 break-all text-gold text-lg font-mono bg-gray-800 px-4 py-2 rounded-lg shadow-inner">{wallet.address}</div>
+              <div className="flex flex-col items-center mt-6 p-6 rounded-2xl bg-gradient-to-br from-neutral-900 to-neutral-800 shadow-2xl border border-gold">
+                <div className="font-bold text-lg mb-2 uppercase tracking-widest text-gold">{selectedChain} <span className="text-xs text-neutral-400 dark:text-neutral-500">({selectedNetwork})</span></div>
+                <QRCodeSVG value={wallet.address} size={160} className="mb-4 border-4 border-gold rounded-2xl bg-neutral-50 dark:bg-neutral-900" />
+                <div className="mb-2 break-all text-gold text-lg font-mono bg-neutral-800 dark:bg-neutral-800 px-4 py-2 rounded-lg shadow-inner">{wallet.address}</div>
                 <button className="text-xs text-blue-400 underline mb-2" onClick={() => navigator.clipboard.writeText(wallet.address)}>Copy Address</button>
                 <button
                   className="mt-2 py-2 px-8 rounded-lg bg-gold text-black font-bold hover:bg-yellow-600 transition text-lg shadow-lg"
@@ -222,7 +222,7 @@ const Deposit = () => {
           </thead>
           <tbody>
             {history.length === 0 && (
-              <tr><td colSpan={3} className="text-center text-gray-400 py-6">No deposits yet</td></tr>
+              <tr><td colSpan={3} className="text-center text-neutral-400 dark:text-neutral-500 py-6">No deposits yet</td></tr>
             )}
             {history.map(dep => (
               <tr key={dep._id}>

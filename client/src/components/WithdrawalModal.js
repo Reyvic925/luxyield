@@ -38,18 +38,18 @@ const WithdrawalModal = ({ isOpen, onClose, investments }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-neutral-900/50 flex items-center justify-center z-50">
       <div className="glassmorphic p-6 rounded-xl w-full max-w-full sm:max-w-md mx-4">
         <h2 className="text-2xl font-bold mb-4 text-gold">Simulated Withdrawal</h2>
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-400 mb-2">Investment</label>
+            <label className="block text-neutral-400 mb-2">Investment</label>
             <select
               name="investmentId"
               value={formData.investmentId}
               onChange={handleChange}
-              className="w-full bg-transparent border border-gray-600 rounded-lg p-2 text-white"
+              className="w-full bg-transparent border border-neutral-600 rounded-lg p-2 text-neutral-100"
               required
             >
               <option value="">Select Investment</option>
@@ -62,7 +62,7 @@ const WithdrawalModal = ({ isOpen, onClose, investments }) => {
           </div>
           
           <div className="mb-4">
-            <label className="block text-gray-400 mb-2">Amount (USD)</label>
+            <label className="block text-neutral-400 mb-2">Amount (USD)</label>
             <input
               type="number"
               name="amount"
@@ -70,18 +70,18 @@ const WithdrawalModal = ({ isOpen, onClose, investments }) => {
               onChange={handleChange}
               min="100"
               step="100"
-              className="w-full bg-transparent border border-gray-600 rounded-lg p-2 text-white"
+              className="w-full bg-transparent border border-neutral-600 rounded-lg p-2 text-neutral-100"
               required
             />
           </div>
           
           <div className="mb-6">
-            <label className="block text-gray-400 mb-2">Method</label>
+            <label className="block text-neutral-400 mb-2">Method</label>
             <select
               name="method"
               value={formData.method}
               onChange={handleChange}
-              className="w-full bg-transparent border border-gray-600 rounded-lg p-2 text-white"
+              className="w-full bg-transparent border border-neutral-600 rounded-lg p-2 text-neutral-100"
               required
             >
               <option value="bank_transfer">Bank Transfer</option>
@@ -94,7 +94,7 @@ const WithdrawalModal = ({ isOpen, onClose, investments }) => {
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto px-4 py-2 border border-gray-600 rounded-lg hover:bg-gray-800 transition"
+              className="w-full sm:w-auto px-4 py-2 border border-neutral-600 rounded-lg hover:bg-neutral-800 transition"
               disabled={loading}
             >
               Cancel

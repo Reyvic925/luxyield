@@ -65,10 +65,10 @@ const Dashboard = () => {
       <BlockchainTransactions walletAddresses={walletAddresses} />
       <CryptoNewsFeed />
       <div className="glass-card p-6 rounded-xl mb-4">
-        <h1 className="text-3xl font-bold mb-2">
+        <h1 className="text-3xl font-bold mb-2 text-black dark:text-white">
           Welcome back, <span className="text-gold-gradient">{dashboardData.userInfo.name}</span>
         </h1>
-        <p className="text-gray-400">Your portfolio is performing better than 87% of investors</p>
+        <p className="text-gray-600 dark:text-gray-400">Your portfolio is performing better than 87% of investors</p>
       </div>
       {/* Add your dashboard content here, e.g. charts, quick actions, etc. */}
       <button onClick={() => setIsDepositOpen(true)} className="mr-2 px-4 py-2 bg-gold rounded">Deposit</button>
