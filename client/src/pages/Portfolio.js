@@ -419,28 +419,28 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                 const { value } = getCurrentRoiAndValue(investment);
                 return (
                   <tr key={investment._id || investment.id} className="border-b border-gray-800 hover:bg-gray-800 hover:bg-opacity-30 transition">
-                    <td className="py-4">
-                      <div className="font-medium">{investment.fundName}</div>
-                      <div className="text-sm text-gray-400">ID: {investment._id || investment.id}</div>
+                    <td className="py-4 px-4">
+                      <div className="font-medium break-words">{investment.fundName}</div>
+                      <div className="text-sm text-gray-400 truncate">ID: {investment._id || investment.id}</div>
                     </td>
-                    <td className="py-4">
+                    <td className="py-4 px-4">
                       <div className="font-medium">{investment.planName}</div>
                       <div className="text-sm text-gray-400">
                         {investment.status === 'active' ? 'Active' : 'Completed'}
                       </div>
                     </td>
-                    <td className="py-4 text-right font-mono">${investment.initialAmount.toLocaleString()}</td>
-                    <td className="py-4 text-right font-mono">${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                    <td className="py-4">
+                    <td className="py-4 px-4 text-right font-mono whitespace-nowrap border-l border-gray-800">${investment.initialAmount.toLocaleString()}</td>
+                    <td className="py-4 px-4 text-right font-mono whitespace-nowrap border-l border-gray-800">${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                    <td className="py-4 px-4">
                       <div className="flex items-center">
                         <FiCalendar className="mr-2 text-gray-400" />
-                        <span className="text-sm">
+                        <span className="text-sm whitespace-nowrap">
                           {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} -{' '}
                           {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}
                         </span>
                       </div>
                     </td>
-                    <td className="py-4 text-right">
+                    <td className="py-4 px-4 text-right">
                       <button 
                         onClick={() => setSelectedInvestment(investment)}
                         className="text-gold hover:underline text-sm font-medium"
@@ -469,15 +469,26 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                 </div>
                 <div className="mb-1 text-sm"><span className="font-bold">Plan:</span> {investment.planName}</div>
                 <div className="mb-1 text-sm"><span className="font-bold">Invested:</span> ${investment.initialAmount.toLocaleString()}</div>
-                <div className="mb-1 text-sm"><span className="font-bold">Current Value:</span> ${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
-                <div className="mb-1 text-sm"><span className="font-bold">ROI (Expected):</span> {(() => {
-                  const cfg = findPlanConfigByName(investment.planName);
-                  const fallback = investment?.percentReturn ?? investment?.roi ?? investment?.expectedRoi;
-                  if (cfg) return (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`);
-                  if (fallback !== undefined && fallback !== null && fallback !== '') return `${fallback}%`;
-                  return '--';
-                })()}</div>
-                <div className="mb-1 text-sm"><span className="font-bold">Duration:</span> {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</div>
+                <div className="divide-y divide-gray-800 rounded-md">
+                  <div className="py-2 text-sm flex justify-between items-center">
+                    <span className="font-bold">Current Value:</span>
+                    <span className="font-mono whitespace-nowrap">${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                  </div>
+                  <div className="py-2 text-sm flex justify-between items-center">
+                    <span className="font-bold">ROI (Expected):</span>
+                    <span className="whitespace-nowrap">{(() => {
+                      const cfg = findPlanConfigByName(investment.planName);
+                      const fallback = investment?.percentReturn ?? investment?.roi ?? investment?.expectedRoi;
+                      if (cfg) return (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`);
+                      if (fallback !== undefined && fallback !== null && fallback !== '') return `${fallback}%`;
+                      return '--';
+                    })()}</span>
+                  </div>
+                  <div className="py-2 text-sm flex justify-between items-center">
+                    <span className="font-bold">Duration:</span>
+                    <span className="whitespace-nowrap">{investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</span>
+                  </div>
+                </div>
                 <button 
                   onClick={() => setSelectedInvestment(investment)}
                   className="mt-2 w-full bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition text-sm"
