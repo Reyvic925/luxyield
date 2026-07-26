@@ -475,14 +475,14 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                   </div>
                   <span className="px-2 py-1 rounded bg-gray-800 text-xs text-gray-200">{investment.status}</span>
                 </div>
-                <div className="mb-1 text-sm"><span className="font-bold">Plan:</span> {investment.planName}</div>
-                <div className="mb-1 text-sm"><span className="font-bold">Invested:</span> ${investment.initialAmount.toLocaleString()}</div>
-                <div className="mb-1 text-sm"><span className="font-bold">Current Value:</span> ${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
-                <div className="mb-1 text-sm"><span className="font-bold">ROI (Expected):</span> {(() => {
+                <div className="mb-1 text-sm break-words"><span className="font-bold">Plan:</span> {investment.planName}</div>
+                <div className="mb-1 text-sm break-words"><span className="font-bold">Invested:</span> ${investment.initialAmount.toLocaleString()}</div>
+                <div className="mb-1 text-sm break-words"><span className="font-bold">Current Value:</span> ${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
+                <div className="mb-1 text-sm break-words"><span className="font-bold">ROI (Expected):</span> {(() => {
                   const cfg = findPlanConfigByName(investment.planName);
                   return cfg ? (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`) : '--';
                 })()}</div>
-                <div className="mb-1 text-sm"><span className="font-bold">Duration:</span> {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</div>
+                <div className="mb-1 text-sm break-words"><span className="font-bold">Duration:</span> {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</div>
                 <button 
                   onClick={() => setSelectedInvestment(investment)}
                   className="mt-2 w-full bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition text-sm"
@@ -507,34 +507,20 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         {investmentPlans.length === 0 ? (
           <div className="text-center py-8 text-gray-400">No plans available</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="grid grid-cols-2 gap-4">
-              {investmentPlans.slice(0,2).map(plan => (
-                <div key={plan.name} className="bg-gray-900 rounded-xl p-4 flex flex-col items-center border-2" style={{ borderColor: plan.color || '#D4AF37' }}>
-                  <div className="text-2xl font-bold mb-2" style={{ color: plan.color || '#D4AF37' }}>{plan.name}</div>
-                  <div className="mb-1">ROI (Expected): <span className="font-bold">{plan.percentReturn}%</span></div>
-                  <div className="mb-1">Duration: <span className="font-bold">{plan.durationDays} days</span></div>
-                  <div className="mb-1">Min: <span className="font-bold">${plan.minInvestment}</span></div>
-                  <div className="mb-1">Max: <span className="font-bold">${plan.maxInvestment}</span></div>
-                  <button className="mt-2 bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition" onClick={() => { if (!hasActiveInvestment) { setSelectedPlan(plan); setShowPlanModal(true); }}} disabled={hasActiveInvestment}>
-                    Start Investment
-                  </button>
-                  {hasActiveInvestment && <div className="text-xs text-red-400 mt-2">You can only have one active investment at a time.</div>}
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {investmentPlans.slice(2,4).map(plan => (
-                <div key={plan.name} className="bg-gray-900 rounded-xl p-4 flex flex-col items-center border-2" style={{ borderColor: plan.color || '#D4AF37' }}>
-                  <div className="text-2xl font-bold mb-2" style={{ color: plan.color || '#D4AF37' }}>{plan.name}</div>
-                  <div className="mb-1">ROI (Expected): <span className="font-bold">{plan.percentReturn}%</span></div>
-                  <div className="mb-1">Duration: <span className="font-bold">{plan.durationDays} days</span></div>
-                  <div className="mb-1">Min: <span className="font-bold">${plan.minInvestment}</span></div>
-                  <div className="mb-1">Max: <span className="font-bold">${plan.maxInvestment}</span></div>
-                  <button className="mt-2 bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition" onClick={() => { setSelectedPlan(plan); setShowPlanModal(true); }}>Start Investment</button>
-                </div>
-              ))}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {investmentPlans.map(plan => (
+              <div key={plan.name} className="bg-gray-900 rounded-xl p-4 flex flex-col items-center border-2 w-full min-w-0" style={{ borderColor: plan.color || '#D4AF37' }}>
+                <div className="text-2xl font-bold mb-2 text-center break-words" style={{ color: plan.color || '#D4AF37' }}>{plan.name}</div>
+                <div className="mb-1 text-sm text-center break-words">ROI (Expected): <span className="font-bold">{plan.percentReturn}%</span></div>
+                <div className="mb-1 text-sm text-center break-words">Duration: <span className="font-bold">{plan.durationDays} days</span></div>
+                <div className="mb-1 text-sm text-center break-words">Min: <span className="font-bold">${plan.minInvestment}</span></div>
+                <div className="mb-1 text-sm text-center break-words">Max: <span className="font-bold">${plan.maxInvestment}</span></div>
+                <button className="mt-2 bg-gold text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition w-full" onClick={() => { if (!hasActiveInvestment) { setSelectedPlan(plan); setShowPlanModal(true); }}} disabled={hasActiveInvestment}>
+                  Start Investment
+                </button>
+                {hasActiveInvestment && <div className="text-xs text-red-400 mt-2 text-center">You can only have one active investment at a time.</div>}
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -616,9 +602,9 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         <div className="space-y-4 max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
           {portfolioData.recentActivity && portfolioData.recentActivity.length > 0 ? (
             portfolioData.recentActivity.map((activity, idx) => (
-              <div key={idx} className="flex justify-between items-center p-3 border-b border-gray-800 last:border-0">
-                <div className="flex items-center">
-                  <div className={`p-2 rounded-lg mr-4 ${
+              <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b border-gray-800 last:border-0 gap-3">
+                <div className="flex items-start sm:items-center gap-3 min-w-0">
+                  <div className={`p-2 rounded-lg ${
                     activity.type === 'Investment' ? 'bg-blue-500 bg-opacity-20 text-blue-500' :
                     activity.type === 'Withdrawal' ? 'bg-red-500 bg-opacity-20 text-red-500' :
                     'bg-green-500 bg-opacity-20 text-green-500'
@@ -626,14 +612,14 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                     {activity.type === 'Investment' ? <FiTrendingUp /> :
                      activity.type === 'Withdrawal' ? <FiDollarSign /> : <FiRefreshCw />}
                   </div>
-                  <div>
-                    <p className="font-medium">{activity.type}</p>
-                    <p className="text-sm text-gray-400">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{activity.type}</p>
+                    <p className="text-sm text-gray-400 break-words">
                       {activity.description} {activity.fund ? `• ${activity.fund}` : ''} • {activity.date ? new Date(activity.date).toLocaleDateString() : ''}
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right min-w-[6rem]">
                   <p className={`font-mono ${
                     activity.type === 'Withdrawal' ? 'text-red-500' : 'text-green-500'
                   }`}>
