@@ -143,6 +143,8 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
     activeCurrentValue = value;
   }
 
+  const netGainLoss = portfolioData?.summary?.totalROI ?? 0;
+
   if (loading || kycLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -181,29 +183,34 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
 
   // Calculate correct current ROI and value for active investments
   function getCurrentRoiAndValue(investment) {
-    if (!investment) return { roi: '0.00', value: '0.00', expectedRoi: '' };
+    if (!investment) return { roi: '0.00', value: '0.00', expectedRoi: '', gainLoss: 0 };
     // Use helper to find plan config (case-insensitive)
     const plan = findPlanConfigByName(investment.planName) || null;
+    const initialAmount = Number(investment.initialAmount) || 0;
 
     // Helper to resolve expected roi from various sources
     const resolveExpectedRoi = () => {
       return plan?.roi ?? investment.percentReturn ?? investment.roi ?? investment.expectedRoi ?? '';
     };
 
-    if (typeof investment.currentValue === 'number' && !isNaN(investment.currentValue) && Number(investment.initialAmount) > 0) {
-      const roi = ((investment.currentValue - investment.initialAmount) / investment.initialAmount) * 100;
+    if (typeof investment.currentValue === 'number' && !isNaN(investment.currentValue) && initialAmount > 0) {
+      const roi = ((investment.currentValue - initialAmount) / initialAmount) * 100;
+      const gainLoss = investment.currentValue - initialAmount;
       return {
         roi: roi.toFixed(2),
         value: investment.currentValue.toFixed(2),
-        expectedRoi: resolveExpectedRoi()
+        expectedRoi: resolveExpectedRoi(),
+        gainLoss
       };
     }
 
     if (investment.status !== 'active' || !plan) {
+      const currentValue = Number(investment.currentValue) || 0;
       return {
         roi: (Number(investment.roi) || 0).toFixed(2),
-        value: (Number(investment.currentValue) || 0).toFixed(2),
-        expectedRoi: resolveExpectedRoi()
+        value: currentValue.toFixed(2),
+        expectedRoi: resolveExpectedRoi(),
+        gainLoss: currentValue - initialAmount
       };
     }
 
@@ -215,11 +222,12 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
     const elapsedSeconds = Math.max(0, Math.min((now - start) / 1000, totalSeconds));
     const progress = totalSeconds > 0 ? elapsedSeconds / totalSeconds : 0;
     const currentRoi = roi * progress;
-    const currentValue = (Number(investment.initialAmount) || 0) * (1 + currentRoi / 100);
+    const currentValue = initialAmount * (1 + currentRoi / 100);
     return {
       roi: currentRoi.toFixed(2),
       value: currentValue.toFixed(2),
-      expectedRoi: roi
+      expectedRoi: roi,
+      gainLoss: currentValue - initialAmount
     };
   }
 
@@ -257,7 +265,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 sm:gap-6">
         <div className="glassmorphic p-4 sm:p-6 rounded-xl min-w-0">
           <div className="flex justify-between items-start gap-3">
             <div className="min-w-0">
@@ -276,6 +284,36 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
               <h2 className="text-2xl font-bold break-words">${Number(activeCurrentValue).toLocaleString(undefined, {maximumFractionDigits: 2})}</h2>
             </div>
             <div className="bg-green-500 bg-opacity-20 p-3 rounded-full text-green-500 flex-shrink-0">
+              <FiTrendingUp size={20} />
+            </div>
+          </div>
+        </div>
+        <div className="glassmorphic p-4 sm:p-6 rounded-xl min-w-0">
+          <div className="flex justify-between items-start gap-3">
+            <div className="min-w-0">
+              <p className="text-gray-400">Total ROI (Expected)</p>
+              <h2 className="text-2xl font-bold break-words">
+                {(() => {
+                  if (!activeInvestment) return '--';
+                  const cfg = findPlanConfigByName(activeInvestment.planName);
+                  return cfg ? (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`) : '--';
+                })()}
+              </h2>
+            </div>
+            <div className="bg-purple-500 bg-opacity-20 p-3 rounded-full text-purple-500 flex-shrink-0">
+              <FiPieChart size={20} />
+            </div>
+          </div>
+        </div>
+        <div className="glassmorphic p-4 sm:p-6 rounded-xl min-w-0">
+          <div className="flex justify-between items-start gap-3">
+            <div className="min-w-0">
+              <p className="text-gray-400">Net Gain/Loss</p>
+              <h2 className={`text-2xl font-bold break-words ${netGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {netGainLoss >= 0 ? '+' : '-'}${Math.abs(netGainLoss).toLocaleString(undefined, {maximumFractionDigits: 2})}
+              </h2>
+            </div>
+            <div className={`p-3 rounded-full flex-shrink-0 ${netGainLoss >= 0 ? 'bg-green-500 bg-opacity-20 text-green-500' : 'bg-red-500 bg-opacity-20 text-red-500'}`}>
               <FiTrendingUp size={20} />
             </div>
           </div>
@@ -374,10 +412,10 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
       <div className="glassmorphic p-4 sm:p-6 rounded-xl overflow-hidden">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-6">
           <h3 className="text-xl font-bold">Your Investments</h3>
-          <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:justify-end min-w-0">
+          <div className="flex gap-2 w-full sm:w-auto sm:justify-end min-w-0 overflow-x-auto">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-3 py-2 rounded-lg text-sm flex-1 sm:flex-none text-center whitespace-nowrap min-w-[72px] ${
+              className={`px-3 py-2 rounded-lg text-sm flex-none text-center whitespace-nowrap ${
                 activeTab === 'all' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
               } transition`}
             >
@@ -385,7 +423,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
             </button>
             <button
               onClick={() => setActiveTab('active')}
-              className={`px-3 py-2 rounded-lg text-sm flex-1 sm:flex-none text-center whitespace-nowrap min-w-[72px] ${
+              className={`px-3 py-2 rounded-lg text-sm flex-none text-center whitespace-nowrap ${
                 activeTab === 'active' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
               } transition`}
             >
@@ -393,7 +431,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
             </button>
             <button
               onClick={() => setActiveTab('completed')}
-              className={`px-3 py-2 rounded-lg text-sm flex-1 sm:flex-none text-center whitespace-nowrap min-w-[72px] ${
+              className={`px-3 py-2 rounded-lg text-sm flex-none text-center whitespace-nowrap ${
                 activeTab === 'completed' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
               } transition`}
             >
@@ -410,13 +448,14 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                 <th className="pb-4">Plan</th>
                 <th className="pb-4 text-right">Invested</th>
                 <th className="pb-4 text-right">Current Value</th>
+                <th className="pb-4 text-right">Gain/Loss</th>
                 <th className="pb-4">Duration</th>
                 <th className="pb-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredInvestments.map((investment) => {
-                const { value } = getCurrentRoiAndValue(investment);
+                const { value, gainLoss } = getCurrentRoiAndValue(investment);
                 return (
                   <tr key={investment._id || investment.id} className="border-b border-gray-800 hover:bg-gray-800 hover:bg-opacity-30 transition">
                     <td className="py-4 px-4">
@@ -431,6 +470,9 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                     </td>
                     <td className="py-4 px-4 text-right font-mono whitespace-nowrap border-l border-gray-800">${investment.initialAmount.toLocaleString()}</td>
                     <td className="py-4 px-4 text-right font-mono whitespace-nowrap border-l border-gray-800">${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                    <td className={`py-4 px-4 text-right font-mono whitespace-nowrap border-l border-gray-800 ${gainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {gainLoss >= 0 ? '+' : '-'}${Math.abs(gainLoss).toLocaleString(undefined, {maximumFractionDigits: 2})}
+                    </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center">
                         <FiCalendar className="mr-2 text-gray-400" />
@@ -457,7 +499,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
         {/* Mobile card layout for investments */}
         <div className="sm:hidden space-y-4">
           {filteredInvestments.map((investment) => {
-            const { value } = getCurrentRoiAndValue(investment);
+            const { value, gainLoss } = getCurrentRoiAndValue(investment);
             return (
               <div key={investment._id || investment.id} className="glassmorphic p-4 rounded-xl overflow-hidden">
                 <div className="flex justify-between items-start gap-2 mb-2">
@@ -470,6 +512,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                 <div className="mb-1 text-sm break-words" style={{ overflowWrap: 'anywhere' }}><span className="font-bold">Plan:</span> {investment.planName}</div>
                 <div className="mb-1 text-sm break-words" style={{ overflowWrap: 'anywhere' }}><span className="font-bold">Invested:</span> ${investment.initialAmount.toLocaleString()}</div>
                 <div className="mb-1 text-sm break-words" style={{ overflowWrap: 'anywhere' }}><span className="font-bold">Current Value:</span> ${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
+                <div className={`mb-1 text-sm break-words ${gainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ overflowWrap: 'anywhere' }}><span className="font-bold">Gain/Loss:</span> {gainLoss >= 0 ? '+' : '-'}${Math.abs(gainLoss).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
                 <div className="mb-1 text-sm break-words" style={{ overflowWrap: 'anywhere' }}><span className="font-bold">Duration:</span> {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</div>
                 <button 
                   onClick={() => setSelectedInvestment(investment)}
