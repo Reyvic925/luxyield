@@ -283,27 +283,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
         <div className="glassmorphic p-4 sm:p-6 rounded-xl">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-400">Total ROI (Expected)</p>
-              <h2 className="text-2xl font-bold">
-                {(() => {
-                  if (!activeInvestment) return '--';
-                  const cfg = findPlanConfigByName(activeInvestment.planName);
-                  // Prefer plan config, then explicit expected/percentReturn, avoid using investment.roi (current ROI) as fallback
-                  const fallback = activeInvestment?.percentReturn ?? activeInvestment?.expectedRoi ?? activeInvestment?.roi;
-                  if (cfg) return (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`);
-                  if (fallback !== undefined && fallback !== null && fallback !== '') return `${fallback}%`;
-                  return '--';
-                })()}
-              </h2>
-            </div>
-            <div className="bg-purple-500 bg-opacity-20 p-3 rounded-full text-purple-500">
-              <FiPieChart size={20} />
-            </div>
-          </div>
-        </div>
-        <div className="glassmorphic p-4 sm:p-6 rounded-xl">
-          <div className="flex justify-between items-start">
-            <div>
               <p className="text-gray-400">Active Investments</p>
               <h2 className="text-2xl font-bold">{portfolioData.summary.activeInvestments}</h2>
             </div>
@@ -431,7 +410,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                 <th className="pb-4">Plan</th>
                 <th className="pb-4 text-right">Invested</th>
                 <th className="pb-4 text-right">Current Value</th>
-                <th className="pb-4 text-right">ROI (Expected)</th>
                 <th className="pb-4">Duration</th>
                 <th className="pb-4 text-right">Actions</th>
               </tr>
@@ -453,16 +431,6 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                     </td>
                     <td className="py-4 text-right font-mono">${investment.initialAmount.toLocaleString()}</td>
                     <td className="py-4 text-right font-mono">${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                    <td className="py-4 text-right font-mono text-gold">
-                      {(() => {
-                        const cfg = findPlanConfigByName(investment.planName);
-                        // Prefer plan config, then explicit expected/percentReturn on the investment, avoid using investment.roi (which may be current ROI)
-                        const fallback = investment?.percentReturn ?? investment?.expectedRoi ?? investment?.roi;
-                        if (cfg) return (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`);
-                        if (fallback !== undefined && fallback !== null && fallback !== '') return `${fallback}%`;
-                        return '--';
-                      })()}
-                    </td>
                     <td className="py-4">
                       <div className="flex items-center">
                         <FiCalendar className="mr-2 text-gray-400" />
