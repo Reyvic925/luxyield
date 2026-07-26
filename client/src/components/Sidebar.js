@@ -1,25 +1,23 @@
 ﻿// src/components/Sidebar.js
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FiHome, FiPieChart, FiDollarSign, FiUpload, 
-         FiFileText, FiShield, FiBell,
-         FiTarget, FiBook, FiSettings, FiMenu, FiX, FiLogOut, FiUsers } from 'react-icons/fi';
-import { useUser } from '../contexts/UserContext';
+         FiTrendingUp, FiShield, FiBell,
+         FiTarget, FiBook, FiMenu, FiX, FiUsers } from 'react-icons/fi';
 import '../custom-scrollbar.css';
 
 const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncement = false }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { logout } = useUser();
-  const navigate = useNavigate();
 
   const navItems = [
     { icon: <FiHome />, label: 'Dashboard', path: '/dashboard' },
-    { icon: <FiPieChart />, label: 'Investment Portfolio', path: '/dashboard/portfolio' },
-    { icon: <FiDollarSign />, label: 'Deposit Funds', path: '/dashboard/deposit' },
-    { icon: <FiUpload />, label: 'Withdraw Funds', path: '/dashboard/withdraw' },
-    { icon: <FiFileText />, label: 'Fund Performance', path: '/dashboard/performance' },
-    { icon: <FiShield />, label: 'KYC Status', path: '/dashboard/kyc' },
-    { icon: <FiUsers />, label: 'Invite Friends', path: '/dashboard/invite-friends' },
+    { icon: <FiPieChart />, label: 'Portfolio', path: '/dashboard/portfolio' },
+    { icon: <FiDollarSign />, label: 'Deposit', path: '/dashboard/deposit' },
+    { icon: <FiUpload />, label: 'Withdraw', path: '/dashboard/withdraw' },
+    { icon: <FiTrendingUp />, label: 'Investments', path: '/dashboard/performance' },
+    { icon: <FiShield />, label: 'KYC', path: '/dashboard/kyc' },
+    { icon: <FiTarget />, label: 'Goals', path: '/dashboard/goals' },
+    { icon: <FiUsers />, label: 'Referrals', path: '/dashboard/invite-friends' },
     { icon: (
         <span className="relative">
           <FiBell />
@@ -28,19 +26,11 @@ const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncemen
           )}
         </span>
       ), label: 'Announcements', path: '/dashboard/announcements' },
-    { icon: <FiTarget />, label: 'My Goals', path: '/dashboard/goals' },
-    { icon: <FiSettings />, label: 'Settings', path: '/dashboard/settings' },
     { icon: <FiBook />, label: 'Education Center', path: '/dashboard/education' },
   ];
 
   // Desktop collapse/expand
   const handleCollapse = () => setCollapsed(!collapsed);
-  // Mobile open/close
-  const handleMobile = () => setMobileOpen(!mobileOpen);
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   // Only render sidebar for user (not admin routes)
   if (window.location.pathname.startsWith('/admin')) return null;

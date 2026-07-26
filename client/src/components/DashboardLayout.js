@@ -4,7 +4,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopRightBar from './TopRightBar';
 
-const DashboardLayout = ({ sidebarCollapsed, setSidebarCollapsed }) => {
+const DashboardLayout = ({ sidebarCollapsed, setSidebarCollapsed, hasNewAnnouncement }) => {
   return (
     <div
       className="flex flex-col md:flex-row h-screen"
@@ -22,7 +22,7 @@ const DashboardLayout = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           </div>
         </div>
       </div>
-      <TopRightBar />
+      <TopRightBar hasNewAnnouncement={hasNewAnnouncement} />
     </div>
   );
 };

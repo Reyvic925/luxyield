@@ -114,7 +114,7 @@ function App() {
                   <Route path="/legal" element={<LegalDisclaimerPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/group-chat" element={<GroupChat />} />
-                  <Route path="/dashboard" element={<DashboardLayout sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />}>
+                  <Route path="/dashboard" element={<DashboardLayout sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} hasNewAnnouncement={hasNewAnnouncement} />}>
                     <Route index element={<Dashboard />} />
                     <Route path="portfolio" element={<Portfolio />} />
                     <Route path="deposit" element={<Deposit />} />
