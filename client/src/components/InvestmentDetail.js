@@ -158,6 +158,9 @@ const InvestmentDetail = ({ investment, onClose }) => {
         const token = localStorage.getItem('token');
         const headers = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
         const res = await fetch(`/api/portfolio/investment/${investment._id || investment.id}`, { headers });
         if (res.ok) {
           const text = await res.text();
@@ -209,11 +212,55 @@ const InvestmentDetail = ({ investment, onClose }) => {
     return () => clearInterval(interval);
   }, [investment]);
 
-  // Use liveInvestment.transactions or fallback to lastTransactions
-  const txList = (liveInvestment && (liveInvestment.transactions || liveInvestment.lastTransactions)) || [];
-  const normalizedTxs = txList.map(t => ({ type: t.type, amount: Number(t.amount || 0), date: t.date, description: t.description || '' }));
-  const gainTxs = normalizedTxs.filter(t => (t.type === 'roi' || t.type === 'gain') && Number(t.amount) > 0);
-  const lossTxs = normalizedTxs.filter(t => ((t.type === 'roi' && Number(t.amount) < 0) || t.type === 'loss'));
+  // Use liveInvestment.transactions or fallback to other possible transaction sources
+  const txList = (liveInvestment && (
+    liveInvestment.transactions ||
+    liveInvestment.lastTransactions ||
+    liveInvestment.lastTransactionsByType ||
+    liveInvestment.transactionsHistory ||
+    liveInvestment.tx ||
+    (liveInvestment.statement && liveInvestment.statement.transactions)
+  )) || [];
+  const normalizedTxs = txList.map(t => {
+    // Normalize amount: accept numbers or strings like "$165.00", "165.00", "-165.00"
+    let raw = (t && (t.amount ?? t.value ?? t.amt)) || 0;
+    let amt = 0;
+    if (typeof raw === 'number') amt = raw;
+    else if (typeof raw === 'string') {
+      // strip non-numeric except dot and minus
+      const cleaned = raw.replace(/[^0-9.-]+/g, '');
+      amt = parseFloat(cleaned);
+      if (Number.isNaN(amt)) amt = 0;
+    } else {
+      amt = Number(raw) || 0;
+    }
+
+    // Normalize date field
+    const date = t.date || t.createdAt || t.timestamp || null;
+
+    // Normalize type and derive effective type when missing
+    const rawType = (t.type || t.txType || t.category || '').toString().toLowerCase();
+    let effectiveType = rawType;
+    if (!effectiveType) {
+      if (amt > 0) effectiveType = 'gain';
+      else if (amt < 0) effectiveType = 'loss';
+      else effectiveType = 'other';
+    }
+
+    return {
+      original: t,
+      _id: t._id || t.id || null,
+      type: rawType || effectiveType,
+      effectiveType,
+      amount: Number(amt),
+      date,
+      description: t.description || t.note || t.meta || ''
+    };
+  });
+
+  // Classify gains and losses by sign to be robust to varying type names
+  const gainTxs = normalizedTxs.filter(t => Number(t.amount) > 0);
+  const lossTxs = normalizedTxs.filter(t => Number(t.amount) < 0);
 
   const handleWithdrawRoi = async () => {
     if (!investment || investment.status !== 'completed') {
@@ -385,18 +432,30 @@ const InvestmentDetail = ({ investment, onClose }) => {
             <div className="overflow-y-auto max-h-40">
               {tab === 'gains' && gainTxs.length === 0 && <div className="text-gray-400">No gains yet.</div>}
               {tab === 'losses' && lossTxs.length === 0 && <div className="text-gray-400">No losses yet.</div>}
-              {tab === 'gains' && gainTxs.slice().reverse().map((tx, i) => (
-                <div key={i} className="flex justify-between py-1 text-green-400">
-                  <span>{new Date(tx.date).toLocaleDateString()}</span>
-                  <span>+${tx.amount.toFixed(2)}</span>
-                </div>
-              ))}
-              {tab === 'losses' && lossTxs.slice().reverse().map((tx, i) => (
-                <div key={i} className="flex justify-between py-1 text-red-400">
-                  <span>{new Date(tx.date).toLocaleDateString()}</span>
-                  <span>-${Math.abs(tx.amount).toFixed(2)}</span>
-                </div>
-              ))}
+              {tab === 'gains' && gainTxs.slice().reverse().map((tx) => {
+                const key = tx._id || `${tx.type}-${tx.amount}-${tx.date}`;
+                const dateObj = new Date(tx.date || tx.createdAt || Date.now());
+                const dateStr = isNaN(dateObj.getTime()) ? 'N/A' : dateObj.toLocaleDateString();
+                const amount = Number(tx.amount) || 0;
+                return (
+                  <div key={key} className="flex justify-between py-1 text-green-400">
+                    <span>{dateStr}</span>
+                    <span>+${amount.toFixed(2)}</span>
+                  </div>
+                );
+              })}
+              {tab === 'losses' && lossTxs.slice().reverse().map((tx) => {
+                const key = tx._id || `${tx.type}-${tx.amount}-${tx.date}`;
+                const dateObj = new Date(tx.date || tx.createdAt || Date.now());
+                const dateStr = isNaN(dateObj.getTime()) ? 'N/A' : dateObj.toLocaleDateString();
+                const amount = Number(tx.amount) || 0;
+                return (
+                  <div key={key} className="flex justify-between py-1 text-red-400">
+                    <span>{dateStr}</span>
+                    <span>-${Math.abs(amount).toFixed(2)}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
