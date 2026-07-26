@@ -288,7 +288,8 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                 {(() => {
                   if (!activeInvestment) return '--';
                   const cfg = findPlanConfigByName(activeInvestment.planName);
-                  const fallback = activeInvestment?.percentReturn ?? activeInvestment?.roi ?? activeInvestment?.expectedRoi;
+                  // Prefer plan config, then explicit expected/percentReturn, avoid using investment.roi (current ROI) as fallback
+                  const fallback = activeInvestment?.percentReturn ?? activeInvestment?.expectedRoi ?? activeInvestment?.roi;
                   if (cfg) return (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`);
                   if (fallback !== undefined && fallback !== null && fallback !== '') return `${fallback}%`;
                   return '--';
@@ -455,7 +456,8 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                     <td className="py-4 text-right font-mono text-gold">
                       {(() => {
                         const cfg = findPlanConfigByName(investment.planName);
-                        const fallback = investment?.percentReturn ?? investment?.roi ?? investment?.expectedRoi;
+                        // Prefer plan config, then explicit expected/percentReturn on the investment, avoid using investment.roi (which may be current ROI)
+                        const fallback = investment?.percentReturn ?? investment?.expectedRoi ?? investment?.roi;
                         if (cfg) return (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`);
                         if (fallback !== undefined && fallback !== null && fallback !== '') return `${fallback}%`;
                         return '--';
