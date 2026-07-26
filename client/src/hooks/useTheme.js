@@ -5,11 +5,13 @@ import { ThemeContext } from '../contexts/ThemeContext';
  * Custom React hook for accessing theme context
  * 
  * @returns {Object} Theme context object containing:
- *   - theme {string} - Current theme ('light' or 'dark')
- *   - setTheme(theme) {function} - Function to set theme
- *   - toggleTheme() {function} - Function to toggle between light and dark
- *   - isLight {boolean} - True if current theme is 'light'
- *   - isDark {boolean} - True if current theme is 'dark'
+ *   - theme {string} - Current resolved theme ('light' or 'dark')
+ *   - themeMode {string} - Current user preference ('light', 'dark', or 'system')
+ *   - setThemeMode(mode) {function} - Function to set the theme preference
+ *   - toggleTheme() {function} - Function to toggle explicitly between light and dark
+ *   - isLight {boolean} - True if current resolved theme is 'light'
+ *   - isDark {boolean} - True if current resolved theme is 'dark'
+ *   - isSystem {boolean} - True if current user preference is 'system'
  *   - isInitialized {boolean} - True when theme has been initialized
  * 
  * @throws {Error} If used outside of ThemeProvider

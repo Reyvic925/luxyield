@@ -2,19 +2,16 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { useTheme } from '../hooks/useTheme';
-import { FiMenu } from 'react-icons/fi';
+import TopRightBar from './TopRightBar';
 
 const DashboardLayout = ({ sidebarCollapsed, setSidebarCollapsed }) => {
-  const { isDark } = useTheme();
-
   return (
-    <div 
+    <div
       className="flex flex-col md:flex-row h-screen"
       style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
     >
       <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
-      <div 
+      <div
         className="flex-1 overflow-y-auto flex flex-col scrollbar-thin scrollbar-thumb-gold"
         style={{ backgroundColor: 'var(--bg-primary)' }}
       >
@@ -25,6 +22,7 @@ const DashboardLayout = ({ sidebarCollapsed, setSidebarCollapsed }) => {
           </div>
         </div>
       </div>
+      <TopRightBar />
     </div>
   );
 };

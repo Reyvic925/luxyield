@@ -8,7 +8,6 @@ import { getReferralStats } from '../services/referralAPI';
 import KYCStatus from '../components/KYCStatus';
 import { useUserDataRefresh } from '../contexts/UserDataRefreshContext';
 import WalletIcon from '../components/WalletIcon';
-import TopRightBar from '../components/TopRightBar'; // Import TopRightBar
 // Removed unused import: GoalsDashboard
 dayjs.extend(relativeTime);
 
@@ -297,7 +296,6 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
 
   return (
     <div className="space-y-8 max-w-screen-xl mx-auto px-2 md:px-6 py-8">
-      {!adminView && <TopRightBar />} {/* Only show TopRightBar for normal user view, not admin */}
       {/* Top: Welcome + Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Welcome tab (2 columns) */}

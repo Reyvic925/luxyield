@@ -149,7 +149,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
   }, [lastRefresh, adminView]);
 
   const navigate = useNavigate();
-  const { toggleTheme, isDark } = useTheme();
+  const { theme, themeMode, setThemeMode, isDark, isSystem } = useTheme();
 
   // --- Account & Data Actions ---
   const handleInviteFriends = () => {
@@ -506,18 +506,45 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
             <span>Notifications</span>
             <input type="checkbox" checked={profile?.notifications} onChange={() => handleToggle('notifications')} className="ml-2" />
           </div>
-          <div className="flex items-center gap-2 theme-aware-text">
-            {isDark ? <FiSun className="text-xl text-gold" /> : <FiMoon className="text-xl text-gold" />}
-            <label className="flex items-center gap-2">
-              <span>Dark Mode</span>
-              <input
-                type="checkbox"
-                checked={isDark}
-                onChange={() => toggleTheme()}
-                className="ml-2 h-5 w-5 rounded border theme-aware-border-secondary bg-transparent text-gold focus:outline-none focus:ring-2 focus:ring-gold"
-                aria-label="Toggle dark mode"
-              />
-            </label>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 theme-aware-text">
+              {isDark ? <FiMoon className="text-xl text-gold" /> : <FiSun className="text-xl text-gold" />}
+              <span className="font-medium">Theme Preference</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { value: 'light', label: 'Light', icon: FiSun, description: 'Always use Light mode' },
+                { value: 'dark', label: 'Dark', icon: FiMoon, description: 'Always use Dark mode' },
+                { value: 'system', label: 'System', icon: FiGlobe, description: 'Follow your operating system' },
+              ].map((option) => {
+                const Icon = option.icon;
+                const selected = themeMode === option.value;
+
+                return (
+                  <label
+                    key={option.value}
+                    className={`block rounded-xl border p-3 transition ${selected ? 'border-gold bg-gold/10' : 'theme-aware-border-secondary theme-aware-bg-secondary'}`}
+                  >
+                    <input
+                      type="radio"
+                      name="themeMode"
+                      value={option.value}
+                      checked={selected}
+                      onChange={() => setThemeMode(option.value)}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon className="text-gold text-xl" />
+                      <span className="font-semibold">{option.label}</span>
+                    </div>
+                    <p className="text-sm theme-aware-text-muted">{option.description}</p>
+                  </label>
+                );
+              })}
+            </div>
+            <div className="text-sm theme-aware-text-muted">
+              Current selection: {themeMode === 'system' ? 'System preference' : themeMode === 'dark' ? 'Dark' : 'Light'}{isSystem ? ` (${theme === 'dark' ? 'Dark' : 'Light'} active)` : ''}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <FiGlobe className="text-xl text-green-400" />

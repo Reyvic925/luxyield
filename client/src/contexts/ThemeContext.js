@@ -4,17 +4,31 @@ import { themeConfig, THEMES, THEME_STORAGE_KEY } from '../utils/themeConfig';
 // Create the Theme Context
 export const ThemeContext = createContext();
 
+// Define theme modes for user preference selection
+export const THEME_MODES = {
+  LIGHT: THEMES.LIGHT,
+  DARK: THEMES.DARK,
+  SYSTEM: 'system',
+};
+
 // Themes map to CSS class names
 const THEME_CLASS_MAP = {
   [THEMES.LIGHT]: themeConfig[THEMES.LIGHT].className,
   [THEMES.DARK]: themeConfig[THEMES.DARK].className,
 };
 
+// Default theme mode when no preference is set
+const DEFAULT_THEME_MODE = THEME_MODES.SYSTEM;
+
+const isValidThemeMode = (value) =>
+  [THEME_MODES.LIGHT, THEME_MODES.DARK, THEME_MODES.SYSTEM].includes(value);
+
 /**
  * ThemeProvider component that manages theme state and provides theme utilities
  * Handles system preference detection, localStorage persistence, and real-time OS theme detection
  */
 export const ThemeProvider = ({ children }) => {
+  const [themeMode, setThemeModeState] = useState(DEFAULT_THEME_MODE);
   const [theme, setThemeState] = useState(THEMES.LIGHT);
   const [isInitialized, setIsInitialized] = useState(false);
   const [mediaQueryListener, setMediaQueryListener] = useState(null);
@@ -23,25 +37,21 @@ export const ThemeProvider = ({ children }) => {
    * Applies the theme class to the document element
    * Prevents FOUC (Flash of Unstyled Content) by updating DOM immediately
    */
-  const applyThemeToDOM = useCallback((themeValue) => {
+  const applyThemeToDOM = useCallback((resolvedTheme) => {
     try {
       if (typeof document !== 'undefined' && document.documentElement) {
-        // Remove all theme classes
         Object.values(THEME_CLASS_MAP).forEach((className) => {
           document.documentElement.classList.remove(className);
         });
 
-        // Add the new theme class
-        const themeClass = THEME_CLASS_MAP[themeValue];
+        const themeClass = THEME_CLASS_MAP[resolvedTheme];
         if (themeClass) {
           document.documentElement.classList.add(themeClass);
         }
 
-        // Store as data attribute for additional flexibility
-        document.documentElement.setAttribute('data-theme', themeValue);
+        document.documentElement.setAttribute('data-theme', resolvedTheme);
 
-        // Apply CSS variables from the centralized theme configuration
-        const themeColors = themeConfig[themeValue]?.colors;
+        const themeColors = themeConfig[resolvedTheme]?.colors;
         if (themeColors) {
           Object.entries(themeColors).forEach(([key, value]) => {
             document.documentElement.style.setProperty(`--${key}`, value);
@@ -55,7 +65,6 @@ export const ThemeProvider = ({ children }) => {
 
   /**
    * Detects the system preference for color scheme
-   * Uses prefers-color-scheme media query to determine user's OS-level preference
    */
   const detectSystemTheme = useCallback(() => {
     try {
@@ -66,55 +75,48 @@ export const ThemeProvider = ({ children }) => {
     } catch (error) {
       console.error('Error detecting system theme:', error);
     }
-    return THEMES.LIGHT; // Default fallback
+    return THEMES.LIGHT;
   }, []);
 
   /**
-   * Loads saved theme from localStorage or detects system preference
-   * Called during component initialization to restore or detect theme
+   * Loads saved theme mode from localStorage or defaults to system preference
    */
   const initializeTheme = useCallback(() => {
     try {
-      // First, try to load saved theme preference from localStorage
+      let savedThemeMode = DEFAULT_THEME_MODE;
       if (typeof window !== 'undefined' && window.localStorage) {
         const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-        
-        if (savedTheme && Object.values(THEMES).includes(savedTheme)) {
-          setThemeState(savedTheme);
-          applyThemeToDOM(savedTheme);
-          return savedTheme;
+        if (savedTheme && isValidThemeMode(savedTheme)) {
+          savedThemeMode = savedTheme;
         }
       }
-      
-      // No saved preference, use system preference
-      const systemTheme = detectSystemTheme();
-      setThemeState(systemTheme);
-      applyThemeToDOM(systemTheme);
-      return systemTheme;
+
+      setThemeModeState(savedThemeMode);
+      const resolvedTheme = savedThemeMode === THEME_MODES.SYSTEM ? detectSystemTheme() : savedThemeMode;
+      setThemeState(resolvedTheme);
+      applyThemeToDOM(resolvedTheme);
+      return { savedThemeMode, resolvedTheme };
     } catch (error) {
       console.error('Error initializing theme:', error);
-      applyThemeToDOM(THEMES.LIGHT);
+      setThemeModeState(DEFAULT_THEME_MODE);
       setThemeState(THEMES.LIGHT);
-      return THEMES.LIGHT;
+      applyThemeToDOM(THEMES.LIGHT);
+      return { savedThemeMode: DEFAULT_THEME_MODE, resolvedTheme: THEMES.LIGHT };
     }
   }, [applyThemeToDOM, detectSystemTheme]);
 
-  /**
-   * Changes the theme to a specific value and persists to localStorage
-   * Also cleans up system preference listener if manual preference is set
-   */
   /**
    * Cleans up the media query listener for system theme changes
    */
   const cleanupMediaQueryListener = useCallback(() => {
     try {
-      if (
-        typeof window !== 'undefined' &&
-        window.matchMedia &&
-        mediaQueryListener
-      ) {
+      if (typeof window !== 'undefined' && window.matchMedia && mediaQueryListener) {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        mediaQuery.removeEventListener('change', mediaQueryListener);
+        if (mediaQuery.removeEventListener) {
+          mediaQuery.removeEventListener('change', mediaQueryListener);
+        } else if (mediaQuery.removeListener) {
+          mediaQuery.removeListener(mediaQueryListener);
+        }
         setMediaQueryListener(null);
       }
     } catch (error) {
@@ -123,72 +125,25 @@ export const ThemeProvider = ({ children }) => {
   }, [mediaQueryListener]);
 
   /**
-   * Changes the theme to a specific value and persists to localStorage
-   * Also cleans up system preference listener if manual preference is set
-   */
-  const setTheme = useCallback((newTheme) => {
-    try {
-      if (!Object.values(THEMES).includes(newTheme)) {
-        console.warn(`Invalid theme: ${newTheme}. Must be one of: ${Object.values(THEMES).join(', ')}`);
-        return;
-      }
-
-      // Save to localStorage
-      if (typeof window !== 'undefined' && window.localStorage) {
-        try {
-          localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-        } catch (storageError) {
-          console.warn('Failed to save theme to localStorage:', storageError);
-        }
-      }
-
-      // Update state and apply to DOM
-      setThemeState(newTheme);
-      applyThemeToDOM(newTheme);
-
-      // Clean up system preference listener when user sets manual preference
-      if (mediaQueryListener) {
-        cleanupMediaQueryListener();
-      }
-    } catch (error) {
-      console.error('Error setting theme:', error);
-    }
-  }, [mediaQueryListener, applyThemeToDOM, cleanupMediaQueryListener]);
-
-  /**
-   * Toggles between light and dark themes
-   */
-  const toggleTheme = useCallback(() => {
-    setTheme(theme === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT);
-  }, [theme, setTheme]);
-
-  /**
    * Sets up real-time OS theme detection
-   * Only listens for system preference changes when no manual preference is saved
-   * Uses addEventListener (modern API) instead of deprecated addListener
    */
   const setupSystemThemeListener = useCallback(() => {
     try {
       if (typeof window !== 'undefined' && window.matchMedia) {
-        // Create the media query
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-        // Define the listener function
         const listener = (e) => {
           const newTheme = e.matches ? THEMES.DARK : THEMES.LIGHT;
           setThemeState(newTheme);
           applyThemeToDOM(newTheme);
         };
 
-        // Use modern addEventListener API (replaces deprecated addListener)
         if (mediaQuery.addEventListener) {
           mediaQuery.addEventListener('change', listener);
         } else if (mediaQuery.addListener) {
-          // Fallback for older browsers (deprecated but provides compatibility)
           mediaQuery.addListener(listener);
         }
 
-        setMediaQueryListener(() => listener);
+        setMediaQueryListener(listener);
       }
     } catch (error) {
       console.error('Error setting up system theme listener:', error);
@@ -196,52 +151,76 @@ export const ThemeProvider = ({ children }) => {
   }, [applyThemeToDOM]);
 
   /**
-   * Initialize theme on component mount
-   * Apply theme to DOM before first render to prevent FOUC
+   * Sets the theme mode and persists the preference
    */
-  useEffect(() => {
-    // Initialize theme immediately to prevent FOUC
-    initializeTheme();
+  const setThemeMode = useCallback(
+    (newThemeMode) => {
+      try {
+        if (!isValidThemeMode(newThemeMode)) {
+          console.warn(`Invalid theme mode: ${newThemeMode}. Must be one of: ${Object.values(THEME_MODES).join(', ')}`);
+          return;
+        }
 
-    // Check if a manual preference was saved
-    let hasSavedPreference = false;
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        hasSavedPreference = localStorage.getItem(THEME_STORAGE_KEY) !== null;
+        if (typeof window !== 'undefined' && window.localStorage) {
+          try {
+            localStorage.setItem(THEME_STORAGE_KEY, newThemeMode);
+          } catch (storageError) {
+            console.warn('Failed to save theme mode to localStorage:', storageError);
+          }
+        }
+
+        setThemeModeState(newThemeMode);
+
+        if (newThemeMode === THEME_MODES.SYSTEM) {
+          cleanupMediaQueryListener();
+          const resolvedTheme = detectSystemTheme();
+          setThemeState(resolvedTheme);
+          applyThemeToDOM(resolvedTheme);
+          setupSystemThemeListener();
+        } else {
+          cleanupMediaQueryListener();
+          setThemeState(newThemeMode);
+          applyThemeToDOM(newThemeMode);
+        }
+      } catch (error) {
+        console.error('Error setting theme mode:', error);
       }
-    } catch (error) {
-      console.warn('Error checking for saved theme:', error);
-    }
+    },
+    [applyThemeToDOM, cleanupMediaQueryListener, detectSystemTheme, setupSystemThemeListener]
+  );
 
-    // Only setup system theme listener if no manual preference is saved
-    if (!hasSavedPreference) {
+  /**
+   * Toggles theme between light and dark explicitly
+   */
+  const toggleTheme = useCallback(() => {
+    const nextTheme = theme === THEMES.DARK ? THEMES.LIGHT : THEMES.DARK;
+    setThemeMode(nextTheme);
+  }, [theme, setThemeMode]);
+
+  useEffect(() => {
+    const { savedThemeMode } = initializeTheme();
+    if (savedThemeMode === THEME_MODES.SYSTEM) {
       setupSystemThemeListener();
     }
-
     setIsInitialized(true);
-
-    // Cleanup on unmount
     return () => {
       cleanupMediaQueryListener();
     };
-  }, [initializeTheme, setupSystemThemeListener, cleanupMediaQueryListener]);
+  }, [cleanupMediaQueryListener, initializeTheme, setupSystemThemeListener]);
 
-  // Context value with theme and utility functions
   const value = {
     theme,
-    setTheme,
+    themeMode,
+    setThemeMode,
     toggleTheme,
     initializeTheme,
     isLight: theme === THEMES.LIGHT,
     isDark: theme === THEMES.DARK,
+    isSystem: themeMode === THEME_MODES.SYSTEM,
     isInitialized,
   };
 
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 /**
@@ -250,11 +229,11 @@ export const ThemeProvider = ({ children }) => {
  */
 export const useTheme = () => {
   const context = React.useContext(ThemeContext);
-  
+
   if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
-  
+
   return context;
 };
 
