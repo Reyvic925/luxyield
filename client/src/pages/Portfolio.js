@@ -469,12 +469,12 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                 </div>
                 <div className="mb-1 text-sm"><span className="font-bold">Plan:</span> {investment.planName}</div>
                 <div className="mb-1 text-sm"><span className="font-bold">Invested:</span> ${investment.initialAmount.toLocaleString()}</div>
-                <div className="divide-y divide-gray-800 rounded-md">
-                  <div className="py-2 text-sm flex justify-between items-center">
+                <div className="divide-y divide-gray-800 rounded-md space-y-2">
+                  <div className="py-3 text-sm flex justify-between items-center">
                     <span className="font-bold">Current Value:</span>
                     <span className="font-mono whitespace-nowrap">${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                   </div>
-                  <div className="py-2 text-sm flex justify-between items-center">
+                  <div className="py-3 text-sm flex justify-between items-center">
                     <span className="font-bold">ROI (Expected):</span>
                     <span className="whitespace-nowrap">{(() => {
                       const cfg = findPlanConfigByName(investment.planName);
@@ -484,7 +484,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                       return '--';
                     })()}</span>
                   </div>
-                  <div className="py-2 text-sm flex justify-between items-center">
+                  <div className="pt-4 pb-3 text-sm flex justify-between items-center">
                     <span className="font-bold">Duration:</span>
                     <span className="whitespace-nowrap">{investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</span>
                   </div>
