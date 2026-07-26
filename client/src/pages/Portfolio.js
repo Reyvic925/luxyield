@@ -469,24 +469,14 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                 </div>
                 <div className="mb-1 text-sm break-words"><span className="font-bold">Plan:</span> {investment.planName}</div>
                 <div className="mb-1 text-sm break-words"><span className="font-bold">Invested:</span> ${investment.initialAmount.toLocaleString()}</div>
-                <div className="divide-y divide-gray-800 rounded-md space-y-2">
-                  <div className="py-3 text-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                    <span className="font-bold min-w-0">Current Value:</span>
-                    <span className="font-mono text-right break-words sm:whitespace-nowrap">${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                <div className="mt-3 space-y-2">
+                  <div className="py-2 text-sm flex flex-col gap-1">
+                    <span className="font-bold">Current Value</span>
+                    <span className="font-mono break-words">${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                   </div>
-                  <div className="py-3 text-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                    <span className="font-bold min-w-0">ROI (Expected):</span>
-                    <span className="text-right break-words sm:whitespace-nowrap">{(() => {
-                      const cfg = findPlanConfigByName(investment.planName);
-                      const fallback = investment?.percentReturn ?? investment?.roi ?? investment?.expectedRoi;
-                      if (cfg) return (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`);
-                      if (fallback !== undefined && fallback !== null && fallback !== '') return `${fallback}%`;
-                      return '--';
-                    })()}</span>
-                  </div>
-                  <div className="pt-4 pb-3 text-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                    <span className="font-bold min-w-0">Duration:</span>
-                    <span className="text-right break-words sm:whitespace-nowrap">{investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</span>
+                  <div className="py-2 text-sm flex flex-col gap-1">
+                    <span className="font-bold">Duration</span>
+                    <span className="break-words">{investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</span>
                   </div>
                 </div>
                 <button 
