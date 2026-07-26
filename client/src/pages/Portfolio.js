@@ -372,12 +372,12 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
 
       {/* Investments Table */}
       <div className="glassmorphic p-3 sm:p-6 rounded-xl min-w-0">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 w-full min-w-0">
           <h3 className="text-xl font-bold break-words">Your Investments</h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto min-w-0">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-4 py-2 rounded-lg text-sm ${
+              className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-sm whitespace-nowrap text-center ${
                 activeTab === 'all' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
               } transition`}
             >
@@ -385,7 +385,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
             </button>
             <button
               onClick={() => setActiveTab('active')}
-              className={`px-4 py-2 rounded-lg text-sm ${
+              className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-sm whitespace-nowrap text-center ${
                 activeTab === 'active' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
               } transition`}
             >
@@ -393,7 +393,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
             </button>
             <button
               onClick={() => setActiveTab('completed')}
-              className={`px-4 py-2 rounded-lg text-sm ${
+              className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-sm whitespace-nowrap text-center ${
                 activeTab === 'completed' ? 'bg-gold text-black' : 'bg-gray-800 bg-opacity-50 hover:bg-opacity-70'
               } transition`}
             >
