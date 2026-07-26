@@ -151,65 +151,62 @@ const InvestmentDetail = ({ investment, onClose }) => {
     return () => clearInterval(interval);
   }, [investment.endDate]);
 
-  useEffect(() => {
+    useEffect(() => {
     setLiveInvestment(investment); // Reset on open
-    const interval = setInterval(async () => {
+
+    let mounted = true;
+    const fetchAndMerge = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const headers = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const headers = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const res = await fetch(`/api/portfolio/investment/${investment._id || investment.id}`, { headers });
-        if (res.ok) {
-          const text = await res.text();
-          let data = null;
-          try { data = JSON.parse(text); } catch { data = text; }
-          const fetched = (data && data.investment) ? data.investment : data;
+        const res = await axios.get(`/api/portfolio/investment/${investment._id || investment.id}`);
+        const data = res?.data;
+        const fetched = (data && data.investment) ? data.investment : data;
 
-          // Normalize transactions if server returned lastTransactions only
-          if (fetched && !fetched.transactions && fetched.lastTransactions) {
-            fetched.transactions = fetched.lastTransactions.map(t => ({ ...t, amount: Number(t.amount || 0), date: t.date, description: t.description || '' }));
-          }
-
-          // Merge transactions instead of blindly overwriting so local added txs don't disappear
-          setLiveInvestment(prev => {
-            if (!fetched) return prev;
-            const prevTx = (prev && (prev.transactions || prev.lastTransactions)) ? (prev.transactions || prev.lastTransactions) : [];
-            const fetchedTx = fetched.transactions || [];
-
-            const map = new Map();
-            const addTx = (tx) => {
-              const key = tx._id ? String(tx._id) : `${tx.type}|${Number(tx.amount||0)}|${tx.date}|${tx.description||''}`;
-              if (!map.has(key)) {
-                map.set(key, { ...tx, amount: Number(tx.amount || 0) });
-              }
-            };
-
-            prevTx.forEach(addTx);
-            fetchedTx.forEach(addTx);
-
-            const mergedTxs = Array.from(map.values()).sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            // Merge fetched fields with prev: prefer fetched when present, otherwise keep previous values
-            const merged = { ...fetched };
-            if (prev) {
-              Object.keys(prev).forEach(k => {
-                if (merged[k] === undefined || merged[k] === null || merged[k] === '') {
-                  merged[k] = prev[k];
-                }
-              });
-            }
-            merged.transactions = mergedTxs;
-            return merged;
-          });
+        // Normalize transactions if server returned lastTransactions only
+        if (fetched && !fetched.transactions && fetched.lastTransactions) {
+          fetched.transactions = fetched.lastTransactions;
         }
+
+        if (!mounted) return;
+        // Merge transactions instead of blindly overwriting so local added txs don't disappear
+        setLiveInvestment(prev => {
+          if (!fetched) return prev;
+
+          const prevTx = (prev && (prev.transactions || prev.lastTransactions || prev.transactionsHistory || prev.tx || prev.statement?.transactions)) ? (prev.transactions || prev.lastTransactions || prev.transactionsHistory || prev.tx || prev.statement?.transactions) : [];
+          const fetchedTx = fetched.transactions || fetched.lastTransactions || fetched.transactionsHistory || [];
+
+          const map = new Map();
+          const addTx = (tx) => {
+            const key = tx._id ? String(tx._id) : `${tx.type}|${Number(tx.amount ?? tx.value ?? 0)}|${tx.date || tx.createdAt || tx.timestamp}|${tx.description || tx.note || ''}`;
+            if (!map.has(key)) {
+              map.set(key, { ...tx, amount: Number(tx.amount ?? tx.value ?? 0) });
+            }
+          };
+
+          prevTx.forEach(addTx);
+          fetchedTx.forEach(addTx);
+
+          const mergedTxs = Array.from(map.values()).sort((a,b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+
+          // Merge fetched fields with prev: prefer fetched when present, otherwise keep previous values
+          const merged = { ...fetched };
+          if (prev) {
+            Object.keys(prev).forEach(k => {
+              if (merged[k] === undefined || merged[k] === null || merged[k] === '') {
+                merged[k] = prev[k];
+              }
+            });
+          }
+          merged.transactions = mergedTxs;
+          return merged;
+        });
       } catch (err) {
-        console.error('[INVEST_DETAIL] periodic fetch error', err);
+        console.error('[INVEST_DETAIL] fetchAndMerge error', err);
       }
-    }, 15000); // Refresh every 15 seconds
-    return () => clearInterval(interval);
+    };
+
+    fetchAndMerge();
+    const id = setInterval(fetchAndMerge, 15000);
+    return () => { mounted = false; clearInterval(id); };
   }, [investment]);
 
   // Use liveInvestment.transactions or fallback to other possible transaction sources
@@ -483,3 +480,4 @@ const InvestmentDetail = ({ investment, onClose }) => {
 };
 
 export default InvestmentDetail
+
