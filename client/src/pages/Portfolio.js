@@ -182,23 +182,32 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
   // Calculate correct current ROI and value for active investments
   function getCurrentRoiAndValue(investment) {
     if (!investment) return { roi: '0.00', value: '0.00', expectedRoi: '' };
-    const plan = planConfig[investment.planName];
-    if (typeof investment.currentValue === 'number' && !isNaN(investment.currentValue)) {
+    // Use helper to find plan config (case-insensitive)
+    const plan = findPlanConfigByName(investment.planName) || null;
+
+    // Helper to resolve expected roi from various sources
+    const resolveExpectedRoi = () => {
+      return plan?.roi ?? investment.percentReturn ?? investment.roi ?? investment.expectedRoi ?? '';
+    };
+
+    if (typeof investment.currentValue === 'number' && !isNaN(investment.currentValue) && Number(investment.initialAmount) > 0) {
       const roi = ((investment.currentValue - investment.initialAmount) / investment.initialAmount) * 100;
       return {
         roi: roi.toFixed(2),
         value: investment.currentValue.toFixed(2),
-        expectedRoi: plan?.roi || ''
+        expectedRoi: resolveExpectedRoi()
       };
     }
+
     if (investment.status !== 'active' || !plan) {
       return {
-        roi: Number(investment.roi).toFixed(2),
-        value: Number(investment.currentValue).toFixed(2),
-        expectedRoi: plan?.roi || ''
+        roi: (Number(investment.roi) || 0).toFixed(2),
+        value: (Number(investment.currentValue) || 0).toFixed(2),
+        expectedRoi: resolveExpectedRoi()
       };
     }
-    const roi = plan.roi;
+
+    const roi = plan?.roi ?? 0;
     const start = new Date(investment.startDate);
     const end = new Date(investment.endDate);
     const now = new Date();
@@ -206,7 +215,7 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
     const elapsedSeconds = Math.max(0, Math.min((now - start) / 1000, totalSeconds));
     const progress = totalSeconds > 0 ? elapsedSeconds / totalSeconds : 0;
     const currentRoi = roi * progress;
-    const currentValue = investment.initialAmount * (1 + currentRoi / 100);
+    const currentValue = (Number(investment.initialAmount) || 0) * (1 + currentRoi / 100);
     return {
       roi: currentRoi.toFixed(2),
       value: currentValue.toFixed(2),
@@ -279,7 +288,10 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                 {(() => {
                   if (!activeInvestment) return '--';
                   const cfg = findPlanConfigByName(activeInvestment.planName);
-                  return cfg ? (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`) : '--';
+                  const fallback = activeInvestment?.percentReturn ?? activeInvestment?.roi ?? activeInvestment?.expectedRoi;
+                  if (cfg) return (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`);
+                  if (fallback !== undefined && fallback !== null && fallback !== '') return `${fallback}%`;
+                  return '--';
                 })()}
               </h2>
             </div>
@@ -443,7 +455,10 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                     <td className="py-4 text-right font-mono text-gold">
                       {(() => {
                         const cfg = findPlanConfigByName(investment.planName);
-                        return cfg ? (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`) : '--';
+                        const fallback = investment?.percentReturn ?? investment?.roi ?? investment?.expectedRoi;
+                        if (cfg) return (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`);
+                        if (fallback !== undefined && fallback !== null && fallback !== '') return `${fallback}%`;
+                        return '--';
                       })()}
                     </td>
                     <td className="py-4">
@@ -487,7 +502,10 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
                 <div className="mb-1 text-sm"><span className="font-bold">Current Value:</span> ${Number(value).toLocaleString(undefined, {maximumFractionDigits: 2})}</div>
                 <div className="mb-1 text-sm"><span className="font-bold">ROI (Expected):</span> {(() => {
                   const cfg = findPlanConfigByName(investment.planName);
-                  return cfg ? (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`) : '--';
+                  const fallback = investment?.percentReturn ?? investment?.roi ?? investment?.expectedRoi;
+                  if (cfg) return (typeof cfg.roi === 'number' ? `${cfg.roi}%` : `${cfg.roi}`);
+                  if (fallback !== undefined && fallback !== null && fallback !== '') return `${fallback}%`;
+                  return '--';
                 })()}</div>
                 <div className="mb-1 text-sm"><span className="font-bold">Duration:</span> {investment.startDate ? new Date(investment.startDate).toLocaleDateString() : ''} - {investment.endDate ? new Date(investment.endDate).toLocaleDateString() : ''}</div>
                 <button 
