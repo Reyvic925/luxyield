@@ -7,7 +7,7 @@ import { useTheme } from '../../hooks/useTheme';
 
 const AdminLayout = () => {
   const { admin, logout } = useAdminAuth();
-  const { toggleTheme, isDark } = useTheme();
+  const { theme, themeMode, setThemeMode, isDark } = useTheme();
 
   const navItems = [
     { to: '/admin', icon: <FiHome size={22} />, label: 'Dashboard', description: 'Overview & Quick Links' },
@@ -27,7 +27,7 @@ const AdminLayout = () => {
 
   return (
     <div 
-      className="min-h-screen relative transition-colors duration-300"
+      className="min-h-screen relative transition-colors duration-300 theme-aware-bg-primary theme-aware-text"
       style={{ 
         backgroundColor: 'var(--bg-primary)',
         color: 'var(--text-primary)'
@@ -35,9 +35,9 @@ const AdminLayout = () => {
     >
       {/* Header */}
       <div 
-        className="sticky top-0 z-40 bg-opacity-95 backdrop-blur-md border-b transition-colors duration-300"
+        className="sticky top-0 z-40 bg-opacity-95 backdrop-blur-md border-b theme-aware-border-secondary transition-colors duration-300"
         style={{ 
-          backgroundColor: `rgba(${isDark ? '15, 15, 15' : '255, 255, 255'}, 0.95)`,
+          backgroundColor: 'var(--bg-primary)',
           borderColor: 'var(--border-primary)'
         }}
       >
@@ -46,27 +46,22 @@ const AdminLayout = () => {
             <div className="w-12 h-12 rounded-xl bg-gold text-black flex items-center justify-center font-extrabold text-lg">L</div>
             <div>
               <div className="text-xl font-bold tracking-wider">LuxHedge Admin</div>
-              <div style={{ color: 'var(--text-secondary)' }} className="text-xs">{admin?.name ? `Logged in as ${admin.name}` : 'Administrator panel'}</div>
+              <div className="theme-aware-text-secondary text-xs">{admin?.name ? `Logged in as ${admin.name}` : 'Administrator panel'}</div>
             </div>
           </div>
           <div className="flex items-center gap-3 justify-end">
             <button
-              onClick={toggleTheme}
-              className="px-3 py-2 rounded-lg transition-all duration-300 flex items-center gap-2"
-              style={{
-                backgroundColor: 'var(--bg-secondary)',
-                color: '#D4AF37',
-                border: '1px solid var(--border-primary)'
-              }}
-              aria-label="Toggle theme"
+              type="button"
+              onClick={() => setThemeMode(isDark ? 'light' : 'dark')}
+              className="px-3 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 theme-aware-bg-secondary theme-aware-border-secondary border"
+              title="Toggle theme"
             >
-              {isDark ? <FiSun size={18} /> : <FiMoon size={18} />}
+              {isDark ? <FiSun size={18} className="text-gold" /> : <FiMoon size={18} className="text-gold" />}
               <span>{isDark ? 'Light' : 'Dark'}</span>
             </button>
             <button
               onClick={logout}
-              className="px-3 py-2 rounded-lg text-white hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: '#DC2626' }}
+              className="px-3 py-2 rounded-lg text-white hover:opacity-90 transition-opacity bg-red-600"
             >
               Logout
             </button>
@@ -81,36 +76,28 @@ const AdminLayout = () => {
             <Link
               key={to}
               to={to}
-              className="group block rounded-3xl p-5 text-left transition-all duration-300"
+              className="group block rounded-3xl p-5 text-left transition-all duration-300 theme-aware-bg-secondary theme-aware-border-secondary border hover:border-gold"
               style={{
                 backgroundColor: 'var(--bg-secondary)',
-                border: `1px solid var(--border-primary)`,
+                borderColor: 'var(--border-primary)',
                 color: 'var(--text-primary)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#D4AF37';
-                e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-primary)';
-                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
               }}
             >
               <div 
-                className="flex h-12 w-12 items-center justify-center rounded-2xl text-gold mb-4 transition-all duration-300"
+                className="flex h-12 w-12 items-center justify-center rounded-2xl text-gold mb-4 transition-all duration-300 theme-aware-bg-tertiary"
                 style={{ backgroundColor: 'var(--bg-tertiary)' }}
               >
                 {icon}
               </div>
               <div className="text-base font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>{label}</div>
-              <p className="text-sm leading-5" style={{ color: 'var(--text-secondary)' }}>{description}</p>
+              <p className="theme-aware-text-secondary text-sm leading-5">{description}</p>
             </Link>
           ))}
         </section>
 
         {/* Main Content Area */}
         <div 
-          className="rounded-3xl border p-4 md:p-6 min-h-[60vh] transition-colors duration-300"
+          className="rounded-3xl border p-4 md:p-6 min-h-[60vh] transition-colors duration-300 theme-aware-bg-secondary theme-aware-border-secondary"
           style={{
             backgroundColor: 'var(--bg-secondary)',
             borderColor: 'var(--border-primary)'

@@ -38,18 +38,18 @@ const WithdrawalModal = ({ isOpen, onClose, investments }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-neutral-900/50 flex items-center justify-center z-50">
-      <div className="glassmorphic p-6 rounded-xl w-full max-w-full sm:max-w-md mx-4">
+    <div className="fixed inset-0 flex items-center justify-center z-50 theme-overlay">
+      <div className="glassmorphic p-6 rounded-xl w-full max-w-full sm:max-w-md mx-4 theme-aware-bg-secondary border theme-aware-border-secondary">
         <h2 className="text-2xl font-bold mb-4 text-gold">Simulated Withdrawal</h2>
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-neutral-400 mb-2">Investment</label>
+            <label className="block theme-aware-text-secondary mb-2">Investment</label>
             <select
               name="investmentId"
               value={formData.investmentId}
               onChange={handleChange}
-              className="w-full bg-transparent border border-neutral-600 rounded-lg p-2 text-neutral-100"
+              className="w-full theme-aware-bg-primary border theme-aware-border-secondary theme-aware-text rounded-lg p-2"
               required
             >
               <option value="">Select Investment</option>
@@ -62,7 +62,7 @@ const WithdrawalModal = ({ isOpen, onClose, investments }) => {
           </div>
           
           <div className="mb-4">
-            <label className="block text-neutral-400 mb-2">Amount (USD)</label>
+            <label className="block theme-aware-text-secondary mb-2">Amount (USD)</label>
             <input
               type="number"
               name="amount"
@@ -70,18 +70,18 @@ const WithdrawalModal = ({ isOpen, onClose, investments }) => {
               onChange={handleChange}
               min="100"
               step="100"
-              className="w-full bg-transparent border border-neutral-600 rounded-lg p-2 text-neutral-100"
+              className="w-full theme-aware-bg-primary border theme-aware-border-secondary theme-aware-text rounded-lg p-2"
               required
             />
           </div>
           
           <div className="mb-6">
-            <label className="block text-neutral-400 mb-2">Method</label>
+            <label className="block theme-aware-text-secondary mb-2">Method</label>
             <select
               name="method"
               value={formData.method}
               onChange={handleChange}
-              className="w-full bg-transparent border border-neutral-600 rounded-lg p-2 text-neutral-100"
+              className="w-full theme-aware-bg-primary border theme-aware-border-secondary theme-aware-text rounded-lg p-2"
               required
             >
               <option value="bank_transfer">Bank Transfer</option>
@@ -94,17 +94,17 @@ const WithdrawalModal = ({ isOpen, onClose, investments }) => {
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto px-4 py-2 border border-neutral-600 rounded-lg hover:bg-neutral-800 transition"
+              className="w-full sm:w-auto px-4 py-2 border theme-aware-border-secondary rounded-lg hover:theme-aware-bg-tertiary transition"
               disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="w-full sm:w-auto px-4 py-2 bg-red-500 bg-opacity-20 text-red-400 rounded-lg hover:bg-opacity-30 transition flex items-center justify-center"
+              className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center justify-center"
               disabled={loading}
             >
-              {loading && <div className="animate-spin rounded-full h-4 w-4 mr-2 border-t-2 border-b-2 border-red-400"></div>}
+              {loading && <div className="animate-spin rounded-full h-4 w-4 mr-2 border-t-2 border-b-2 border-white"></div>}
               Request Withdrawal
             </button>
           </div>

@@ -34,12 +34,12 @@ export default function CryptoPriceWidget({ portfolioUSD = 0 }) {
 
   return (
     <div className="glass-card p-6 rounded-xl mb-6 shadow-lg">
-      <h3 className="font-bold text-lg mb-4 text-black dark:text-white">Live Crypto Prices</h3>
-      {loading ? <div className="text-gray-700 dark:text-gray-300">Loading...</div> : (
+      <h3 className="font-bold text-lg mb-4 theme-aware-text">Live Crypto Prices</h3>
+      {loading ? <div className="theme-aware-text-secondary">Loading...</div> : (
         <div className="flex flex-wrap gap-6">
           {COINS.map(coin => (
             <div key={coin.id} className="flex flex-col items-center">
-              <span className="font-semibold text-black dark:text-white">{coin.symbol}</span>
+              <span className="font-semibold theme-aware-text">{coin.symbol}</span>
               <span className="text-green-400 text-xl">${prices[coin.id]?.usd?.toLocaleString() || 'N/A'}</span>
             </div>
           ))}
@@ -47,8 +47,8 @@ export default function CryptoPriceWidget({ portfolioUSD = 0 }) {
       )}
       {portfolioUSD > 0 && prices['bitcoin'] && (
         <div className="mt-6">
-          <div className="font-semibold text-black dark:text-white">Your Portfolio Value</div>
-          <div className="flex gap-4 mt-2 text-black dark:text-white">
+          <div className="font-semibold theme-aware-text">Your Portfolio Value</div>
+          <div className="flex gap-4 mt-2 theme-aware-text">
             <span>${portfolioUSD.toLocaleString()} USD</span>
             <span>|
               {(portfolioUSD / prices['bitcoin'].usd).toFixed(6)} BTC

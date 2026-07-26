@@ -27,12 +27,12 @@ const Leaderboard = () => {
         <FiAward className="text-gold" /> Fund Leaderboard
       </h2>
       {loading ? (
-        <div className="text-gray-400 animate-pulse">Loading leaderboard...</div>
+        <div className="theme-aware-text-muted animate-pulse">Loading leaderboard...</div>
       ) : error ? (
         <div className="text-red-500">{error}</div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-left bg-gray-900 rounded-lg shadow-lg">
+          <table className="w-full text-left theme-aware-bg-secondary rounded-lg shadow-lg">
             <thead>
               <tr className="text-gold text-lg">
                 <th className="p-3">Rank</th>
@@ -45,7 +45,7 @@ const Leaderboard = () => {
             </thead>
             <tbody>
               {leaders.map((user, idx) => (
-                <tr key={user.id || idx} className={`border-b border-gray-800 ${idx < 3 ? 'bg-gold bg-opacity-10' : ''}`}>
+                <tr key={user.id || idx} className={`theme-aware-border-secondary border-b ${idx < 3 ? 'bg-gold bg-opacity-10' : ''}`}>
                   <td className="p-3 font-bold flex items-center gap-2">
                     {idx === 0 && <FiAward className="text-yellow-400 animate-bounce" />}#{idx + 1}
                   </td>
@@ -68,7 +68,7 @@ const Leaderboard = () => {
           </table>
         </div>
       )}
-      <div className="mt-6 text-gray-400 text-sm flex items-center justify-center gap-2">
+      <div className="mt-6 theme-aware-text-muted text-sm flex items-center justify-center gap-2">
         <FiBarChart2 className="text-gold" />
         Live leaderboard updates every minute. Data is simulated for demo.
       </div>

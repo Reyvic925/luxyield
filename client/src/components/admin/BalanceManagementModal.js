@@ -70,29 +70,29 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
   };
 
   return (
-    <div className="dark:bg-gray-800 bg-white rounded-xl p-6 w-full max-w-full sm:max-w-md mx-4 dark:border-gray-700 border border-gray-300">
+    <div className="theme-aware-bg rounded-xl p-6 w-full max-w-full sm:max-w-md mx-4 theme-aware-border">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold dark:text-white text-gray-900">Manage User Balance</h2>
-        <button onClick={onClose} className="dark:text-gray-400 dark:hover:text-white text-gray-600 hover:text-gray-900">
+        <h2 className="text-xl font-bold theme-aware-text">Manage User Balance</h2>
+        <button onClick={onClose} className="theme-aware-text-secondary hover:theme-aware-text">
           ✕
         </button>
       </div>
 
       <div className="mb-4">
-        <p className="dark:text-gray-400 text-gray-600">Available Balance: <span className="dark:text-white text-gray-900 font-mono">${(user.availableBalance || user.balance || 0).toLocaleString()}</span></p>
-        <p className="dark:text-gray-400 text-gray-600">User: <span className="dark:text-white text-gray-900">{user.name}</span></p>
+        <p className="theme-aware-text-secondary">Available Balance: <span className="theme-aware-text font-mono">${(user.availableBalance || user.balance || 0).toLocaleString()}</span></p>
+        <p className="theme-aware-text-secondary">User: <span className="theme-aware-text">{user.name}</span></p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium dark:text-gray-300 text-gray-700 mb-1">Operation Type</label>
+          <label className="block text-sm font-medium theme-aware-text-secondary mb-1">Operation Type</label>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               className={`flex items-center justify-center px-4 py-2 rounded-lg transition-all ${
                 type === 'add' 
-                  ? 'dark:bg-green-500 dark:bg-opacity-20 dark:text-green-400 dark:border-green-500 bg-green-100 text-green-700 border border-green-300' 
-                  : 'dark:bg-gray-700 dark:text-gray-400 bg-gray-100 text-gray-600'
+                  ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-500' 
+                  : 'theme-aware-bg-secondary theme-aware-text-secondary'
               }`}
               onClick={() => setType('add')}
             >
@@ -102,8 +102,8 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
               type="button"
               className={`flex items-center justify-center px-4 py-2 rounded-lg transition-all ${
                 type === 'subtract' 
-                  ? 'dark:bg-red-500 dark:bg-opacity-20 dark:text-red-400 dark:border-red-500 bg-red-100 text-red-700 border border-red-300' 
-                  : 'dark:bg-gray-700 dark:text-gray-400 bg-gray-100 text-gray-600'
+                  ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-500' 
+                  : 'theme-aware-bg-secondary theme-aware-text-secondary'
               }`}
               onClick={() => setType('subtract')}
             >
@@ -113,23 +113,23 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium dark:text-gray-300 text-gray-700 mb-1">Amount ($)</label>
+          <label className="block text-sm font-medium theme-aware-text-secondary mb-1">Amount ($)</label>
           <div className="relative">
-            <FiDollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 dark:text-gray-400 text-gray-600" />
+            <FiDollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-aware-text-secondary" />
             <input
               type="number"
               step="0.01"
               min="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500 transition-all"
+              className="w-full pl-10 pr-4 py-2 theme-aware-bg-primary theme-aware-border theme-aware-text rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               placeholder="Enter amount"
             />
           </div>
         </div>
 
         {error && (
-          <div className="dark:bg-red-500 dark:bg-opacity-20 dark:text-red-400 bg-red-100 text-red-700 p-3 rounded-lg text-sm">
+          <div className="bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 p-3 rounded-lg text-sm">
             {error}
           </div>
         )}
@@ -138,7 +138,7 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-all"
+            className="w-full sm:w-auto px-4 py-2 theme-aware-bg-secondary theme-aware-hover-bg theme-aware-text rounded-lg transition-all"
           >
             Cancel
           </button>
@@ -146,7 +146,7 @@ const BalanceManagementModal = ({ user, onClose, onUpdate }) => {
             type="submit"
             disabled={loading}
             className={`w-full sm:w-auto px-4 py-2 rounded-lg flex items-center justify-center font-medium transition-all ${
-              loading ? 'dark:bg-blue-500 dark:bg-opacity-50 bg-blue-300 cursor-not-allowed' : 'dark:bg-blue-500 dark:hover:bg-blue-600 bg-blue-500 hover:bg-blue-600 text-white'
+              loading ? 'bg-blue-300 dark:bg-blue-500/50 cursor-not-allowed' : 'bg-blue-500 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700 text-white'
             }`}
           >
             {loading && (

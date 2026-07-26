@@ -1,4 +1,4 @@
-ï»¿// src/components/admin/FundEditor.js
+// src/components/admin/FundEditor.js
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSave, FiTrash2 } from 'react-icons/fi';
 import FundPerformanceChart from './FundPerformanceChart';
@@ -167,15 +167,15 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="dark:bg-gray-800 bg-white rounded-xl w-full max-w-full sm:max-w-4xl mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold dark:scrollbar-track-gray-900/60 scrollbar-track-gray-100">
+      <div className="theme-aware-bg rounded-xl w-full max-w-full sm:max-w-4xl mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-100 ">
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
-            <h2 className="text-2xl font-bold dark:text-white text-gray-900">
+            <h2 className="text-2xl font-bold theme-aware-text">
               {fund ? 'Edit Fund' : 'Create New Fund'}
             </h2>
             <button
               onClick={onCancel}
-              className="p-2 rounded-full dark:hover:bg-gray-700 hover:bg-gray-100 dark:text-gray-400 text-gray-600"
+              className="p-2 rounded-full theme-aware-hover-bg theme-aware-text-secondary"
             >
               <FiX size={24} />
             </button>
@@ -184,24 +184,24 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block dark:text-gray-300 text-gray-700 mb-2 font-medium">Fund Name</label>
+                <label className="block theme-aware-text-secondary mb-2 font-medium">Fund Name</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
+                  className="w-full p-3 theme-aware-bg-primary theme-aware-border theme-aware-text rounded-lg focus:outline-none focus:ring-2 focus:ring-gold transition-all"
                   required
                 />
               </div>
 
               <div>
-                <label className="block dark:text-gray-300 text-gray-700 mb-2 font-medium">Status</label>
+                <label className="block theme-aware-text-secondary mb-2 font-medium">Status</label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
+                  className="w-full p-3 theme-aware-bg-primary theme-aware-border theme-aware-text bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold  transition-all"
                 >
                   <option value="active">Active</option>
                   <option value="paused">Paused</option>
@@ -210,24 +210,24 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block dark:text-gray-300 text-gray-700 mb-2 font-medium">Description</label>
+                <label className="block theme-aware-text-secondary mb-2 font-medium">Description</label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
+                  className="w-full p-3 theme-aware-bg-primary theme-aware-border theme-aware-text bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold  transition-all"
                   required
                 />
               </div>
 
               <div>
-                <label className="block dark:text-gray-300 text-gray-700 mb-2 font-medium">Investment Strategy</label>
+                <label className="block theme-aware-text-secondary mb-2 font-medium">Investment Strategy</label>
                 <select
                   name="strategy"
                   value={formData.strategy}
                   onChange={handleChange}
-                  className="w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
+                  className="w-full p-3 theme-aware-bg-primary theme-aware-border theme-aware-text bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold  transition-all"
                 >
                   <option value="buy_hold">Buy & Hold</option>
                   <option value="yield_farming">Yield Farming</option>
@@ -238,12 +238,12 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
               </div>
 
               <div>
-                <label className="block dark:text-gray-300 text-gray-700 mb-2 font-medium">Available For</label>
+                <label className="block theme-aware-text-secondary mb-2 font-medium">Available For</label>
                 <select
                   name="tier"
                   value={formData.tier}
                   onChange={handleChange}
-                  className="w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
+                  className="w-full p-3 theme-aware-bg-primary theme-aware-border theme-aware-text bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold  transition-all"
                 >
                   <option value="all">All Tiers</option>
                   <option value="basic">Basic Only</option>
@@ -254,29 +254,29 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
               </div>
 
               <div>
-                <label className="block dark:text-gray-300 text-gray-700 mb-2 font-medium">ROI Range (%)</label>
+                <label className="block theme-aware-text-secondary mb-2 font-medium">ROI Range (%)</label>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs dark:text-gray-400 text-gray-600">Minimum</label>
+                    <label className="text-xs theme-aware-text-secondary">Minimum</label>
                     <input
                       type="number"
                       name="min"
                       value={formData.roiRange.min}
                       onChange={handleRangeChange}
-                      className="w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
+                      className="w-full p-3 theme-aware-bg-primary theme-aware-border theme-aware-text bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold  transition-all"
                       step="0.1"
                       min="0"
                       required
                     />
                   </div>
                   <div>
-                    <label className="text-xs dark:text-gray-400 text-gray-600">Maximum</label>
+                    <label className="text-xs theme-aware-text-secondary">Maximum</label>
                     <input
                       type="number"
                       name="max"
                       value={formData.roiRange.max}
                       onChange={handleRangeChange}
-                      className="w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
+                      className="w-full p-3 theme-aware-bg-primary theme-aware-border theme-aware-text bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold  transition-all"
                       step="0.1"
                       min={formData.roiRange.min}
                       required
@@ -286,7 +286,7 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
               </div>
 
               <div>
-                <label className="block dark:text-gray-300 text-gray-700 mb-2 font-medium">Lock Periods (Days)</label>
+                <label className="block theme-aware-text-secondary mb-2 font-medium">Lock Periods (Days)</label>
                 <div className="space-y-2">
                   {formData.lockPeriods.map((period, index) => (
                     <div key={index} className="flex items-center space-x-2">
@@ -294,14 +294,14 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
                         type="number"
                         value={period}
                         onChange={(e) => handleLockPeriodChange(index, e.target.value)}
-                        className="w-24 p-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold dark:focus:ring-gold transition-all"
+                        className="w-24 p-3 theme-aware-bg-primary theme-aware-border theme-aware-text bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold  transition-all"
                         min="1"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => removeLockPeriod(index)}
-                        className="p-2 dark:text-red-400 dark:hover:bg-red-500 dark:hover:bg-opacity-10 text-red-600 hover:bg-red-100 rounded-lg transition-all"
+                        className="p-2 text-red-400 hover:bg-red-100 dark:hover:bg-red-500/10 text-red-600 hover:bg-red-100 rounded-lg transition-all"
                       >
                         <FiTrash2 />
                       </button>
@@ -310,7 +310,7 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
                   <button
                     type="button"
                     onClick={addLockPeriod}
-                    className="mt-2 px-4 py-2 dark:bg-gray-700 dark:hover:bg-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg dark:text-gray-300 text-gray-700 transition-all"
+                    className="mt-2 px-4 py-2 dark:bg-gray-700 theme-aware-bg-secondary theme-aware-hover-bg rounded-lg theme-aware-text-secondary transition-all"
                   >
                     Add Lock Period
                   </button>
@@ -320,7 +320,7 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
 
             {fund && (
               <div>
-                <h3 className="text-lg font-bold dark:text-white text-gray-900 mb-4">Performance Simulation</h3>
+                <h3 className="text-lg font-bold theme-aware-text mb-4">Performance Simulation</h3>
                 <div className="h-64">
                   <FundPerformanceChart data={formData.performance} />
                 </div>
@@ -328,11 +328,11 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
             )}
 
             <div className="mt-8">
-              <h3 className="text-lg font-bold dark:text-white text-gray-900 mb-4">Investment Plans</h3>
+              <h3 className="text-lg font-bold theme-aware-text mb-4">Investment Plans</h3>
               <div className="hidden md:block">
-              <table className="w-full mb-4 text-sm rounded-lg dark:border-gray-700 border border-gray-300 overflow-hidden">
+              <table className="w-full mb-4 text-sm rounded-lg border theme-aware-border overflow-hidden">
                 <thead>
-                  <tr className="text-gold dark:bg-gray-900 bg-gray-100 dark:border-b-gray-700 border-b border-gray-300">
+                  <tr className="text-gold theme-aware-bg-secondary border-b theme-aware-border-secondary">
                     <th className="py-3 px-4 font-semibold">Name</th>
                     <th className="py-3 px-4 font-semibold">ROI (%)</th>
                     <th className="py-3 px-4 font-semibold">Lock (days)</th>
@@ -344,7 +344,7 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
                 </thead>
                 <tbody>
                   {plans.map((plan, idx) => (
-                    <tr key={idx} className="dark:border-b-gray-800 dark:hover:bg-gray-800 border-b border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                    <tr key={idx} className="border-b theme-aware-border-secondary theme-aware-hover-bg dark:hover:bg-gray-800 transition">
                       <td className="py-3 px-4">{plan.name}</td>
                       <td className="py-3 px-4">{plan.roi}</td>
                       <td className="py-3 px-4">{plan.lockPeriod}</td>
@@ -368,8 +368,8 @@ const FundEditor = ({ fund, onSave, onCancel }) => {
                     <div className="flex justify-between items-start">
                       <div className="min-w-0">
                         <div className="font-semibold truncate">{plan.name}</div>
-                        <div className="text-xs text-gray-400">ROI: {plan.roi}% â€¢ Lock: {plan.lockPeriod} days</div>
-                        <div className="text-xs text-gray-400">Min: {plan.minInvestment} â€¢ Max: {plan.maxInvestment}</div>
+                        <div className="text-xs text-gray-400">ROI: {plan.roi}% • Lock: {plan.lockPeriod} days</div>
+                        <div className="text-xs text-gray-400">Min: {plan.minInvestment} • Max: {plan.maxInvestment}</div>
                       </div>
                       <div className="ml-3 text-right">
                         <div className="text-xs text-gray-400">{plan.compounding ? 'Compounding' : 'No Compounding'}</div>

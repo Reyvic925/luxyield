@@ -104,15 +104,15 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 md:p-6 shadow-xl w-full min-w-0 overflow-hidden border border-gray-300 dark:border-gray-700">
+    <div className="theme-aware-bg rounded-xl p-4 md:p-6 shadow-xl w-full min-w-0 overflow-hidden theme-aware-border">
       <div className="w-full flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 min-w-0">
         {/* Search Bar */}
         <div className="relative w-full lg:w-96 min-w-0">
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-aware-text-secondary" />
           <input
             type="text"
             placeholder="Search by name, email or ID..."
-            className="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all min-w-0 border border-gray-300 dark:border-gray-600"
+            className="w-full pl-10 pr-4 py-3 theme-aware-bg-secondary theme-aware-text rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all min-w-0 border theme-aware-border"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -122,7 +122,7 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
   <div className="flex flex-wrap items-center gap-3 justify-end w-full lg:w-auto">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all border border-gray-300 dark:border-gray-600"
+            className="flex items-center px-4 py-2 theme-aware-bg-secondary theme-aware-text rounded-lg theme-aware-hover-bg transition-all border theme-aware-border"
           >
             <FiFilter className="mr-2" />
             <span>Filters</span>
@@ -130,19 +130,19 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
           </button>
 
           <div className="relative group">
-            <button className="flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all border border-gray-300 dark:border-gray-600">
+            <button className="flex items-center px-4 py-2 theme-aware-bg-secondary theme-aware-text rounded-lg theme-aware-hover-bg transition-all border theme-aware-border">
               <FiDownload className="mr-2" />
               <span>Export</span>
               <FiChevronDown className="ml-2" />
             </button>
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-xl hidden group-hover:block z-10 border border-gray-300 dark:border-gray-600">
-              <button className="w-full text-left px-4 py-2 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-all">Export as CSV</button>
-              <button className="w-full text-left px-4 py-2 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-all">Export as PDF</button>
-              <button className="w-full text-left px-4 py-2 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-all">Export as Excel</button>
+            <div className="absolute right-0 mt-2 w-48 theme-aware-bg-secondary rounded-lg shadow-xl hidden group-hover:block z-10 border theme-aware-border">
+              <button className="w-full text-left px-4 py-2 theme-aware-text theme-aware-hover-bg transition-all">Export as CSV</button>
+              <button className="w-full text-left px-4 py-2 theme-aware-text theme-aware-hover-bg transition-all">Export as PDF</button>
+              <button className="w-full text-left px-4 py-2 theme-aware-text theme-aware-hover-bg transition-all">Export as Excel</button>
             </div>
           </div>
 
-          <button className="flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all border border-gray-300 dark:border-gray-600">
+          <button className="flex items-center px-4 py-2 theme-aware-bg-secondary theme-aware-text rounded-lg theme-aware-hover-bg transition-all border theme-aware-border">
             <FiSliders className="mr-2" />
             <span>Columns</span>
           </button>
@@ -151,13 +151,13 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
 
       {/* Filters Panel */}
       {showFilters && (
-        <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4 border border-gray-300 dark:border-gray-600">
+        <div className="mb-6 p-4 theme-aware-bg-secondary rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4 border theme-aware-border">
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Tier</label>
+            <label className="block text-sm font-medium mb-2 theme-aware-text">Tier</label>
             <select
               value={filters.tier}
               onChange={(e) => setFilters({ ...filters, tier: e.target.value })}
-              className="w-full bg-white dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-300 dark:border-gray-500"
+              className="w-full theme-aware-bg-primary theme-aware-text rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border theme-aware-border"
             >
               <option value="all">All Tiers</option>
               <option value="diamond">Diamond</option>
@@ -166,11 +166,11 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">KYC Status</label>
+            <label className="block text-sm font-medium mb-2 theme-aware-text">KYC Status</label>
             <select
               value={filters.kycStatus}
               onChange={(e) => setFilters({ ...filters, kycStatus: e.target.value })}
-              className="w-full bg-white dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-300 dark:border-gray-500"
+              className="w-full theme-aware-bg-primary theme-aware-text rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border theme-aware-border"
             >
               <option value="all">All Statuses</option>
               <option value="verified">Verified</option>
@@ -184,9 +184,9 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
                 type="checkbox"
                 checked={filters.activeOnly}
                 onChange={(e) => setFilters({ ...filters, activeOnly: e.target.checked })}
-                className="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-600"
+                className="form-checkbox h-5 w-5 text-blue-500 rounded focus:ring-blue-500 border theme-aware-border theme-aware-bg-primary"
               />
-              <span className="ml-2 text-gray-900 dark:text-white">Active Users Only</span>
+              <span className="ml-2 theme-aware-text">Active Users Only</span>
             </label>
           </div>
         </div>
@@ -194,11 +194,11 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
 
       {/* Table */}
       {/* Desktop/table view (hidden on small screens) */}
-      <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 min-w-0">
+      <div className="hidden md:block overflow-x-auto rounded-lg border theme-aware-border theme-aware-bg-tertiary min-w-0">
         <table className="w-full table-auto min-w-full whitespace-normal">
           <thead>
-            <tr className="border-b border-gray-300 dark:border-gray-700 text-left bg-gray-50 dark:bg-gray-800">
-              <th className="py-4 px-4 min-w-0 cursor-pointer text-gray-900 dark:text-gray-100 font-semibold" onClick={() => handleSort('name')}>
+            <tr className="border-b theme-aware-border-secondary theme-aware-bg-secondary text-left">
+              <th className="py-4 px-4 min-w-0 cursor-pointer theme-aware-text font-semibold" onClick={() => handleSort('name')}>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span>User</span>
                   {sortBy === 'name' && (
@@ -206,7 +206,7 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
                   )}
                 </div>
               </th>
-              <th className="py-4 px-4 min-w-0 cursor-pointer text-gray-900 dark:text-gray-100 font-semibold" onClick={() => handleSort('email')}>
+              <th className="py-4 px-4 min-w-0 cursor-pointer theme-aware-text font-semibold" onClick={() => handleSort('email')}>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span>Email</span>
                   {sortBy === 'email' && (
@@ -214,9 +214,9 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
                   )}
                 </div>
               </th>
-              <th className="py-4 px-4 min-w-0 text-gray-900 dark:text-gray-100 font-semibold">Tier</th>
-              <th className="py-4 px-4 min-w-0 text-gray-900 dark:text-gray-100 font-semibold">KYC Status</th>
-              <th className="py-4 px-4 min-w-0 cursor-pointer text-gray-900 dark:text-gray-100 font-semibold" onClick={() => handleSort('balance')}>
+              <th className="py-4 px-4 min-w-0 theme-aware-text font-semibold">Tier</th>
+              <th className="py-4 px-4 min-w-0 theme-aware-text font-semibold">KYC Status</th>
+              <th className="py-4 px-4 min-w-0 cursor-pointer theme-aware-text font-semibold" onClick={() => handleSort('balance')}>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span>Balance</span>
                   {sortBy === 'balance' && (
@@ -224,15 +224,15 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
                   )}
                 </div>
               </th>
-              <th className="py-4 px-4 min-w-0 text-gray-900 dark:text-gray-100 font-semibold">Actions</th>
+              <th className="py-4 px-4 min-w-0 theme-aware-text font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
             {uniqueUsers.map(user => (
-              <tr key={user.id || user._id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors text-gray-900 dark:text-gray-100">
+              <tr key={user.id || user._id} className="border-b theme-aware-border-secondary theme-aware-hover-bg transition-colors theme-aware-text">
                 <td className="py-4 px-4 min-w-0">
                   <div className="flex items-center min-w-0 gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0 text-gray-700 dark:text-gray-300 font-semibold">
+                    <div className="w-10 h-10 rounded-full theme-aware-bg-secondary flex items-center justify-center flex-shrink-0 theme-aware-text-secondary font-semibold">
                       {user.avatar ? (
                         <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
                       ) : (
@@ -240,12 +240,12 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
                       )}
                     </div>
                     <div className="min-w-0 overflow-hidden">
-                      <div className="font-medium truncate text-gray-900 dark:text-gray-100">{user.name || 'No name'}</div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400 truncate">ID: {user.id || user._id}</div>
+                      <div className="font-medium truncate theme-aware-text">{user.name || 'No name'}</div>
+                      <div className="text-xs theme-aware-text-secondary truncate">ID: {user.id || user._id}</div>
                     </div>
                   </div>
                 </td>
-                <td className="py-4 px-4 min-w-0 break-words max-w-[16rem] text-gray-700 dark:text-gray-300">{user.email || 'N/A'}</td>
+                <td className="py-4 px-4 min-w-0 break-words max-w-[16rem] theme-aware-text-secondary">{user.email || 'N/A'}</td>
                 <td className="py-4 px-4 min-w-0">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTierColor(user.tier)}`}>
                     {user.tier || 'Unknown'}
@@ -256,32 +256,32 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
                     {user.kycStatus || 'Not Submitted'}
                   </span>
                 </td>
-                <td className="py-4 px-4 min-w-0 font-mono text-gray-900 dark:text-gray-100">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</td>
+                <td className="py-4 px-4 min-w-0 font-mono theme-aware-text">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</td>
                 <td className="py-4 px-4 min-w-0">
                   <div className="flex flex-wrap gap-2">
                     <button 
                       onClick={() => onSelectUser(user)}
-                      className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors border border-gray-300 dark:border-gray-600"
+                      className="p-2 theme-aware-bg-secondary theme-aware-text rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors border theme-aware-border"
                       title="View Details"
                     >
                       <FiEye className="w-4 h-4" />
                     </button>
                     <button 
-                      className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors border border-gray-300 dark:border-gray-600"
+                      className="p-2 theme-aware-bg-secondary theme-aware-text rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors border theme-aware-border"
                       title="Edit User"
                     >
                       <FiEdit2 className="w-4 h-4" />
                     </button>
                     <button 
                       onClick={() => setSelectedUserForBalance(user)}
-                      className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors border border-gray-300 dark:border-gray-600"
+                      className="p-2 theme-aware-bg-secondary theme-aware-text rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors border theme-aware-border"
                       title="Manage Balance"
                     >
                       <FiDollarSign className="w-4 h-4" />
                     </button>
                     <button 
                       onClick={() => setSelectedUserForInvestment(user)}
-                      className="p-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-colors border border-gray-300 dark:border-gray-600"
+                      className="p-2 theme-aware-bg-secondary theme-aware-text rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-colors border theme-aware-border"
                       title="Manage Investment"
                     >
                       <FiTrendingUp className="w-4 h-4" />

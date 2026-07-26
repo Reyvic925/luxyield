@@ -25,25 +25,25 @@ const WithdrawalHistory = ({ withdrawals }) => {
 
   return (
     <div className="glassmorphic p-6 rounded-xl">
-      <h3 className="text-xl font-bold mb-4 text-neutral-900 dark:text-neutral-100">Recent Withdrawals</h3>
+      <h3 className="text-xl font-bold mb-4 theme-aware-text">Recent Withdrawals</h3>
       {list.length === 0 ? (
-        <p className="text-neutral-600 dark:text-neutral-400">No withdrawal history</p>
+        <p className="theme-aware-text-secondary">No withdrawal history</p>
       ) : (
         <div className="space-y-4">
           {list.map((withdrawal) => {
             const statusKey = withdrawal.status || 'pending';
             const status = statusInfo[statusKey] || { label: statusKey, color: 'text-yellow-500', icon: <FiClock /> };
             return (
-              <div key={withdrawal.id || withdrawal._id || Math.random()} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border border-neutral-300 dark:border-neutral-800 rounded-xl bg-neutral-100 dark:bg-neutral-900">
+              <div key={withdrawal.id || withdrawal._id || Math.random()} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border theme-aware-border rounded-xl theme-aware-bg-secondary">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <FiDollarSign className="text-gold" size={18} />
-                    <p className="font-semibold text-neutral-900 dark:text-neutral-100">${Math.abs(withdrawal.amount || 0).toFixed(2)}</p>
+                    <p className="font-semibold theme-aware-text">${Math.abs(withdrawal.amount || 0).toFixed(2)}</p>
                   </div>
-                  <p className={`text-sm ${withdrawal.type === 'roi' ? 'text-purple-400 font-semibold' : 'text-neutral-600 dark:text-neutral-400'}`}>
+                  <p className={`text-sm ${withdrawal.type === 'roi' ? 'text-purple-400 font-semibold' : 'theme-aware-text-secondary'}`}>
                     {withdrawal.type === 'roi' ? 'ROI Withdrawal' : `Withdrawal to ${withdrawal.walletAddress || 'your wallet'}`}
                   </p>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-1">
+                  <p className="text-xs theme-aware-text-muted mt-1">
                     {withdrawal.network || withdrawal.currency || 'N/A'} • {withdrawal.createdAt ? new Date(withdrawal.createdAt).toLocaleDateString() : ''}
                   </p>
                 </div>

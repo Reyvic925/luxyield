@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -529,7 +529,7 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                       <p className="text-xs text-gray-400 break-all">{activity.address}</p>
                     )}
                     <p className="text-xs text-gray-400">
-                      {activity.fund ? `${activity.fund} • ` : ''}{activity.description}
+                      {activity.fund ? `${activity.fund} � ` : ''}{activity.description}
                     </p>
                   </div>
                   <div className="col-span-2 text-xs text-gray-400 text-center">
@@ -603,9 +603,9 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
         </div>
         <div className="glassmorphic p-6 rounded-xl">
           <h3 className="text-lg font-bold mb-2">Fund Information</h3>
-          <div className="mb-1 font-serif text-gray-200 dark:text-gray-300">Fund Name: <span className="font-bold">LuxYield Alpha</span></div>
-          <div className="mb-1 font-serif text-gray-200 dark:text-gray-300">Manager: <span className="font-bold">LuxYield</span></div>
-          <div className="mb-1 font-serif text-gray-200 dark:text-gray-300">Fees: <span className="font-bold">2% management, 20% performance</span></div>
+          <div className="mb-1 font-serif theme-aware-text-secondary">Fund Name: <span className="font-bold">LuxYield Alpha</span></div>
+          <div className="mb-1 font-serif theme-aware-text-secondary">Manager: <span className="font-bold">LuxYield</span></div>
+          <div className="mb-1 font-serif theme-aware-text-secondary">Fees: <span className="font-bold">2% management, 20% performance</span></div>
           <div className="text-xs text-gray-400 mt-1 font-serif">
             Annual management fee on invested capital. Performance fee applies only to net profits.
           </div>

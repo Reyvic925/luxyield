@@ -16,7 +16,7 @@ const TopRightBar = () => {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex items-center gap-2 p-2 rounded-xl border theme-aware-border-secondary bg-white/90 dark:bg-slate-900/90 backdrop-blur shadow-lg">
+    <div className="fixed top-4 right-4 z-50 flex items-center gap-2 p-2 rounded-xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text backdrop-blur shadow-lg">
       <button
         type="button"
         onClick={toggleTheme}
