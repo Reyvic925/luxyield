@@ -372,9 +372,9 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData, profi
 
       {/* Investments Table */}
       <div className="glassmorphic p-4 sm:p-6 rounded-xl overflow-x-auto">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
           <h3 className="text-xl font-bold">Your Investments</h3>
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setActiveTab('all')}
               className={`px-4 py-2 rounded-lg text-sm ${
