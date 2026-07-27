@@ -21,12 +21,9 @@ const DashboardLayout = ({ sidebarCollapsed, setSidebarCollapsed, hasNewAnnounce
           >
             <FiMenu />
           </button>
-          <a href="/" className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <img src={process.env.PUBLIC_URL + '/logo192.png'} alt="LuxYield" className="h-8 md:h-10 w-auto rounded-sm drop-shadow-sm" />
-            <span className="text-lg md:text-xl font-extrabold bg-clip-text text-transparent" style={{ background: 'linear-gradient(90deg, #D4AF37, #FFD963)' }}>
-              LuxYield
-            </span>
-          </a>
+          </div>
         </div>
 
         <div className="ml-auto">
