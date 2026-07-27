@@ -132,7 +132,18 @@ export const ThemeProvider = ({ children }) => {
       if (typeof window !== 'undefined' && window.matchMedia) {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const listener = (e) => {
-          const newTheme = e.matches ? THEMES.DARK : THEMES.LIGHT;
+          // Defensive: some environments may call the listener with a null/undefined event
+          // or otherwise provide no `matches` property. Fall back to mediaQuery.matches or
+          // query the matchMedia result directly.
+          const matches = (e && typeof e.matches === 'boolean')
+            ? e.matches
+            : (mediaQuery && typeof mediaQuery.matches === 'boolean')
+              ? mediaQuery.matches
+              : (typeof window !== 'undefined' && window.matchMedia)
+                ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                : false;
+
+          const newTheme = matches ? THEMES.DARK : THEMES.LIGHT;
           setThemeState(newTheme);
           applyThemeToDOM(newTheme);
         };
