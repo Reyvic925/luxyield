@@ -1,9 +1,20 @@
 /* Responsive Design for Mobile Devices */
 @media (max-width: 600px) {
+  /* Reduce heavy visual effects on small devices to avoid compositor blanking issues */
   .glass-card {
     border-radius: 12px;
     padding: 10px;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
   }
+  .glassmorphic {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+  }
+  .golden-cursor { display: none !important; }
+
   .glass-button {
     font-size: 14px;
     padding: 8px 16px;

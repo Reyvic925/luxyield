@@ -19,6 +19,7 @@ const GoldenCursorGlow = () => {
   return (
     <div
       ref={glowRef}
+      className="golden-cursor"
       style={{
         position: 'fixed',
         left: 0,
