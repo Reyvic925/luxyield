@@ -1,5 +1,5 @@
 ﻿// src/components/Sidebar.js
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiHome, FiPieChart, FiDollarSign, FiUpload, 
          FiTrendingUp, FiShield, FiBell,
