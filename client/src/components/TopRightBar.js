@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
 import { FiChevronDown, FiMoon, FiSun } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
@@ -61,53 +62,67 @@ const TopRightBar = () => {
           <FiChevronDown className="text-lg md:text-xl" />
         </button>
 
-        {menuOpen && (
-          <div className="absolute right-0 mt-2 w-72 rounded-2xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text shadow-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', backdropFilter: 'none' }}>
-            <div className="px-4 py-4">
-              <p className="font-semibold">{displayName}</p>
-              <p className="text-sm text-gray-400 break-all">{displayEmail}</p>
+        {menuOpen && (() => {
+          // Build the dropdown menu element
+          const menuElement = (
+            <div className="absolute right-0 mt-2 w-72 rounded-2xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text shadow-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', backdropFilter: 'none', zIndex: 9999 }}>
+              <div className="px-4 py-4">
+                <p className="font-semibold">{displayName}</p>
+                <p className="text-sm text-gray-400 break-all">{displayEmail}</p>
+              </div>
+              <div className="border-t theme-aware-border-secondary"></div>
+              <div className="flex flex-col py-2">
+                <Link
+                  to="/dashboard/settings"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-4 py-2 text-sm hover:bg-gold/10 transition"
+                >
+                  My Profile
+                </Link>
+                <Link
+                  to="/dashboard/settings"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-4 py-2 text-sm hover:bg-gold/10 transition"
+                >
+                  Settings
+                </Link>
+                <Link
+                  to="/dashboard/settings"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-4 py-2 text-sm hover:bg-gold/10 transition"
+                >
+                  Security
+                </Link>
+                <Link
+                  to="/dashboard/education"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-4 py-2 text-sm hover:bg-gold/10 transition"
+                >
+                  Help Center
+                </Link>
+              </div>
+              <div className="border-t theme-aware-border-secondary"></div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-500/10 transition"
+              >
+                Sign Out
+              </button>
             </div>
-            <div className="border-t theme-aware-border-secondary"></div>
-            <div className="flex flex-col py-2">
-              <Link
-                to="/dashboard/settings"
-                onClick={() => setMenuOpen(false)}
-                className="px-4 py-2 text-sm hover:bg-gold/10 transition"
-              >
-                My Profile
-              </Link>
-              <Link
-                to="/dashboard/settings"
-                onClick={() => setMenuOpen(false)}
-                className="px-4 py-2 text-sm hover:bg-gold/10 transition"
-              >
-                Settings
-              </Link>
-              <Link
-                to="/dashboard/settings"
-                onClick={() => setMenuOpen(false)}
-                className="px-4 py-2 text-sm hover:bg-gold/10 transition"
-              >
-                Security
-              </Link>
-              <Link
-                to="/dashboard/education"
-                onClick={() => setMenuOpen(false)}
-                className="px-4 py-2 text-sm hover:bg-gold/10 transition"
-              >
-                Help Center
-              </Link>
-            </div>
-            <div className="border-t theme-aware-border-secondary"></div>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="w-full px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-500/10 transition"
-            >
-              Sign Out
-            </button>
-          </div>
-        )}
+          );
+
+          // If document is available, portal the dropdown to body to avoid stacking context issues
+          try {
+            if (typeof document !== 'undefined' && document.body && React && ReactDOM && ReactDOM.createPortal) {
+              return ReactDOM.createPortal(menuElement, document.body);
+            }
+          } catch (e) {
+            // ignore and render inline fallback
+          }
+
+          return menuElement;
+        })()}
       </div>
     </div>
   );
