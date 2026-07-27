@@ -13,9 +13,9 @@ const WalletIcon = ({ size = 40, className = '' }) => (
     strokeLinejoin="round"
     className={className}
   >
-    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" stroke="#D4AF37" fill="#23272b"/>
-    <path d="M16 3h-8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z" stroke="#D4AF37" fill="#23272b"/>
-    <circle cx="18" cy="14" r="2" fill="#D4AF37"/>
+    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" stroke="var(--accent-primary)" fill="#23272b"/>
+    <path d="M16 3h-8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z" stroke="var(--accent-primary)" fill="#23272b"/>
+    <circle cx="18" cy="14" r="2" fill="var(--accent-primary)"/>
   </svg>
 );
 

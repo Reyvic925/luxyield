@@ -141,16 +141,16 @@ function App() {
                   <Route path="/funds/:slug" element={<FundDetailPage />} />
                   <Route path="/blog/:slug" element={<BlogDetailPage />} />
                   <Route path="/events/:slug" element={<EventDetailPage />} />
-                </Routes>
+                    </Routes>
                 </AppLayout>
-              </RefreshProvider>
-            </UserProvider>
-          </AdminAuthProvider>
-        </UserDataRefreshProvider>
-        </ThemeProvider>
-      </NotificationProvider>
-    </BrowserRouter>
-  );
+                </RefreshProvider>
+              </UserProvider>
+            </AdminAuthProvider>
+          </UserDataRefreshProvider>
+          </ThemeProvider>
+        </NotificationProvider>
+      </BrowserRouter>
+    );
 }
 
 export default App;

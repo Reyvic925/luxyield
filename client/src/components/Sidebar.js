@@ -6,8 +6,10 @@ import { FiHome, FiPieChart, FiDollarSign, FiUpload,
          FiTarget, FiBook, FiMenu, FiX, FiUsers } from 'react-icons/fi';
 import '../custom-scrollbar.css';
 
-const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncement = false }) => {
-  const [mobileOpen, setMobileOpen] = useState(false);
+const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncement = false, mobileOpen = false, setMobileOpen = () => {} }) => {
+  // Sidebar no longer measures or sets global layout variables. Layout owns spacing.
+  // mobileOpen is controlled by the parent layout to toggle the overlay on small screens.
+
 
   const navItems = [
     { icon: <FiHome />, label: 'Dashboard', path: '/dashboard' },
@@ -37,14 +39,6 @@ const Sidebar = ({ collapsed = false, setCollapsed = () => {}, hasNewAnnouncemen
 
   return (
     <>
-      {/* Hamburger button for mobile (toggle open/close) */}
-      <button
-        className="fixed top-4 left-4 z-50 bg-gold text-black p-2 rounded-full shadow-lg md:hidden"
-        onClick={() => setMobileOpen((prev) => !prev)}
-        aria-label={mobileOpen ? "Close sidebar" : "Open sidebar"}
-      >
-        {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-      </button>
       {/* Sidebar for desktop and mobile */}
       <div
         className={`glassmorphic theme-aware-bg-primary theme-aware-text transition-all duration-500 ease-in-out

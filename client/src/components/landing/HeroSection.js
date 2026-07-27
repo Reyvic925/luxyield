@@ -10,8 +10,8 @@ const HeroSection = () => (
           <text x="60" y="30" fontFamily="'Montserrat', sans-serif" fontWeight="bold" fontSize="32" fill="url(#gold-gradient)">HEDGE</text>
           <defs>
             <linearGradient id="gold-gradient" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#FFD700" />
-              <stop offset="100%" stopColor="#BFA14A" />
+              <stop offset="0%" stopColor="var(--accent-gradient-start)" />
+              <stop offset="100%" stopColor="var(--accent-secondary)" />
             </linearGradient>
           </defs>
         </svg>

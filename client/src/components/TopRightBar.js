@@ -12,6 +12,9 @@ const TopRightBar = ({ hasNewAnnouncement = false }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // TopRightBar no longer measures itself or updates layout variables. It renders inline within the header.
+
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -36,7 +39,7 @@ const TopRightBar = ({ hasNewAnnouncement = false }) => {
   const displayEmail = user?.email || 'victor@email.com';
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex items-center gap-2 p-2 rounded-xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text backdrop-blur shadow-lg">
+    <div className="flex items-center gap-2 p-2 rounded-xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text backdrop-blur shadow-sm">
       <button
         type="button"
         onClick={handleNotificationClick}

@@ -34,6 +34,8 @@
   --overlay-bg: rgba(0, 0, 0, 0.6);
 }
 
+
+
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -76,8 +78,8 @@ body {
 }
 
 .glass-card:hover {
-  border-color: rgba(212, 175, 55, 0.3);
-  box-shadow: 0 4px 30px rgba(212, 175, 55, 0.1);
+  border-color: var(--glass-border);
+  box-shadow: 0 4px 30px var(--glass-glow);
 }
 
 /* Theme-aware utility shims for Settings visuals
@@ -236,7 +238,7 @@ html, body {
 
 :root html,
 :root body {
-  scrollbar-color: #D4AF37 #f3f4f6;
+  scrollbar-color: var(--accent-primary) var(--bg-secondary);
 }
 
 :root.dark html,

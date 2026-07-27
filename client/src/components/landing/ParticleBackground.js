@@ -7,25 +7,43 @@ const ParticleBackground = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let animationFrameId;
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
 
+    // Reduce particle count and disable heavy shadows on small screens to improve mobile performance
+    const isMobile = typeof window !== 'undefined' && (window.innerWidth < 768 || 'ontouchstart' in window);
+    const numParticles = isMobile ? 18 : 80;
+
+    // Get accent colors from CSS variables, fall back to gold
+    const computed = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
+    const accent = (computed && computed.getPropertyValue('--accent-primary')) ? computed.getPropertyValue('--accent-primary').trim() : '#FFD700';
+    const accentRgba08 = (computed && computed.getPropertyValue('--accent-primary-rgba-08')) ? computed.getPropertyValue('--accent-primary-rgba-08').trim() : 'rgba(255,217,99,0.08)';
+    const accentRgba44 = (computed && computed.getPropertyValue('--accent-primary-rgba-33')) ? computed.getPropertyValue('--accent-primary-rgba-33').trim() : 'rgba(255,217,99,0.33)';
+
     // Create tiny particles
-    const numParticles = 80;
     particles.current = Array.from({ length: numParticles }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.5,
-      r: Math.random() * 1.2 + 0.5,
-      color: 'rgba(255,255,255,0.12)'
+      vx: (Math.random() - 0.5) * (isMobile ? 0.3 : 0.5),
+      vy: (Math.random() - 0.5) * (isMobile ? 0.3 : 0.5),
+      r: Math.random() * (isMobile ? 1 : 1.2) + 0.4,
+      color: isMobile ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.12)'
     }));
 
     const draw = () => {
+      // In case of resize during animation
+      if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+      }
+
       ctx.clearRect(0, 0, width, height);
       for (let p of particles.current) {
         // Move slightly toward mouse (less sensitive)
@@ -45,22 +63,44 @@ const ParticleBackground = () => {
         ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
         // If mouse is close, brighten up
         const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < 80) {
+        if (dist < 80 && !isMobile) {
           ctx.fillStyle = 'rgba(255,255,180,0.35)';
-          ctx.shadowColor = '#FFD700';
-          ctx.shadowBlur = 18;
+          ctx.shadowColor = accent;
+          ctx.shadowBlur = 16;
         } else {
           ctx.fillStyle = p.color;
-          ctx.shadowColor = '#FFD70044';
-          ctx.shadowBlur = 6;
+          // Use a subtle accent shadow on desktop, none on mobile
+          ctx.shadowColor = isMobile ? 'transparent' : accentRgba44;
+          ctx.shadowBlur = isMobile ? 0 : 6;
         }
         ctx.fill();
         ctx.shadowBlur = 0;
       }
       animationFrameId = requestAnimationFrame(draw);
     };
-    draw();
+
+    // Start animation after slight delay to allow page paint (improves perceived load on mobile)
+    const startTimeout = setTimeout(() => draw(), isMobile ? 200 : 0);
+
     // Mouse move
+    const handleMouseMove = (e) => {
+      mouse.current.x = e.clientX;
+      mouse.current.y = e.clientY;
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    // Resize
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(startTimeout);
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);    // Mouse move
     const handleMouseMove = (e) => {
       mouse.current.x = e.clientX;
       mouse.current.y = e.clientY;

@@ -31,6 +31,11 @@ export const themeConfig = {
     'glass-border': 'rgba(166,124,0,0.28)',
     'glass-glow': 'rgba(166,124,0,0.08)',
     'cursor-dot': '#CDA83F',
+    'accent-primary-rgba-08': 'rgba(166,124,0,0.08)',
+    'accent-primary-rgba-12': 'rgba(166,124,0,0.12)',
+    'accent-primary-rgba-18': 'rgba(166,124,0,0.18)',
+    'accent-primary-rgba-22': 'rgba(166,124,0,0.22)',
+    'accent-primary-rgba-33': 'rgba(166,124,0,0.33)',
     },
   },
   [THEMES.DARK]: {
@@ -58,8 +63,13 @@ export const themeConfig = {
     'glass-border': 'rgba(255,217,99,0.28)',
     'glass-glow': 'rgba(255,217,99,0.12)',
     'cursor-dot': '#FFD963',
-    },
-  },
-};
+        'accent-primary-rgba-08': 'rgba(255,217,99,0.08)',
+        'accent-primary-rgba-12': 'rgba(255,217,99,0.12)',
+        'accent-primary-rgba-18': 'rgba(255,217,99,0.18)',
+        'accent-primary-rgba-22': 'rgba(255,217,99,0.22)',
+        'accent-primary-rgba-33': 'rgba(255,217,99,0.33)',
+        },
+      },
+    };
 
 export const getThemeConfig = (theme) => themeConfig[theme] || themeConfig[THEMES.LIGHT];

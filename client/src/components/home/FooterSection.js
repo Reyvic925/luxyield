@@ -19,7 +19,7 @@ const FooterSection = () => {
   return (
     <footer className="relative backdrop-blur-xl bg-black bg-opacity-80 border-t border-gold/20 py-10 px-4 mt-8 overflow-hidden">
       {/* Soft gold gradient overlay */}
-      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 60% 0%, #FFD70022 0%, transparent 80%)', zIndex: 0 }} />
+      <div aria-hidden className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 60% 0%, var(--accent-primary-rgba-08) 0%, transparent 80%)', zIndex: 0 }} />
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
         <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-center">
           <a href="/" className="hover:text-gold">Home</a>

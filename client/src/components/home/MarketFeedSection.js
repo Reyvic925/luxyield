@@ -3,9 +3,9 @@
 const feed = [
   { icon: '₿', text: 'BTC Fund returned +8.2% last month', color: '#F7931A' },
   { icon: 'Ξ', text: 'ETH Vault rebalanced for optimal exposure', color: '#627EEA' },
-  { icon: '🤖', text: 'AI Grid Strategy hit new all-time high', color: '#FFD700' },
+  { icon: '🤖', text: 'AI Grid Strategy hit new all-time high', color: 'var(--accent-primary)' },
   { icon: '🧑‍💼', text: 'Sarah from Singapore deposited $12,000', color: '#B8860B' },
-  { icon: '🧠', text: 'DAO Seed Accelerator closed new round', color: '#FFD700' },
+  { icon: '🧠', text: 'DAO Seed Accelerator closed new round', color: 'var(--accent-primary)' },
 ];
 
 const MarketFeedSection = () => (
@@ -22,7 +22,7 @@ const MarketFeedSection = () => (
             <span className="text-white/90">{item.text}</span>
             {/* Sparkline placeholder */}
             <svg width="48" height="16" viewBox="0 0 48 16" fill="none" className="ml-2">
-              <polyline points="0,12 8,6 16,10 24,4 32,8 40,6 48,12" stroke="#FFD700" strokeWidth="2" fill="none" strokeLinejoin="round" />
+              <polyline points="0,12 8,6 16,10 24,4 32,8 40,6 48,12" stroke="var(--accent-primary)" strokeWidth="2" fill="none" strokeLinejoin="round" />
             </svg>
           </span>
         ))}
