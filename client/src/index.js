@@ -3,6 +3,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import './responsive.css';
+// Diagnostics to capture DOM/class/style changes and runtime errors (temporary)
+import './utils/startupDiagnostics';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
