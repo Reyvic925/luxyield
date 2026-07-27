@@ -1,10 +1,10 @@
 ﻿import React, { useEffect, useRef, useState } from 'react';
-import { FiBell, FiChevronDown, FiMoon, FiSun } from 'react-icons/fi';
+import { FiChevronDown, FiMoon, FiSun } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useTheme } from '../hooks/useTheme';
 
-const TopRightBar = ({ hasNewAnnouncement = false }) => {
+const TopRightBar = () => {
   const { user, logout } = useUser();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
@@ -20,9 +20,6 @@ const TopRightBar = ({ hasNewAnnouncement = false }) => {
     navigate('/login');
   };
 
-  const handleNotificationClick = () => {
-    navigate('/dashboard/announcements');
-  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -39,38 +36,29 @@ const TopRightBar = ({ hasNewAnnouncement = false }) => {
   const displayEmail = user?.email || 'victor@email.com';
 
   return (
-    <div className="flex items-center gap-2 p-2 rounded-xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text backdrop-blur shadow-sm">
-      <button
-        type="button"
-        onClick={handleNotificationClick}
-        className="relative inline-flex items-center justify-center p-3 rounded-full border theme-aware-border-secondary theme-aware-bg-secondary theme-aware-text hover:bg-gold/10 transition"
-        aria-label="Notifications"
-        title="Notifications"
-      >
-        <FiBell className="text-gold text-xl" />
-        {hasNewAnnouncement && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 shadow-lg"></span>}
-      </button>
+    <div className="flex items-center gap-2 p-2 md:p-2 rounded-xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text backdrop-blur shadow-sm">
+      {/* Notification icon removed to save space on mobile */}
       <button
         type="button"
         onClick={toggleTheme}
-        className="inline-flex items-center justify-center p-3 rounded-full border theme-aware-border-secondary theme-aware-bg-secondary theme-aware-text hover:bg-gold/10 transition"
+        className="inline-flex items-center justify-center p-2 md:p-3 rounded-full border theme-aware-border-secondary theme-aware-bg-secondary theme-aware-text hover:bg-gold/10 transition"
         aria-label="Toggle theme"
         title="Toggle theme"
       >
-        {isDark ? <FiSun className="text-gold text-xl" /> : <FiMoon className="text-gold text-xl" />}
+        {isDark ? <FiSun className="text-gold text-lg md:text-xl" /> : <FiMoon className="text-gold text-lg md:text-xl" />}
       </button>
       <div className="relative" ref={dropdownRef}>
         <button
           type="button"
           onClick={() => setMenuOpen((prev) => !prev)}
-          className="inline-flex items-center gap-2 rounded-full border theme-aware-border-secondary theme-aware-bg-secondary theme-aware-text px-3 py-2 hover:bg-gold/10 transition"
+          className="inline-flex items-center gap-2 rounded-full border theme-aware-border-secondary theme-aware-bg-secondary theme-aware-text px-2 py-1 hover:bg-gold/10 transition"
           aria-haspopup="menu"
           aria-expanded={menuOpen}
         >
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gold text-black font-semibold">
+          <span className="inline-flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full bg-gold text-black font-semibold">
             {displayName.charAt(0).toUpperCase()}
           </span>
-          <FiChevronDown className="text-xl" />
+          <FiChevronDown className="text-lg md:text-xl" />
         </button>
 
         {menuOpen && (

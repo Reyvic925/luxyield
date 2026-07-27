@@ -11,7 +11,7 @@ const DashboardLayout = ({ sidebarCollapsed, setSidebarCollapsed, hasNewAnnounce
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       {/* Header row: contains logo / nav and top-right controls */}
-      <header className="w-full flex items-center justify-between px-4 py-3 border-b theme-aware-border-secondary theme-aware-bg-primary">
+      <header className="w-full flex items-center justify-between px-4 py-3 border-b theme-aware-border-secondary" style={{ background: 'linear-gradient(90deg, rgba(166,124,0,0.06), rgba(255,217,99,0.02))' }}>
         <div className="flex items-center gap-4">
           {/* Hamburger for mobile to open sidebar overlay */}
           <button
@@ -21,11 +21,16 @@ const DashboardLayout = ({ sidebarCollapsed, setSidebarCollapsed, hasNewAnnounce
           >
             <FiMenu />
           </button>
-          <div className="text-lg font-bold">LuxYield</div>
+          <a href="/" className="flex items-center gap-3">
+            <img src={process.env.PUBLIC_URL + '/logo192.png'} alt="LuxYield" className="h-8 md:h-10 w-auto rounded-sm drop-shadow-sm" />
+            <span className="text-lg md:text-xl font-extrabold bg-clip-text text-transparent" style={{ background: 'linear-gradient(90deg, #D4AF37, #FFD963)' }}>
+              LuxYield
+            </span>
+          </a>
         </div>
 
         <div className="ml-auto">
-          <TopRightBar hasNewAnnouncement={hasNewAnnouncement} />
+          <TopRightBar />
         </div>
       </header>
 
