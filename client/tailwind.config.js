@@ -6,9 +6,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Accent colors (unchanged)
-        gold: '#FFD700',
-        goldDark: '#B8860B',
+        // Accent colors mapped to CSS variables so they adapt to theme
+        gold: 'var(--accent-primary)',
+        goldDark: 'var(--accent-secondary)',
         dark: '#0F0F0F',
         // Neutral text colors with dark mode variants
         textLight: {
