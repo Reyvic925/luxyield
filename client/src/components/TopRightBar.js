@@ -62,7 +62,7 @@ const TopRightBar = () => {
         </button>
 
         {menuOpen && (
-          <div className="absolute right-0 mt-2 w-72 rounded-2xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text shadow-xl overflow-hidden">
+          <div className="absolute right-0 mt-2 w-72 rounded-2xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text shadow-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', backdropFilter: 'none' }}>
             <div className="px-4 py-4">
               <p className="font-semibold">{displayName}</p>
               <p className="text-sm text-gray-400 break-all">{displayEmail}</p>
