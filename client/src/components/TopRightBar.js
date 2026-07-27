@@ -12,6 +12,9 @@ const TopRightBar = () => {
   const isDark = theme === 'dark';
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
+  const [menuStyle, setMenuStyle] = useState({ top: 0, right: 0, visibility: 'hidden' });
 
   // TopRightBar no longer measures itself or updates layout variables. It renders inline within the header.
 
@@ -33,6 +36,61 @@ const TopRightBar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Position the portal dropdown when it opens and update on resize/scroll
+  useEffect(() => {
+    if (!menuOpen) {
+      setMenuStyle((s) => ({ ...s, visibility: 'hidden' }));
+      return;
+    }
+
+    const computePosition = () => {
+      try {
+        if (!triggerRef.current) return;
+        const rect = triggerRef.current.getBoundingClientRect();
+        const preferredTop = rect.bottom + 8; // 8px gap
+        const preferredRight = Math.max(8, window.innerWidth - rect.right);
+
+        // temporarily set visibility hidden to measure menu size
+        setMenuStyle({ top: preferredTop + 'px', right: preferredRight + 'px', visibility: 'hidden' });
+
+        // measure after render
+        requestAnimationFrame(() => {
+          const menuEl = menuRef.current;
+          if (!menuEl) {
+            setMenuStyle({ top: preferredTop + 'px', right: preferredRight + 'px', visibility: 'visible' });
+            return;
+          }
+          const menuRect = menuEl.getBoundingClientRect();
+          // Clamp vertically
+          let top = preferredTop;
+          if (top + menuRect.height > window.innerHeight - 8) {
+            top = Math.max(8, window.innerHeight - menuRect.height - 8);
+          }
+          // Clamp horizontally (ensure not beyond left edge)
+          let right = preferredRight;
+          const menuLeft = window.innerWidth - right - menuRect.width;
+          if (menuLeft < 8) {
+            // shift to keep within viewport
+            right = Math.max(8, window.innerWidth - 8 - menuRect.width);
+          }
+
+          setMenuStyle({ top: top + 'px', right: right + 'px', visibility: 'visible' });
+        });
+      } catch (err) {
+        // fallback: position near top-right
+        setMenuStyle({ top: '48px', right: '8px', visibility: 'visible' });
+      }
+    };
+
+    computePosition();
+    window.addEventListener('resize', computePosition);
+    window.addEventListener('scroll', computePosition, true);
+    return () => {
+      window.removeEventListener('resize', computePosition);
+      window.removeEventListener('scroll', computePosition, true);
+    };
+  }, [menuOpen]);
+
   const displayName = user?.name || 'Victor Agapiah';
   const displayEmail = user?.email || 'victor@email.com';
 
@@ -51,6 +109,7 @@ const TopRightBar = () => {
       <div className="relative" ref={dropdownRef}>
         <button
           type="button"
+          ref={triggerRef}
           onClick={() => setMenuOpen((prev) => !prev)}
           className="inline-flex items-center gap-2 rounded-full border theme-aware-border-secondary theme-aware-bg-secondary theme-aware-text px-2 py-1 hover:bg-gold/10 transition"
           aria-haspopup="menu"
@@ -65,7 +124,7 @@ const TopRightBar = () => {
         {menuOpen && (() => {
           // Build the dropdown menu element
           const menuElement = (
-            <div className="absolute right-0 mt-2 w-72 rounded-2xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text shadow-xl overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', backdropFilter: 'none', zIndex: 9999 }}>
+            <div ref={menuRef} className="w-72 rounded-2xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text shadow-xl overflow-hidden" style={{ position: 'fixed', top: menuStyle.top, right: menuStyle.right, backgroundColor: 'var(--bg-primary)', backdropFilter: 'none', zIndex: 9999, visibility: menuStyle.visibility }}>
               <div className="px-4 py-4">
                 <p className="font-semibold">{displayName}</p>
                 <p className="text-sm text-gray-400 break-all">{displayEmail}</p>
