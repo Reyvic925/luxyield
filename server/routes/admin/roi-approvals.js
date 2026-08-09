@@ -45,11 +45,6 @@ router.patch('/:id', auth, async (req, res) => {
       const user = await User.findById(withdrawal.userId);
       if (!user) return res.status(404).json({ message: 'User not found' });
 
-      if ((user.lockedBalance || 0) < withdrawal.amount) {
-        return res.status(400).json({ message: 'Insufficient locked balance' });
-      }
-
-      user.lockedBalance -= withdrawal.amount;
       user.availableBalance = (user.availableBalance || 0) + withdrawal.amount;
       await user.save();
 

@@ -188,6 +188,8 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       investmentId,
       amount: requestedAmount,
       reservedAmount: requestedAmount,
+      activationFeeAmount: 0,
+      activationFeePaid: 0,
       status: 'awaiting_activation_fee',
       type: 'roi',
       walletAddress: '',

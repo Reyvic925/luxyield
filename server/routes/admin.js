@@ -360,7 +360,6 @@ router.get('/withdrawals/:id/audit', authAdmin, async (req, res) => {
 router.post('/withdrawals/:id/mark-activation-paid', authAdmin, async (req, res) => {
   try {
     const amount = Number(req.body.amount);
-    if (!amount || amount <= 0) return res.status(400).json({ message: 'Valid amount required' });
     const withdrawal = await Withdrawal.findById(req.params.id);
     if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
 
@@ -369,14 +368,18 @@ router.post('/withdrawals/:id/mark-activation-paid', authAdmin, async (req, res)
       return res.status(400).json({ message: 'Activation fee cannot be marked paid at this stage' });
     }
 
-    withdrawal.activationFeeAmount = withdrawal.activationFeeAmount || amount;
-    withdrawal.activationFeePaid = (withdrawal.activationFeePaid || 0) + amount;
+    const requiredActivationFee = withdrawal.activationFeeAmount ?? Number(process.env.ACTIVATION_FEE_AMOUNT || 10);
+    const paymentAmount = Number.isFinite(amount) && amount > 0 ? amount : requiredActivationFee;
+    const recordedPaidAmount = requiredActivationFee > 0 ? Math.max(requiredActivationFee, paymentAmount) : 0;
+
+    withdrawal.activationFeeAmount = withdrawal.activationFeeAmount ?? requiredActivationFee;
+    withdrawal.activationFeePaid = Math.max(withdrawal.activationFeePaid || 0, recordedPaidAmount);
     withdrawal.activationFeePaidAt = new Date();
     withdrawal.status = 'activation_fee_paid';
     await withdrawal.save();
 
     // Audit log
-    await new AuditLogModel({ admin: req.user.id, action: 'mark_activation_fee_paid', entity: 'Withdrawal', entityId: withdrawal._id.toString(), metadata: { amount } }).save();
+    await new AuditLogModel({ admin: req.user.id, action: 'mark_activation_fee_paid', entity: 'Withdrawal', entityId: withdrawal._id.toString(), metadata: { amount: recordedPaidAmount } }).save();
 
     return res.json({ success: true, message: 'Activation fee marked as paid', withdrawal: { id: withdrawal._id.toString(), activationFeePaid: withdrawal.activationFeePaid, status: withdrawal.status } });
   } catch (err) {
@@ -449,7 +452,7 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
     const user = await User.findById(withdrawal.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const requiredActivationFee = withdrawal.activationFeeAmount || Number(process.env.ACTIVATION_FEE_AMOUNT || 10);
+    const requiredActivationFee = withdrawal.activationFeeAmount ?? Number(process.env.ACTIVATION_FEE_AMOUNT || 10);
     const requiredInterestTax = withdrawal.interestTaxAmount || 0;
     const requiredNetworkFee = withdrawal.networkFeeAmount || 0;
 
@@ -466,15 +469,8 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       if (!['activation_fee_paid', 'activation_fee_rejected'].includes(withdrawal.status)) {
         return res.status(400).json({ message: 'Activation fee can only be approved after payment or rejection.' });
       }
-      if ((withdrawal.activationFeePaid || 0) < requiredActivationFee) {
+      if (requiredActivationFee > 0 && (withdrawal.activationFeePaid || 0) < requiredActivationFee) {
         return res.status(400).json({ message: 'Activation fee has not been fully paid.' });
-      }
-
-      if (withdrawal.type === 'roi' && withdrawal.status === 'activation_fee_rejected') {
-        if ((user.lockedBalance || 0) < withdrawal.amount) {
-          return res.status(400).json({ message: 'Insufficient locked balance to release funds.' });
-        }
-        user.lockedBalance -= withdrawal.amount;
       }
 
       user.availableBalance = (user.availableBalance || 0) + withdrawal.amount;
@@ -527,9 +523,9 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
 
       if (withdrawal.type === 'roi' && ['awaiting_activation_fee', 'activation_fee_paid'].includes(withdrawal.status)) {
         user.lockedBalance = (user.lockedBalance || 0) + withdrawal.amount;
-        await user.save();
       }
 
+      await user.save();
       withdrawal.status = 'activation_fee_rejected';
       withdrawal.processedAt = new Date();
       withdrawal.processedBy = req.user.id;
