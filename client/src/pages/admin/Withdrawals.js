@@ -145,11 +145,13 @@ const AdminWithdrawals = () => {
 
         {/* Mobile Card View */}
         <div className="md:hidden space-y-3">
-          {withdrawals.map((withdrawal) => (
-            <div key={withdrawal._id} className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+          {withdrawals.map((withdrawal) => {
+            const itemId = withdrawal.id || withdrawal._id;
+            return (
+            <div key={itemId} className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
               {/* Card Header */}
               <button
-                onClick={() => setExpandedId(expandedId === withdrawal._id ? null : withdrawal._id)}
+                onClick={() => setExpandedId(expandedId === itemId ? null : itemId)}
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-750 transition"
               >
                 <div className="flex-1 text-left">
@@ -166,12 +168,12 @@ const AdminWithdrawals = () => {
                   }`}>
                     {withdrawal.status}
                   </span>
-                  {expandedId === withdrawal._id ? <FiChevronUp /> : <FiChevronDown />}
+                  {expandedId === itemId ? <FiChevronUp /> : <FiChevronDown />}
                 </div>
               </button>
 
               {/* Card Expanded Content */}
-              {expandedId === withdrawal._id && (
+              {expandedId === itemId && (
                 <div className="bg-gray-850 px-4 py-3 border-t border-gray-700 space-y-3">
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
@@ -223,7 +225,8 @@ const AdminWithdrawals = () => {
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* No Results */}

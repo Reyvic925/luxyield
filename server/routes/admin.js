@@ -256,6 +256,18 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
       .sort('-createdAt')
       .populate('userId', 'email name');
 
+    const includeLockedBalanceEntries = !status || status === 'all' || status === 'pending';
+    const withdrawalUserIds = new Set(withdrawals.map(w => w.userId?._id?.toString() || w.userId?.toString()).filter(Boolean));
+
+    let lockedBalanceUsers = [];
+    if (includeLockedBalanceEntries) {
+      lockedBalanceUsers = await User.find({
+        role: 'user',
+        lockedBalance: { $gt: 0 },
+        _id: { $nin: Array.from(withdrawalUserIds) }
+      }).select('name email lockedBalance createdAt').lean();
+    }
+
     const cleanedWithdrawals = withdrawals.map(w => ({
       id: w._id.toString(),
       _id: w._id,
@@ -279,7 +291,35 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
       updatedAt: w.updatedAt
     }));
 
-    res.json(cleanedWithdrawals);
+    const lockedBalanceEntries = lockedBalanceUsers.map(user => ({
+      id: `locked-balance-${user._id}`,
+      _id: user._id,
+      userId: user._id.toString(),
+      userEmail: user.email || '',
+      userFullName: user.name || '',
+      amount: Number(user.lockedBalance || 0),
+      status: 'pending',
+      type: 'locked_balance',
+      walletAddress: '',
+      network: 'N/A',
+      currency: 'USD',
+      activationFeeAmount: 0,
+      activationFeePaid: 0,
+      interestTaxAmount: 0,
+      interestTaxPaid: 0,
+      networkFeeAmount: 0,
+      networkFeePaid: 0,
+      lockedBalanceAccount: true,
+      lockedBalanceAmount: Number(user.lockedBalance || 0),
+      createdAt: user.createdAt || new Date(),
+      updatedAt: user.createdAt || new Date(),
+      adminNotes: 'Locked balance exists on this account. This entry was generated from the user balance record.'
+    }));
+
+    const combined = [...cleanedWithdrawals, ...lockedBalanceEntries];
+    combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json(combined);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
