@@ -271,8 +271,6 @@ router.post('/withdraw', auth, async (req, res) => {
     const withdrawal = new Withdrawal({
       userId: req.user.id,
       amount: parseFloat(amount),
-      currency: 'USDT', // or use investment currency if available
-      network: 'ERC20', // or use investment network if available
       walletAddress: 'ROI_WITHDRAWN',
       status: 'pending',
       destination: 'locked',

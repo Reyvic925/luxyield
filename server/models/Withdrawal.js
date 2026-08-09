@@ -25,8 +25,9 @@ const WithdrawalSchema = new mongoose.Schema({
   networkFeePaidAt: { type: Date },
   processingStartedAt: { type: Date },
   walletAddress: { type: String, default: '' },
-  currency: { type: String, required: true, enum: ['USDT', 'BTC', 'ETH', 'BNB'] },
-  network: { type: String, required: true, enum: ['ERC20', 'TRC20', 'BEP20', 'BTC', 'ETH'] },
+  // Currency/network are optional at creation; they will be set when the user submits the withdrawal form.
+  currency: { type: String, enum: ['USDT', 'BTC', 'ETH', 'BNB'], default: null },
+  network: { type: String, enum: ['ERC20', 'TRC20', 'BEP20', 'BTC', 'ETH'], default: null },
   status: { 
     type: String, 
     required: true, 
@@ -64,6 +65,8 @@ const WithdrawalSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Whether the amount was debited from the user's availableBalance when the request was created
+  debitedFromAvailable: { type: Boolean, default: false },
   // Pause flag: when true user actions (paying fees / submitting forms) are blocked until admin unpauses
   paused: { type: Boolean, default: false }
 }, { 

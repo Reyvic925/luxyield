@@ -107,99 +107,119 @@ router.post('/', auth, async (req, res) => {
     const addressInput = String(address || '').trim();
     const pinInput = String(pin || '').trim();
 
-    if (!currency || !network || !addressInput || !pinInput) {
-      return res.status(400).json({ msg: 'Please provide all required fields including PIN' });
-    }
-
     const requestedAmount = Number(amount);
     if (!requestedAmount || requestedAmount <= 0) {
       return res.status(400).json({ msg: 'Please provide a valid withdrawal amount greater than 0.' });
     }
-
-    const currencyInput = String(currency).toUpperCase();
-    const networkInput = String(network).toUpperCase();
 
     const user = await User.findById(userId).select('+withdrawalPin');
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    if (!matchesStoredPin(user.withdrawalPin, pinInput)) {
-      return res.status(400).json({ msg: 'Invalid withdrawal PIN' });
-    }
-
-    const requestedCurrency = 'USD';
-    let cryptoCurrency = '';
-    let cryptoAmount = 0;
-    let conversionRate = 1;
-
-    // Fetch live rates
-    const rates = await getCryptoUSDPrices();
-
-    if (currencyInput === 'BTC' || networkInput === 'BTC') {
-      conversionRate = rates.BTC;
-      cryptoAmount = requestedAmount / conversionRate;
-      cryptoCurrency = 'BTC';
-    } else if (currencyInput === 'ETH' || networkInput === 'ETH') {
-      conversionRate = rates.ETH;
-      cryptoAmount = requestedAmount / conversionRate;
-      cryptoCurrency = 'ETH';
-    } else if (currencyInput === 'BNB' || networkInput === 'BEP20') {
-      conversionRate = rates.BNB;
-      cryptoAmount = requestedAmount / conversionRate;
-      cryptoCurrency = 'BNB';
-    } else if (currencyInput === 'USDT' || ['ERC20', 'TRC20', 'BEP20'].includes(networkInput)) {
-      conversionRate = rates.USDT;
-      cryptoAmount = requestedAmount / conversionRate;
-      cryptoCurrency = 'USDT';
-    } else {
-      return res.status(400).json({ msg: 'Unsupported currency or network.' });
-    }
-
-    // Check user balance (in USD) - use availableBalance which includes ROI
     const activationFeeAmount = await getActivationFeeAmount();
-    if (user.availableBalance < requestedAmount + activationFeeAmount) {
-      return res.status(400).json({ msg: `Insufficient balance for withdrawal. Please keep at least $${activationFeeAmount} available to cover the activation fee.` });
+
+    // If full details are provided (currency/network/address/pin) treat as immediate withdrawal
+    if (currency && network && addressInput && pinInput) {
+      const currencyInput = String(currency).toUpperCase();
+      const networkInput = String(network).toUpperCase();
+
+      if (!matchesStoredPin(user.withdrawalPin, pinInput)) {
+        return res.status(400).json({ msg: 'Invalid withdrawal PIN' });
+      }
+
+      const requestedCurrency = 'USD';
+      let cryptoCurrency = '';
+      let cryptoAmount = 0;
+      let conversionRate = 1;
+
+      // Fetch live rates
+      const rates = await getCryptoUSDPrices();
+
+      if (currencyInput === 'BTC' || networkInput === 'BTC') {
+        conversionRate = rates.BTC;
+        cryptoAmount = requestedAmount / conversionRate;
+        cryptoCurrency = 'BTC';
+      } else if (currencyInput === 'ETH' || networkInput === 'ETH') {
+        conversionRate = rates.ETH;
+        cryptoAmount = requestedAmount / conversionRate;
+        cryptoCurrency = 'ETH';
+      } else if (currencyInput === 'BNB' || networkInput === 'BEP20') {
+        conversionRate = rates.BNB;
+        cryptoAmount = requestedAmount / conversionRate;
+        cryptoCurrency = 'BNB';
+      } else if (currencyInput === 'USDT' || ['ERC20', 'TRC20', 'BEP20'].includes(networkInput)) {
+        conversionRate = rates.USDT;
+        cryptoAmount = requestedAmount / conversionRate;
+        cryptoCurrency = 'USDT';
+      } else {
+        return res.status(400).json({ msg: 'Unsupported currency or network.' });
+      }
+
+      // Check user available balance for immediate withdrawal
+      if (user.availableBalance < requestedAmount + activationFeeAmount) {
+        return res.status(400).json({ msg: `Insufficient balance for withdrawal. Please keep at least $${activationFeeAmount} available to cover the activation fee.` });
+      }
+
+      user.availableBalance -= requestedAmount;
+      await user.save();
+
+      const newWithdrawal = new Withdrawal({
+        type: 'regular',
+        userId: userId,
+        amount: requestedAmount,
+        reservedAmount: requestedAmount,
+        currency: cryptoCurrency,
+        network: networkInput,
+        walletAddress: addressInput,
+        status: 'awaiting_activation_fee',
+        activationFeeAmount,
+        debitedFromAvailable: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      await newWithdrawal.save();
+
+      const cryptoAmountDisplay = cryptoAmount ? cryptoAmount.toFixed(8) : '0';
+
+      console.log('[WITHDRAWAL API] Returning (immediate):', {
+        requestedAmount,
+        requestedCurrency: 'USD',
+        cryptoAmount: cryptoAmountDisplay,
+        cryptoCurrency,
+      });
+
+      return res.json({
+        success: true,
+        msg: 'Withdrawal request created and awaiting activation fee.',
+        withdrawal: newWithdrawal,
+        requestedAmount,
+        cryptoAmount: cryptoAmountDisplay,
+        cryptoCurrency,
+      });
     }
 
-    user.availableBalance -= requestedAmount;
-    await user.save();
+    // Staged withdrawal: create without currency/network/walletAddress and validate against locked balance
+    if ((user.lockedBalance || 0) < requestedAmount) {
+      return res.status(400).json({ msg: 'Insufficient locked balance for staged withdrawal.' });
+    }
 
-    const newWithdrawal = new Withdrawal({
+    const stagedWithdrawal = new Withdrawal({
       type: 'regular',
       userId: userId,
       amount: requestedAmount,
       reservedAmount: requestedAmount,
-      currency: cryptoCurrency,
-      network: networkInput,
-      walletAddress: addressInput,
+      // currency/network/walletAddress left null so user can supply them later via submit-form
       status: 'awaiting_activation_fee',
       activationFeeAmount,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
-    await newWithdrawal.save();
+    await stagedWithdrawal.save();
 
-    const cryptoAmountDisplay = cryptoAmount ? cryptoAmount.toFixed(8) : '0';
-
-    console.log('[WITHDRAWAL API] Returning:', {
-      requestedAmount,
-      requestedCurrency,
-      cryptoAmount: cryptoAmountDisplay,
-      cryptoCurrency,
-      conversionRate
-    });
-    res.json({
-      success: true,
-      msg: 'Withdrawal request created and awaiting activation fee.',
-      withdrawal: newWithdrawal,
-      requestedAmount,
-      requestedCurrency,
-      cryptoAmount: cryptoAmountDisplay,
-      cryptoCurrency,
-      conversionRate
-    });
+    return res.json({ success: true, msg: 'Staged withdrawal created. Please pay activation fee to continue.', withdrawal: stagedWithdrawal });
   } catch (err) {
     console.error('[WITHDRAWAL API] Error:', err);
     res.status(500).json({ msg: 'Server error', error: err.message });
@@ -402,7 +422,7 @@ router.post('/:withdrawalId/pay-activation-fee', auth, async (req, res) => {
 
 router.post('/:withdrawalId/submit-form', auth, async (req, res) => {
   try {
-    const { walletAddress, currency, network, pin } = req.body;
+    const { walletAddress, currency, network, pin, amount } = req.body;
     if (!walletAddress || !currency || !network || !pin) {
       return res.status(400).json({ success: false, error: 'Wallet address, currency, network, and withdrawal PIN are required.' });
     }
@@ -435,6 +455,32 @@ router.post('/:withdrawalId/submit-form', auth, async (req, res) => {
 
     if (!matchesStoredPin(user.withdrawalPin, String(pin).trim())) {
       return res.status(400).json({ success: false, error: 'Invalid withdrawal PIN.' });
+    }
+
+    // Allow the user to optionally modify the withdrawal amount at the form submission stage.
+    if (amount !== undefined && amount !== null) {
+      const newAmount = Number(amount);
+      if (!newAmount || newAmount <= 0) {
+        return res.status(400).json({ success: false, error: 'A valid withdrawal amount greater than 0 is required.' });
+      }
+
+      const maxAllowed = (withdrawal.reservedAmount && withdrawal.reservedAmount > 0)
+        ? withdrawal.reservedAmount
+        : (user.lockedBalance || 0);
+
+      if (newAmount > maxAllowed) {
+        return res.status(400).json({ success: false, error: 'Requested withdrawal amount exceeds the reserved/locked balance.' });
+      }
+
+      // If the original creation debited availableBalance, refund the difference when reducing the amount
+      if (withdrawal.debitedFromAvailable && newAmount < withdrawal.amount) {
+        const refund = Number((withdrawal.amount - newAmount).toFixed(2));
+        user.availableBalance = (user.availableBalance || 0) + refund;
+        await user.save();
+      }
+
+      withdrawal.amount = newAmount;
+      withdrawal.reservedAmount = newAmount;
     }
 
     const taxPercent = await getInterestTaxPercent();

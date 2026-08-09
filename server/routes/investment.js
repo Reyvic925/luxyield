@@ -189,8 +189,6 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       status: 'activation_fee_approved',
       type: 'roi',
       walletAddress: '',
-      network: 'ERC20',
-      currency: 'USDT',
       createdAt: new Date(),
       updatedAt: new Date(),
     });

@@ -105,6 +105,7 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
   const [selectedNetwork, setSelectedNetwork] = useState('ERC20');
   const [currency, setCurrency] = useState('USDT');
   const [withdrawPin, setWithdrawPin] = useState('');
+  const [withdrawAmountInput, setWithdrawAmountInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -202,6 +203,7 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
     if (!activeWithdrawal) {
       setWalletAddress('');
       setWithdrawPin('');
+      setWithdrawAmountInput('');
       return;
     }
     if (activeWithdrawal.walletAddress) {
@@ -212,6 +214,10 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
     }
     if (activeWithdrawal.currency) {
       setCurrency(activeWithdrawal.currency);
+    }
+    // Prefill the withdraw amount input with the staged amount so user can override it
+    if (typeof activeWithdrawal.amount === 'number') {
+      setWithdrawAmountInput(activeWithdrawal.amount.toFixed(2));
     }
   }, [activeWithdrawal]);
 
@@ -248,8 +254,18 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
       setActionError('Withdrawal form is only available after the activation fee step is completed.');
       return;
     }
+    const amountNum = Number(withdrawAmountInput);
+    const maxAllowedAmount = (activeWithdrawal?.reservedAmount && activeWithdrawal.reservedAmount > 0) ? activeWithdrawal.reservedAmount : (lockedBalance || 0);
     if (!validateWalletAddress(walletAddress, selectedNetwork)) {
       setActionError('Please enter a valid wallet address for the selected network.');
+      return;
+    }
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setActionError('Please enter a valid withdrawal amount greater than 0.');
+      return;
+    }
+    if (amountNum > maxAllowedAmount) {
+      setActionError('Requested amount exceeds the reserved/locked funds available for withdrawal.');
       return;
     }
     if (!/^[0-9]{6}$/.test(withdrawPin)) {
@@ -264,6 +280,7 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
         currency,
         network: selectedNetwork,
         pin: withdrawPin,
+        amount: amountNum,
       });
       setWithdrawPin('');
       await Promise.all([refreshWithdrawals(), refreshUserData()]);
@@ -459,6 +476,21 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
                 </label>
 
                 <label className="block">
+                  <span className="text-gray-400 text-sm">Amount to Withdraw (USD)</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={withdrawAmountInput}
+                    onChange={(e) => setWithdrawAmountInput(e.target.value)}
+                    placeholder="Enter amount to withdraw"
+                    className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
+                  />
+                  {withdrawAmountInput && (isNaN(Number(withdrawAmountInput)) || Number(withdrawAmountInput) <= 0) && (
+                    <p className="text-red-400 text-xs mt-2">Please enter a valid amount greater than 0.</p>
+                  )}
+                </label>
+
+                <label className="block">
                   <span className="text-gray-400 text-sm">Wallet Address</span>
                   <input
                     type="text"
@@ -491,8 +523,8 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
             <button
               type="button"
               onClick={handleSubmitWithdrawalForm}
-              disabled={actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) || !/^[0-9]{6}$/.test(withdrawPin)}
-              className={`w-full py-3 rounded-lg font-bold ${actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) || !/^[0-9]{6}$/.test(withdrawPin) ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+              disabled={actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) || !/^[0-9]{6}$/.test(withdrawPin) || !withdrawAmountInput}
+              className={`w-full py-3 rounded-lg font-bold ${actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) || !/^[0-9]{6}$/.test(withdrawPin) || !withdrawAmountInput ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
             >
               {actionLoading ? 'Submitting...' : 'Submit Withdrawal Form'}
             </button>
