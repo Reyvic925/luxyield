@@ -439,8 +439,11 @@ router.post('/withdrawals/:id/mark-activation-paid', authAdmin, async (req, res)
     const withdrawal = await Withdrawal.findById(req.params.id);
     if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
 
-    // Only allow marking when in activation fee stages
-    if (!['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(withdrawal.status)) {
+    const residualLockedBalance = Number((await User.findById(withdrawal.userId))?.lockedBalance || 0);
+    const allowReapproval = residualLockedBalance > 1 && ['activation_fee_approved', 'activation_fee_rejected', 'activation_fee_paid'].includes(withdrawal.status);
+
+    // Only allow marking when in activation fee stages, or when a previously approved/rejected record still has residual locked funds.
+    if (!['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid', 'activation_fee_approved'].includes(withdrawal.status) && !allowReapproval) {
       return res.status(400).json({ message: 'Activation fee cannot be marked paid at this stage' });
     }
 
@@ -607,12 +610,14 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       try { await new AuditLogModel({ admin: req.user.id, action, entity: 'Withdrawal', entityId: withdrawal._id.toString(), metadata }).save(); } catch (e) { console.error('Audit log error', e); }
     };
 
-    // Prevent double approval for same stage
+    // Prevent double approval for same stage unless the user still has a residual locked balance to resolve.
     if (status === 'activation_fee_approved') {
-      if (['activation_fee_approved', 'withdrawal_successful', 'completed'].includes(withdrawal.status)) {
+      const residualLockedBalance = Number(user.lockedBalance || 0);
+      const allowReapproval = residualLockedBalance > 1 && ['activation_fee_approved', 'activation_fee_rejected'].includes(withdrawal.status);
+      if (['activation_fee_approved', 'withdrawal_successful', 'completed'].includes(withdrawal.status) && !allowReapproval) {
         return res.status(409).json({ message: 'Activation fee already approved' });
       }
-      if (!['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(withdrawal.status)) {
+      if (!['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected', 'activation_fee_approved'].includes(withdrawal.status) && !allowReapproval) {
         return res.status(400).json({ message: 'Activation fee can only be approved while the activation stage is active.' });
       }
       if (requiredActivationFee > 0 && (withdrawal.activationFeePaid || 0) < requiredActivationFee) {
@@ -662,10 +667,12 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
     }
 
     if (status === 'activation_fee_rejected') {
-      if (['activation_fee_rejected', 'activation_fee_approved'].includes(withdrawal.status)) {
+      const residualLockedBalance = Number(user.lockedBalance || 0);
+      const allowRejection = residualLockedBalance > 1 && ['activation_fee_approved', 'activation_fee_rejected'].includes(withdrawal.status);
+      if (['activation_fee_rejected', 'activation_fee_approved'].includes(withdrawal.status) && !allowRejection) {
         return res.status(409).json({ message: 'Activation fee already rejected/approved' });
       }
-      if (!['activation_fee_paid', 'awaiting_activation_fee', 'activation_fee_rejected'].includes(withdrawal.status)) {
+      if (!['activation_fee_paid', 'awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_approved'].includes(withdrawal.status) && !allowRejection) {
         return res.status(400).json({ message: 'Activation fee can only be rejected while awaiting review.' });
       }
 

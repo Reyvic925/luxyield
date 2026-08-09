@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { getRoiWithdrawals, updateRoiWithdrawalStatus } from '../../services/roiAPI';
 import axios from '../../utils/axios';
 
-// Only show activation fee (unlock) actions on the ROI approvals page
-const getRoiActionForStatus = (status) => {
-  if (['pending', 'awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(status)) {
+// Only show activation fee (unlock) actions on the ROI approvals page.
+// If a previously approved locked-balance entry still has a residual locked amount, allow the admin
+// to re-open the decision so the amount can be approved or rejected again.
+const getRoiActionForStatus = (status, lockedBalanceAmount = 0) => {
+  const hasResidualLockedBalance = Number(lockedBalanceAmount || 0) > 1;
+  if (['pending', 'awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected', 'activation_fee_approved'].includes(status) || hasResidualLockedBalance) {
     return { approve: 'activation_fee_approved', reject: 'activation_fee_rejected', approveLabel: 'Approve Activation Fee (Unlock)', rejectLabel: 'Reject Activation Fee' };
   }
   // For interest tax / network fee stages, do not show actions here — these belong on the main Withdrawals page
@@ -115,7 +118,7 @@ const RoiApprovals = () => {
                 </div>
                 <div className="mt-4 flex flex-col gap-2">
                   {(() => {
-                    const action = getRoiActionForStatus(w.status);
+                    const action = getRoiActionForStatus(w.status, w.lockedBalanceAmount || w.amount || 0);
                     if (!action && !w.lockedBalanceAccount) {
                       return <div className="text-gray-400 text-sm">Awaiting next step</div>;
                     }
@@ -167,7 +170,7 @@ const RoiApprovals = () => {
                     <td className="py-3 px-4 capitalize break-words">{w.status}</td>
                     <td className="py-3 px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
                       {(() => {
-                        const action = getRoiActionForStatus(w.status);
+                        const action = getRoiActionForStatus(w.status, w.lockedBalanceAmount || w.amount || 0);
                         if (!action && !w.lockedBalanceAccount) {
                           return <span className="text-gray-400 text-sm">Awaiting next step</span>;
                         }
