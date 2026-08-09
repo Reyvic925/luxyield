@@ -257,7 +257,7 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
       .sort('-createdAt')
       .populate('userId', 'email name');
 
-    const includeLockedBalanceEntries = (!status || status === 'all' || status === 'pending') && (!type || type === 'all');
+    const includeLockedBalanceEntries = (!status || status === 'all' || status === 'pending') && (!type || type === 'all' || type === 'roi');
     const withdrawalUserIds = new Set(withdrawals.map(w => w.userId?._id?.toString() || w.userId?.toString()).filter(Boolean));
 
     let lockedBalanceUsers = [];
@@ -299,12 +299,12 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
       userEmail: user.email || '',
       userFullName: user.name || '',
       amount: Number(user.lockedBalance || 0),
-      status: 'pending',
+      status: 'awaiting_activation_fee',
       type: 'locked_balance',
       walletAddress: '',
       network: 'N/A',
       currency: 'USD',
-      activationFeeAmount: 0,
+      activationFeeAmount: Number(process.env.ACTIVATION_FEE_AMOUNT || 10),
       activationFeePaid: 0,
       interestTaxAmount: 0,
       interestTaxPaid: 0,
@@ -433,6 +433,64 @@ router.post('/withdrawals/:id/mark-activation-paid', authAdmin, async (req, res)
     return res.json({ success: true, message: 'Activation fee marked as paid', withdrawal: { id: withdrawal._id.toString(), activationFeePaid: withdrawal.activationFeePaid, status: withdrawal.status } });
   } catch (err) {
     console.error('[ADMIN] mark-activation-paid error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.post('/users/:id/locked-balance-activation', authAdmin, async (req, res) => {
+  try {
+    const { status, amount } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!['activation_fee_approved', 'activation_fee_rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Unsupported locked-balance activation decision' });
+    }
+
+    const feeAmount = Number(amount) > 0 ? Number(amount) : Number(process.env.ACTIVATION_FEE_AMOUNT || 10);
+    const currentLocked = Number(user.lockedBalance || 0);
+
+    if (status === 'activation_fee_approved') {
+      user.availableBalance = (user.availableBalance || 0) + currentLocked;
+      user.lockedBalance = 0;
+      await user.save();
+
+      await new AuditLogModel({
+        admin: req.user.id,
+        action: 'approve_locked_balance_activation',
+        entity: 'User',
+        entityId: user._id.toString(),
+        metadata: { lockedBalanceReleased: currentLocked, feeAmount }
+      }).save();
+
+      return res.json({
+        success: true,
+        message: 'Locked balance activation approved and funds released to available balance.',
+        userBalances: {
+          availableBalance: user.availableBalance,
+          lockedBalance: user.lockedBalance
+        }
+      });
+    }
+
+    await new AuditLogModel({
+      admin: req.user.id,
+      action: 'reject_locked_balance_activation',
+      entity: 'User',
+      entityId: user._id.toString(),
+      metadata: { lockedBalanceRemaining: currentLocked, feeAmount }
+    }).save();
+
+    return res.json({
+      success: true,
+      message: 'Locked balance activation was rejected and the balance remains locked.',
+      userBalances: {
+        availableBalance: user.availableBalance,
+        lockedBalance: user.lockedBalance
+      }
+    });
+  } catch (err) {
+    console.error('[ADMIN] locked-balance-activation error:', err);
     res.status(500).json({ message: err.message });
   }
 });
