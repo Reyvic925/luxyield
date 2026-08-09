@@ -48,13 +48,13 @@ function matchesStoredPin(storedPin, submittedPin) {
 }
 
 function isZeroFeeActivation(withdrawal) {
-  return Number(withdrawal?.activationFeeAmount ?? 0) <= 0;
+  return Boolean(withdrawal?.lockedBalanceSource) || Number(withdrawal?.activationFeeAmount ?? 0) <= 0;
 }
 
 async function normalizeWithdrawalStatus(withdrawal) {
   if (!withdrawal) return withdrawal;
 
-  const shouldReleaseRoiFunds = withdrawal.type === 'roi' && isZeroFeeActivation(withdrawal) && ['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(withdrawal.status);
+  const shouldReleaseRoiFunds = (withdrawal.type === 'roi' || withdrawal.lockedBalanceSource) && isZeroFeeActivation(withdrawal) && ['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(withdrawal.status);
   if (!shouldReleaseRoiFunds) return withdrawal;
 
   const user = await User.findById(withdrawal.userId);
@@ -63,6 +63,8 @@ async function normalizeWithdrawalStatus(withdrawal) {
     await user.save();
   }
 
+  withdrawal.activationFeeAmount = 0;
+  withdrawal.activationFeePaid = 0;
   withdrawal.status = 'activation_fee_approved';
   await withdrawal.save();
   return withdrawal;

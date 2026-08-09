@@ -161,9 +161,8 @@ const Withdraw = () => {
     if (!withdrawal) return null;
     const configuredActivationFee = Number(withdrawal.activationFeeAmount ?? 0);
     const rawStatus = withdrawal.status;
-    return configuredActivationFee <= 0 && ['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(rawStatus)
-      ? 'activation_fee_approved'
-      : rawStatus;
+    const zeroFeeStatus = (configuredActivationFee <= 0 || Boolean(withdrawal.lockedBalanceSource)) && ['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(rawStatus);
+    return zeroFeeStatus ? 'activation_fee_approved' : rawStatus;
   };
 
   useEffect(() => {

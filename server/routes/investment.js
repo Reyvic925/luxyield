@@ -202,11 +202,11 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       updatedAt: new Date(),
     });
     const savedWithdrawal = await withdrawal.save();
-    console.log('[WITHDRAW ROI] Withdrawal created in awaiting_activation_fee with ID:', savedWithdrawal._id);
+    console.log('[WITHDRAW ROI] ROI withdrawal created with no activation fee required and ID:', savedWithdrawal._id);
 
     return res.status(200).json({
       success: true,
-      message: 'ROI withdrawal request created. Awaiting activation fee.',
+      message: 'ROI withdrawal request created. No activation fee is required.',
       withdrawalId: savedWithdrawal._id.toString(),
       reservedAmount: requestedAmount,
       lockedBalance: user.lockedBalance,

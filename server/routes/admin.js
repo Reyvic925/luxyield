@@ -278,14 +278,15 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
             userId: user._id,
             amount: Number(user.lockedBalance || 0),
             reservedAmount: Number(user.lockedBalance || 0),
-            activationFeeAmount: Number(process.env.ACTIVATION_FEE_AMOUNT || 10),
+            activationFeeAmount: 0,
+            activationFeePaid: 0,
             currency: 'USDT',
             network: 'ERC20',
             walletAddress: '',
-            status: 'awaiting_activation_fee',
+            status: 'activation_fee_approved',
             destination: 'locked',
             lockedBalanceSource: true,
-            adminNotes: 'Created from a user locked balance entry.'
+            adminNotes: 'Created from a user locked balance entry. No activation fee is required for ROI/locked-balance withdrawals.'
           });
         }
       }
@@ -420,6 +421,14 @@ router.post('/withdrawals/:id/mark-activation-paid', authAdmin, async (req, res)
     }
 
     const requiredActivationFee = withdrawal.activationFeeAmount ?? Number(process.env.ACTIVATION_FEE_AMOUNT || 10);
+    if (requiredActivationFee <= 0) {
+      withdrawal.activationFeeAmount = 0;
+      withdrawal.activationFeePaid = 0;
+      withdrawal.status = 'activation_fee_approved';
+      await withdrawal.save();
+      return res.json({ success: true, message: 'This withdrawal has no activation fee to mark as paid.', withdrawal: { id: withdrawal._id.toString(), activationFeePaid: 0, status: withdrawal.status } });
+    }
+
     const paymentAmount = Number.isFinite(amount) && amount > 0 ? amount : requiredActivationFee;
     const recordedPaidAmount = requiredActivationFee > 0 ? Math.max(requiredActivationFee, paymentAmount) : 0;
 

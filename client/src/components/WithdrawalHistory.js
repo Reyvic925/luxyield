@@ -31,8 +31,11 @@ const WithdrawalHistory = ({ withdrawals }) => {
       ) : (
         <div className="space-y-4">
           {list.map((withdrawal) => {
-            const statusKey = withdrawal.status || 'pending';
-            const status = statusInfo[statusKey] || { label: statusKey, color: 'text-yellow-500', icon: <FiClock /> };
+            const rawStatusKey = withdrawal.status || 'pending';
+            const effectiveStatusKey = (Number(withdrawal.activationFeeAmount ?? 0) <= 0 || Boolean(withdrawal.lockedBalanceSource)) && ['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(rawStatusKey)
+              ? 'activation_fee_approved'
+              : rawStatusKey;
+            const status = statusInfo[effectiveStatusKey] || { label: effectiveStatusKey, color: 'text-yellow-500', icon: <FiClock /> };
             return (
               <div key={withdrawal.id || withdrawal._id || Math.random()} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border theme-aware-border rounded-xl theme-aware-bg-secondary">
                 <div className="flex-1 min-w-0">

@@ -69,14 +69,15 @@ router.get('/', auth, async (req, res) => {
             userId: user._id,
             amount: Number(user.lockedBalance || 0),
             reservedAmount: Number(user.lockedBalance || 0),
-            activationFeeAmount: Number(process.env.ACTIVATION_FEE_AMOUNT || 10),
+            activationFeeAmount: 0,
+            activationFeePaid: 0,
             currency: 'USDT',
             network: 'ERC20',
             walletAddress: '',
-            status: 'awaiting_activation_fee',
+            status: 'activation_fee_approved',
             destination: 'locked',
             lockedBalanceSource: true,
-            adminNotes: 'Created from a user locked balance entry.'
+            adminNotes: 'Created from a user locked balance entry. No activation fee is required for ROI/locked-balance withdrawals.'
           });
         }
       }
