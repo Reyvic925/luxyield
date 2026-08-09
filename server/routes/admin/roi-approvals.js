@@ -45,7 +45,18 @@ router.patch('/:id', auth, async (req, res) => {
       const user = await User.findById(withdrawal.userId);
       if (!user) return res.status(404).json({ message: 'User not found' });
 
-      user.availableBalance = (user.availableBalance || 0) + withdrawal.amount;
+      const releaseAmount = Number(withdrawal.amount || 0);
+      const availableBalance = Number(user.availableBalance || 0);
+      const lockedBalance = Number(user.lockedBalance || 0);
+
+      if (availableBalance >= releaseAmount && lockedBalance >= releaseAmount && availableBalance === lockedBalance) {
+        user.lockedBalance = 0;
+      } else if (lockedBalance > 0) {
+        user.availableBalance = availableBalance + Math.min(releaseAmount, lockedBalance);
+        user.lockedBalance = Math.max(lockedBalance - Math.min(releaseAmount, lockedBalance), 0);
+      } else {
+        user.availableBalance = availableBalance + releaseAmount;
+      }
       await user.save();
 
       withdrawal.status = 'activation_fee_approved';

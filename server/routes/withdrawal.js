@@ -47,6 +47,33 @@ function matchesStoredPin(storedPin, submittedPin) {
   return storedPin === hashPin(submittedPin) || storedPin === submittedPin;
 }
 
+function releaseZeroFeeRoiFunds(user, amount) {
+  const releaseAmount = Number(amount || 0);
+  if (!user || releaseAmount <= 0) return false;
+
+  const availableBalance = Number(user.availableBalance || 0);
+  const lockedBalance = Number(user.lockedBalance || 0);
+
+  // Historical duplicate-credit bug: some users ended up with the same release amount in both
+  // available and locked balance. In that case, the amount was already credited once and we should
+  // only clear the locked portion without adding it again.
+  if (availableBalance >= releaseAmount && lockedBalance >= releaseAmount && availableBalance === lockedBalance) {
+    user.lockedBalance = 0;
+    return true;
+  }
+
+  if (lockedBalance <= 0 && availableBalance >= releaseAmount) {
+    return true;
+  }
+
+  const transferableAmount = Math.min(releaseAmount, lockedBalance);
+  if (transferableAmount <= 0) return false;
+
+  user.availableBalance = availableBalance + transferableAmount;
+  user.lockedBalance = Math.max(lockedBalance - transferableAmount, 0);
+  return true;
+}
+
 function isZeroFeeActivation(withdrawal) {
   return Boolean(withdrawal?.lockedBalanceSource) || Number(withdrawal?.activationFeeAmount ?? 0) <= 0;
 }
@@ -59,7 +86,7 @@ async function normalizeWithdrawalStatus(withdrawal) {
 
   const user = await User.findById(withdrawal.userId);
   if (user) {
-    user.availableBalance = (user.availableBalance || 0) + (withdrawal.amount || 0);
+    releaseZeroFeeRoiFunds(user, withdrawal.amount);
     await user.save();
   }
 

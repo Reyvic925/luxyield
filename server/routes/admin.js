@@ -21,6 +21,30 @@ const SupportUpload = require('../models/SupportUpload');
 const path = require('path');
 const fs = require('fs');
 
+function releaseZeroFeeRoiFunds(user, amount) {
+  const releaseAmount = Number(amount || 0);
+  if (!user || releaseAmount <= 0) return false;
+
+  const availableBalance = Number(user.availableBalance || 0);
+  const lockedBalance = Number(user.lockedBalance || 0);
+
+  if (availableBalance >= releaseAmount && lockedBalance >= releaseAmount && availableBalance === lockedBalance) {
+    user.lockedBalance = 0;
+    return true;
+  }
+
+  if (lockedBalance <= 0 && availableBalance >= releaseAmount) {
+    return true;
+  }
+
+  const transferableAmount = Math.min(releaseAmount, lockedBalance);
+  if (transferableAmount <= 0) return false;
+
+  user.availableBalance = availableBalance + transferableAmount;
+  user.lockedBalance = Math.max(lockedBalance - transferableAmount, 0);
+  return true;
+}
+
 // JWT decode middleware for admin routes
 router.use((req, res, next) => {
   console.log('[ADMIN ROUTER] Incoming request:', { method: req.method, path: req.path, url: req.originalUrl, body: req.method === 'POST' ? req.body : 'N/A' });
@@ -596,10 +620,7 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       }
 
       if (withdrawal.type === 'roi') {
-        user.availableBalance = (user.availableBalance || 0) + (withdrawal.amount || 0);
-        if (withdrawal.lockedBalanceSource) {
-          user.lockedBalance = Math.max((user.lockedBalance || 0) - (withdrawal.amount || 0), 0);
-        }
+        releaseZeroFeeRoiFunds(user, withdrawal.amount);
       }
       await user.save();
 

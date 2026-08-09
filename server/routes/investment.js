@@ -174,17 +174,10 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Insufficient locked balance for ROI withdrawal.' });
     }
 
-    user.lockedBalance = lockedBalance - requestedAmount;
-    await user.save();
-
     if (requestedAmount === roi) {
       investment.roiWithdrawn = true;
       await investment.save();
     }
-
-    // Release the requested ROI amount immediately because no activation fee is required.
-    user.availableBalance = (user.availableBalance || 0) + requestedAmount;
-    await user.save();
 
     const withdrawal = new Withdrawal({
       userId,
