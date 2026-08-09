@@ -87,11 +87,20 @@ const AdminWithdrawals = () => {
       if (destination) updates.destination = destination;
       if (transactionHash) updates.transactionHash = transactionHash;
       const updated = await updateWithdrawal(id, updates);
-      setWithdrawals(withdrawals.map(w => (w.id === updated.id ? { ...w, ...updated } : w)));
+      setWithdrawals(withdrawals.map(w => (w.id === updated.id || w._id === updated.id ? { ...w, ...updated } : w)));
       setSelectedWithdrawal(null);
       setExpandedId(null);
     } catch (error) {
       console.error('Failed to update withdrawal:', error);
+    }
+  };
+
+  const handleTogglePause = async (id, paused) => {
+    try {
+      const updated = await updateWithdrawal(id, { paused: !paused });
+      setWithdrawals(withdrawals.map(w => (w.id === updated.id || w._id === updated.id ? { ...w, ...updated } : w)));
+    } catch (error) {
+      console.error('Failed to toggle withdrawal pause state:', error);
     }
   };
 
@@ -162,11 +171,12 @@ const AdminWithdrawals = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${
+                    withdrawal.paused ? 'bg-yellow-900 text-yellow-200' :
                     ['completed', 'activation_fee_approved', 'withdrawal_successful'].includes(withdrawal.status) ? 'bg-green-900 text-green-200' :
                     ['pending', 'awaiting_activation_fee', 'activation_fee_paid', 'awaiting_interest_tax', 'interest_tax_paid', 'withdrawal_processing', 'awaiting_network_fee', 'network_fee_paid'].includes(withdrawal.status) ? 'bg-yellow-900 text-yellow-200' :
                     'bg-red-900 text-red-200'
                   }`}>
-                    {withdrawal.status}
+                    {withdrawal.paused ? 'Paused' : withdrawal.status}
                   </span>
                   {expandedId === itemId ? <FiChevronUp /> : <FiChevronDown />}
                 </div>
@@ -219,10 +229,15 @@ const AdminWithdrawals = () => {
                         >
                           <FiX size={16} /> {rejectLabel}
                         </button>
+                        <button
+                          className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-black px-3 py-2 rounded font-semibold text-sm transition flex items-center justify-center gap-2"
+                          onClick={() => handleTogglePause(withdrawal._id, withdrawal.paused)}
+                        >
+                          {withdrawal.paused ? 'Unpause' : 'Pause'}
+                        </button>
                       </div>
                     );
-                  })()}
-                </div>
+                  })()}                </div>
               )}
             </div>
             );

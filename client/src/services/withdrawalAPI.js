@@ -22,7 +22,11 @@ export const getWithdrawalById = async (id) => {
 export const updateWithdrawal = async (id, updates) => {
   try {
     const response = await axios.patch(`/api/admin/withdrawals/${id}`, updates);
-    return response.data;
+    const result = response.data?.withdrawal || response.data;
+    if (result && result._id && !result.id) {
+      result.id = result._id;
+    }
+    return result;
   } catch (error) {
     throw error.response?.data?.message || 'Failed to update withdrawal';
   }

@@ -322,6 +322,9 @@ router.post('/:withdrawalId/pay-activation-fee', auth, async (req, res) => {
     if (withdrawal.userId.toString() !== req.user.id) {
       return res.status(403).json({ success: false, error: 'Forbidden' });
     }
+    if (withdrawal.paused) {
+      return res.status(403).json({ success: false, error: 'This withdrawal has been paused by admin.' });
+    }
     if (!['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(withdrawal.status)) {
       return res.status(400).json({ success: false, error: 'Activation fee cannot be paid at this stage.' });
     }
@@ -418,6 +421,9 @@ router.post('/:withdrawalId/submit-form', auth, async (req, res) => {
     if (withdrawal.userId.toString() !== req.user.id) {
       return res.status(403).json({ success: false, error: 'Forbidden' });
     }
+    if (withdrawal.paused) {
+      return res.status(403).json({ success: false, error: 'This withdrawal has been paused by admin.' });
+    }
     if (withdrawal.status !== 'activation_fee_approved') {
       return res.status(400).json({ success: false, error: 'Withdrawal form is not available until the activation fee is approved.' });
     }
@@ -472,6 +478,9 @@ router.post('/:withdrawalId/pay-interest-tax', auth, async (req, res) => {
     }
     if (withdrawal.userId.toString() !== req.user.id) {
       return res.status(403).json({ success: false, error: 'Forbidden' });
+    }
+    if (withdrawal.paused) {
+      return res.status(403).json({ success: false, error: 'This withdrawal has been paused by admin.' });
     }
     if (!['awaiting_interest_tax', 'interest_tax_rejected', 'interest_tax_paid'].includes(withdrawal.status)) {
       return res.status(400).json({ success: false, error: 'Interest tax cannot be paid at this stage.' });
@@ -530,6 +539,9 @@ router.post('/:withdrawalId/pay-network-fee', auth, async (req, res) => {
     }
     if (withdrawal.userId.toString() !== req.user.id) {
       return res.status(403).json({ success: false, error: 'Forbidden' });
+    }
+    if (withdrawal.paused) {
+      return res.status(403).json({ success: false, error: 'This withdrawal has been paused by admin.' });
     }
 
     withdrawal = await refreshWithdrawalProcessingStatus(withdrawal);

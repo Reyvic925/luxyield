@@ -1,8 +1,7 @@
 // src/components/admin/WithdrawalDetail.js
 import React, { useState, useEffect } from 'react';
-import { FiX, FiClock, FiCopy } from 'react-icons/fi';
+import { FiX, FiClock, FiCopy, FiPause, FiPlay } from 'react-icons/fi';
 import API from '../../services/api';
-import { getWithdrawalById } from '../../services/withdrawalAPI';
 
 const statusColors = {
   pending: 'bg-yellow-900 bg-opacity-30 text-yellow-400',
@@ -39,6 +38,7 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
 
   const [auditHistory, setAuditHistory] = useState([]);
   const [loadingAudit, setLoadingAudit] = useState(false);
+  const [pauseLoading, setPauseLoading] = useState(false);
 
   useEffect(() => {
     setLocalWithdrawal(withdrawal);
@@ -165,6 +165,21 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
     // You could add a toast notification here
   };
 
+  const togglePause = async () => {
+    if (!localWithdrawal || !(localWithdrawal._id || localWithdrawal.id)) return;
+    setPauseLoading(true);
+    try {
+      const id = localWithdrawal._id || localWithdrawal.id;
+      const res = await API.patch(`/admin/withdrawals/${id}`, { paused: !localWithdrawal.paused });
+      const updated = res.data?.withdrawal || res.data || res;
+      setLocalWithdrawal(prev => ({ ...prev, ...updated }));
+    } catch (err) {
+      console.error('Failed to toggle pause', err);
+      alert('Failed to toggle pause state');
+    }
+    setPauseLoading(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-800 rounded-xl w-full max-w-full sm:max-w-2xl mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gold scrollbar-track-gray-900/60">
@@ -229,11 +244,21 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
                     </button>
                   </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Status</span>
-                  <span className={`px-2 py-1 rounded-full text-xs ${statusColors[localWithdrawal?.status]}`}>
-                    {localWithdrawal?.status}
-                  </span>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Status</span>
+                    <span className={`px-2 py-1 rounded-full text-xs ${localWithdrawal?.paused ? 'bg-yellow-900 bg-opacity-30 text-yellow-400' : statusColors[localWithdrawal?.status]}`}>
+                      {localWithdrawal?.paused ? 'Paused' : (localWithdrawal?.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                    </span>
+                  </div>
+                  <button
+                    onClick={togglePause}
+                    disabled={pauseLoading}
+                    className="flex items-center gap-2 px-3 py-1 rounded-lg bg-yellow-500 text-black hover:bg-yellow-400 disabled:opacity-50 text-sm"
+                  >
+                    {localWithdrawal?.paused ? <FiPlay /> : <FiPause />}
+                    {pauseLoading ? 'Processing...' : localWithdrawal?.paused ? 'Unpause Withdrawal' : 'Pause Withdrawal'}
+                  </button>
                 </div>
 
                 {/* Fees summary and admin mark-as-paid controls */}

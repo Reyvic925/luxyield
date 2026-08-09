@@ -1,6 +1,6 @@
 ﻿// src/components/admin/WithdrawalList.js
 import React, { useState } from 'react';
-import { FiDownload, FiCheck, FiX, FiClock } from 'react-icons/fi';
+import { FiDownload, FiCheck, FiX, FiClock, FiPause, FiPlay } from 'react-icons/fi';
 import axios from '../../utils/axios';
 import { toast } from 'react-toastify';
 import ConfirmModal from '../ConfirmModal';
@@ -47,6 +47,21 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
 
   const openApproveModal = (id) => setActionModal({ isOpen: true, type: 'approve', id });
   const openRejectModal = (id) => setActionModal({ isOpen: true, type: 'reject', id });
+
+  const togglePause = async (id, isPaused) => {
+    setActionLoading(id, true);
+    try {
+      const res = await axios.patch(`/api/admin/withdrawals/${id}`, { paused: !isPaused });
+      const updated = res.data?.withdrawal || res.data;
+      setLocalWithdrawals(prev => prev.map(w => (w.id === updated.id || w._id === updated._id ? ({ ...w, ...updated }) : w)));
+      toast.success(`Withdrawal ${updated.paused ? 'paused' : 'unpaused'}`);
+    } catch (err) {
+      console.error('Failed to toggle pause', err);
+      toast.error(err?.response?.data?.message || 'Failed to toggle pause state');
+    } finally {
+      setActionLoading(id, false);
+    }
+  };
 
   const submitAction = async () => {
     const { id, type } = actionModal;
@@ -136,17 +151,25 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                         <FiCheck />
                         <span>Approve</span>
                       </button>
-  
+   
                       <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 flex items-center gap-2">
                         <FiX />
                         <span>Reject</span>
                       </button>
-  
+
+                      <button onClick={() => togglePause(wd.id, wd.paused)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-yellow-500 text-black rounded hover:bg-yellow-400 disabled:opacity-50 flex items-center gap-2">
+                        {wd.paused ? <FiPlay /> : <FiPause />}
+                        <span>{wd.paused ? 'Unpause' : 'Pause'}</span>
+                      </button>
+ 
                       <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded flex items-center gap-2"><FiClock />History</button>
                     </>
                   ) : (
                     <>
-                      <span className="text-gray-500">-</span>
+                      <button onClick={() => togglePause(wd.id, wd.paused)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-yellow-500 text-black rounded hover:bg-yellow-400 disabled:opacity-50 flex items-center gap-2">
+                        {wd.paused ? <FiPlay /> : <FiPause />}
+                        <span>{wd.paused ? 'Unpause' : 'Pause'}</span>
+                      </button>
                       <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded">History</button>
                     </>
                   )}
@@ -181,9 +204,10 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                 <td className="py-3 px-4 text-xs text-gray-500 truncate">{new Date(wd.createdAt).toLocaleDateString()}</td>
                 <td className="py-3 px-4 align-middle max-w-[14rem]">
                   {(() => {
-                    const displayStatus = wd.lockedBalanceAccount ? 'Locked Balance' : (wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    const displayStatus = wd.paused ? 'Paused' : (wd.lockedBalanceAccount ? 'Locked Balance' : (wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
+                    const statusClass = wd.paused ? 'bg-yellow-500 bg-opacity-20 text-yellow-400' : (statusColors[wd.status] || 'bg-orange-500 bg-opacity-20 text-orange-400');
                     return (
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${statusColors[wd.status] || 'bg-orange-500 bg-opacity-20 text-orange-400'}`} style={{whiteSpace: 'normal'}}>{displayStatus}</span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${statusClass}`} style={{whiteSpace: 'normal'}}>{displayStatus}</span>
                     );
                   })()}
                 </td>
@@ -265,7 +289,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                 </div>
                 <div className="text-right ml-3">
                   <div className="font-mono text-gold overflow-hidden truncate max-w-[10rem]" title={`${Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${wd.currency}`}>{Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {wd.currency}</div>
-                  <div className={`mt-1 px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${statusColors[wd.status] || 'bg-orange-500 bg-opacity-20 text-orange-400'}`} style={{whiteSpace: 'normal'}}>{wd.lockedBalanceAccount ? 'Locked Balance' : (wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
+                  <div className={`mt-1 px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${wd.paused ? 'bg-yellow-500 bg-opacity-20 text-yellow-400' : (statusColors[wd.status] || 'bg-orange-500 bg-opacity-20 text-orange-400')}`} style={{whiteSpace: 'normal'}}>{wd.paused ? 'Paused' : (wd.lockedBalanceAccount ? 'Locked Balance' : (wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))}</div>
                 </div>
               </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
@@ -289,12 +313,19 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                   <button onClick={() => onSelect(wd)} className="w-full px-4 py-2 bg-gold text-black rounded-lg font-semibold">Review</button>
                   <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="w-full px-4 py-2 bg-green-600 text-white rounded mt-1 disabled:opacity-50 flex items-center justify-center gap-2">{loadingActions[wd.id] ? 'Processing...' : (<><FiCheck />Approve</>)}</button>
                   <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="w-full px-4 py-2 bg-red-600 text-white rounded mt-1 disabled:opacity-50 flex items-center justify-center gap-2">{loadingActions[wd.id] ? 'Processing...' : (<><FiX />Reject</>)}</button>
+                  <button onClick={() => togglePause(wd.id, wd.paused)} disabled={loadingActions[wd.id]} className="w-full px-3 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 disabled:opacity-50 flex items-center justify-center gap-2 mt-1">
+                    {wd.paused ? <FiPlay /> : <FiPause />}
+                    {wd.paused ? 'Unpause' : 'Pause'}
+                  </button>
                   <button onClick={() => toggleAudit(wd.id)} className="w-full px-3 py-2 bg-gray-700 text-gray-200 rounded mt-1 flex items-center justify-center gap-2"><FiClock />History</button>
                 </>
               ) : (
                 <>
-                  <button className="w-full px-3 py-2 bg-gray-700 text-gray-300 rounded-lg">Details</button>
-                  <button onClick={() => toggleAudit(wd.id)} className="w-full px-3 py-2 bg-gray-700 rounded-lg mt-1">Export</button>
+                  <button onClick={() => togglePause(wd.id, wd.paused)} disabled={loadingActions[wd.id]} className="w-full px-3 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 disabled:opacity-50 flex items-center justify-center gap-2 mt-1">
+                    {wd.paused ? <FiPlay /> : <FiPause />}
+                    {wd.paused ? 'Unpause' : 'Pause'}
+                  </button>
+                  <button onClick={() => toggleAudit(wd.id)} className="w-full px-3 py-2 bg-gray-700 text-gray-200 rounded mt-1 flex items-center justify-center gap-2"><FiClock />History</button>
                 </>
               )}
             </div>

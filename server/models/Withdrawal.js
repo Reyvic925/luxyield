@@ -63,7 +63,9 @@ const WithdrawalSchema = new mongoose.Schema({
   lockedBalanceSource: {
     type: Boolean,
     default: false
-  }
+  },
+  // Pause flag: when true user actions (paying fees / submitting forms) are blocked until admin unpauses
+  paused: { type: Boolean, default: false }
 }, { 
   timestamps: true,
   toJSON: { virtuals: true },

@@ -342,6 +342,26 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
                 <p className="text-gray-400 text-sm">Current Stage</p>
                 <p className="text-white text-xl font-semibold mt-2">{statusLabels[getEffectiveWithdrawalStatus(activeWithdrawal)] || getEffectiveWithdrawalStatus(activeWithdrawal)}</p>
                 <p className="text-gray-500 text-sm mt-2">Requested Amount: ${Number(activeWithdrawal.amount || 0).toFixed(2)}</p>
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const resp = await axios.patch(`/api/admin/withdrawals/${activeWithdrawal._id || activeWithdrawal.id}`, { paused: !(activeWithdrawal.paused) });
+                        await refreshWithdrawals();
+                        if (resp && resp.data && resp.data.message) {
+                          // no-op: message returned
+                        }
+                      } catch (e) {
+                        console.error('Failed to toggle pause:', e);
+                        alert('Failed to toggle pause state');
+                      }
+                    }}
+                    className="mt-2 bg-gray-700 text-white px-3 py-2 rounded"
+                  >
+                    {activeWithdrawal && activeWithdrawal.paused ? 'Unpause Withdrawal' : 'Pause Withdrawal'}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -374,10 +394,20 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
     const activationFeeFullyPaid = remainingActivationFee === 0 && ['activation_fee_paid', 'activation_fee_rejected'].includes(normalizedStatus);
     const interestTaxFullyPaid = remainingInterestTax === 0 && ['interest_tax_paid', 'interest_tax_rejected'].includes(normalizedStatus);
     const networkFeeFullyPaid = remainingNetworkFee === 0 && ['network_fee_paid', 'network_fee_rejected'].includes(normalizedStatus);
+
+    // Pause handling: when a withdrawal is paused by admin, regular users cannot progress further.
+    const isPaused = Boolean(activeWithdrawal?.paused);
+
     const canPayActivation = activationFeeRequired && ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(normalizedStatus) && !activationFeeFullyPaid;
     const canPayTax = ['awaiting_interest_tax', 'interest_tax_rejected', 'interest_tax_paid'].includes(normalizedStatus) && !interestTaxFullyPaid;
     const canPayNetwork = ['awaiting_network_fee', 'network_fee_rejected', 'network_fee_paid'].includes(normalizedStatus) && !networkFeeFullyPaid;
     const showWalletForm = normalizedStatus === 'activation_fee_approved';
+
+    // Final actionable flags (admins can always act from the mirror; regular users are blocked when paused)
+    const canPayActivationFinal = adminView ? canPayActivation : (!isPaused && canPayActivation);
+    const canSubmitFormFinal = adminView ? showWalletForm : (!isPaused && showWalletForm);
+    const canPayTaxFinal = adminView ? canPayTax : (!isPaused && canPayTax);
+    const canPayNetworkFinal = adminView ? canPayNetwork : (!isPaused && canPayNetwork);
 
     return (
       <div className="glassmorphic p-6 rounded-xl bg-gray-900 border border-gray-700">
@@ -408,13 +438,19 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
           </div>
         </div>
 
+        {isPaused && !adminView && (
+          <div className="bg-yellow-900 border border-yellow-700 text-yellow-100 px-4 py-3 rounded-lg mb-6">
+            This withdrawal has been paused by an administrator. All user actions are temporarily disabled. Please contact support or wait for admin to unpause.
+          </div>
+        )}
+
         {actionError && (
           <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded-lg mb-6">
             {actionError}
           </div>
         )}
 
-        {canPayActivation && (
+        {canPayActivationFinal && (
           <div className="space-y-4 mb-6">
             <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
               <div className="flex items-center justify-between">
@@ -451,7 +487,7 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
           </div>
         )}
 
-        {!canPayActivation && ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(normalizedStatus) && (
+        {(!canPayActivationFinal) && ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(normalizedStatus) && (
           <div className="space-y-4 mb-6">
             <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
               <p className="text-gray-400 text-sm">Activation Fee</p>
@@ -464,7 +500,7 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
           </div>
         )}
 
-        {showWalletForm && (
+        {canSubmitFormFinal && (
           <div className="space-y-4 mb-6">
             <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
               <p className="text-gray-400 text-sm">Withdrawal details</p>
@@ -529,7 +565,7 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
           </div>
         )}
 
-        {canPayTax && activeWithdrawal.interestTaxAmount > 0 && (
+        {canPayTaxFinal && activeWithdrawal.interestTaxAmount > 0 && (
           <div className="space-y-4 mb-6">
             <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
               <p className="text-gray-400 text-sm">Interest Income Tax</p>
@@ -566,7 +602,7 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
           </div>
         )}
 
-        {canPayNetwork && activeWithdrawal.networkFeeAmount > 0 && (
+        {canPayNetworkFinal && activeWithdrawal.networkFeeAmount > 0 && (
           <div className="space-y-4 mb-6">
             <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
               <p className="text-gray-400 text-sm">{feeLabel}</p>

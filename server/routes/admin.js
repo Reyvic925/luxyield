@@ -345,7 +345,8 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
       createdAt: w.createdAt,
       updatedAt: w.updatedAt,
       lockedBalanceAccount: Boolean(w.lockedBalanceSource),
-      lockedBalanceAmount: w.lockedBalanceSource ? Number(w.amount || 0) : 0
+      lockedBalanceAmount: w.lockedBalanceSource ? Number(w.amount || 0) : 0,
+      paused: Boolean(w.paused)
     }));
 
     cleanedWithdrawals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -386,7 +387,8 @@ router.get('/withdrawals/:id', authAdmin, async (req, res) => {
       networkFeePaid: w.networkFeePaid,
       createdAt: w.createdAt,
       updatedAt: w.updatedAt,
-      transactionHash: w.transactionHash || ''
+      transactionHash: w.transactionHash || '',
+      paused: Boolean(w.paused)
     };
     res.json(cleaned);
   } catch (err) {
@@ -605,6 +607,15 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
 
     const user = await User.findById(withdrawal.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Allow admin to pause/unpause a withdrawal via the same patch endpoint by passing { paused: true/false }
+    if (typeof req.body.paused !== 'undefined') {
+      const pausedFlag = Boolean(req.body.paused);
+      withdrawal.paused = pausedFlag;
+      await withdrawal.save();
+      await new AuditLogModel({ admin: req.user.id, action: pausedFlag ? 'pause_withdrawal' : 'unpause_withdrawal', entity: 'Withdrawal', entityId: withdrawal._id.toString(), metadata: { paused: pausedFlag } }).save();
+      return res.json({ success: true, message: `Withdrawal ${pausedFlag ? 'paused' : 'unpaused'} successfully`, withdrawal: { id: withdrawal._id.toString(), paused: withdrawal.paused, status: withdrawal.status } });
+    }
 
     const requiredActivationFee = withdrawal.activationFeeAmount ?? Number(process.env.ACTIVATION_FEE_AMOUNT || 10);
     const requiredInterestTax = withdrawal.interestTaxAmount || 0;
