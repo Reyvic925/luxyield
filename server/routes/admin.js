@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const mongoose = require('mongoose');
 
 // server/routes/admin.js
 const express = require('express');
@@ -328,6 +329,10 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
 // Get single withdrawal details
 router.get('/withdrawals/:id', authAdmin, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid withdrawal id' });
+    }
+
     const w = await Withdrawal.findById(req.params.id).populate('userId', 'email name');
     if (!w) return res.status(404).json({ message: 'Withdrawal not found' });
     const cleaned = {
@@ -399,6 +404,10 @@ router.get('/withdrawals/:id/audit', authAdmin, async (req, res) => {
 // Mark activation fee as paid (admin)
 router.post('/withdrawals/:id/mark-activation-paid', authAdmin, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'This entry is not a withdrawal record and cannot be processed as one.' });
+    }
+
     const amount = Number(req.body.amount);
     const withdrawal = await Withdrawal.findById(req.params.id);
     if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
@@ -485,6 +494,10 @@ router.post('/withdrawals/:id/mark-network-paid', authAdmin, async (req, res) =>
 // Approve/reject withdrawal stages
 router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'This entry is not a withdrawal record and cannot be approved or rejected.' });
+    }
+
     const { status, destination, transactionHash } = req.body;
     const withdrawal = await Withdrawal.findById(req.params.id);
     if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });

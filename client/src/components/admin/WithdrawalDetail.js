@@ -62,6 +62,21 @@ const WithdrawalDetail = ({ withdrawal, onApprove, onReject, onClose }) => {
     fetchAudit();
   }, [localWithdrawal]);
 
+  if (localWithdrawal?.lockedBalanceAccount) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-800 rounded-xl w-full max-w-md mx-4 p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-orange-400">Locked Balance Entry</h2>
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-700"><FiX size={20} /></button>
+          </div>
+          <p className="text-gray-200 mb-4">This row represents a locked balance on a user account, not a withdrawal request. It cannot be approved, rejected, or marked as paid.</p>
+          <button onClick={onClose} className="w-full bg-gold text-black font-semibold py-2 rounded-lg">Close</button>
+        </div>
+      </div>
+    );
+  }
+
   const getActionContext = (status) => {
     if (['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(status)) {
       return {
