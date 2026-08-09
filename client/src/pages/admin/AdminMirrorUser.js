@@ -4,6 +4,7 @@ import Portfolio from '../../pages/Portfolio';
 import Dashboard from '../../pages/Dashboard';
 import Settings from '../../pages/Settings';
 import KYCPage from '../../pages/KYCPage';
+import Withdraw from '../../pages/Withdraw';
 import { getUserKeys } from '../../services/adminAPI';
 
 const AdminMirrorUser = ({ userId, onBack }) => {
@@ -131,6 +132,7 @@ const AdminMirrorUser = ({ userId, onBack }) => {
       <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto w-full">
         <button className={`px-4 py-2 rounded whitespace-nowrap ${tab==='dashboard' ? 'bg-gold' : 'bg-gray-800'}`} onClick={()=>setTab('dashboard')}>Dashboard</button>
         <button className={`px-4 py-2 rounded whitespace-nowrap ${tab==='portfolio' ? 'bg-gold' : 'bg-gray-800'}`} onClick={()=>setTab('portfolio')}>Portfolio</button>
+        <button className={`px-4 py-2 rounded whitespace-nowrap ${tab==='withdrawal' ? 'bg-gold' : 'bg-gray-800'}`} onClick={()=>setTab('withdrawal')}>Withdrawal</button>
         <button className={`px-4 py-2 rounded whitespace-nowrap ${tab==='settings' ? 'bg-gold' : 'bg-gray-800'}`} onClick={()=>setTab('settings')}>Settings</button>
         <button className={`px-4 py-2 rounded whitespace-nowrap ${tab==='kyc' ? 'bg-gold' : 'bg-gray-800'}`} onClick={()=>setTab('kyc')}>KYC</button>
         <button className={`px-4 py-2 rounded whitespace-nowrap ${tab==='details' ? 'bg-gold' : 'bg-gray-800'}`} onClick={()=>setTab('details')}>Details</button>
@@ -157,6 +159,7 @@ const AdminMirrorUser = ({ userId, onBack }) => {
           <Portfolio adminView portfolioData={portfolioData} profile={profile} />
         </>
       )}
+      {tab==='withdrawal' && <Withdraw adminView adminUserId={userId} adminPortfolioData={portfolioData} />}
       {tab==='settings' && <Settings adminView profile={profile} />}
       {tab==='kyc' && <KYCPage adminView kyc={kyc} />}
       {tab==='details' && (

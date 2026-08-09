@@ -96,7 +96,7 @@ function validateWalletAddress(address, network) {
   }
 }
 
-const Withdraw = () => {
+const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = null }) => {
   const [withdrawals, setWithdrawals] = useState([]);
   const [activeWithdrawal, setActiveWithdrawal] = useState(null);
   const [availableBalance, setAvailableBalance] = useState(0);
@@ -136,16 +136,33 @@ const Withdraw = () => {
 
   const refreshBalances = useCallback(async () => {
     try {
+      if (adminView && adminUserId) {
+        const response = await axios.get(`/api/admin/users/${adminUserId}/portfolio`);
+        const userInfo = response.data?.userInfo || {};
+        setAvailableBalance(Number(userInfo.availableBalance ?? 0));
+        setLockedBalance(Number(userInfo.lockedBalance ?? 0));
+        return;
+      }
       const response = await axios.get('/api/portfolio');
       setAvailableBalance(response.data.userInfo?.availableBalance ?? 0);
       setLockedBalance(response.data.userInfo?.lockedBalance ?? 0);
     } catch (err) {
       console.error('[WITHDRAW] Failed to refresh balances:', err);
     }
-  }, []);
+  }, [adminUserId, adminView]);
 
   const refreshWithdrawals = useCallback(async () => {
     try {
+      if (adminView && adminUserId) {
+        const response = await axios.get(`/api/admin/withdrawals?userId=${adminUserId}`);
+        const data = response.data || [];
+        setWithdrawals(data);
+        setActiveWithdrawal(findActiveWithdrawal(data));
+        if (!data || data.length === 0) {
+          setActiveWithdrawal(null);
+        }
+        return;
+      }
       const data = await getUserWithdrawals();
       setWithdrawals(data);
       setActiveWithdrawal(findActiveWithdrawal(data));
@@ -155,7 +172,7 @@ const Withdraw = () => {
     } catch (err) {
       console.error('[WITHDRAW] Failed to fetch user withdrawals:', err);
     }
-  }, []);
+  }, [adminUserId, adminView]);
 
   const getEffectiveWithdrawalStatus = (withdrawal) => {
     if (!withdrawal) return null;
@@ -173,6 +190,13 @@ const Withdraw = () => {
     };
     initialize();
   }, [refreshBalances, refreshWithdrawals]);
+
+  useEffect(() => {
+    if (adminView && adminPortfolioData?.userInfo) {
+      setAvailableBalance(Number(adminPortfolioData.userInfo.availableBalance ?? 0));
+      setLockedBalance(Number(adminPortfolioData.userInfo.lockedBalance ?? 0));
+    }
+  }, [adminPortfolioData, adminView]);
 
   useEffect(() => {
     if (!activeWithdrawal) {
@@ -289,6 +313,34 @@ const Withdraw = () => {
   };
 
   const renderActionPanel = () => {
+    if (adminView) {
+      return (
+        <div className="glassmorphic p-6 rounded-xl bg-gray-900 border border-gray-700">
+          <h3 className="text-xl font-bold mb-4">Withdrawal Review</h3>
+          <p className="text-gray-400 mb-4">
+            This is a read-only mirror of the user withdrawal workflow. Admin actions should be handled from the main withdrawal approval screens.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <p className="text-gray-400 text-sm">Available Balance</p>
+              <p className="text-white text-3xl font-semibold mt-2">${availableBalance.toLocaleString()}</p>
+            </div>
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <p className="text-gray-400 text-sm">Locked Balance</p>
+              <p className="text-white text-3xl font-semibold mt-2">${lockedBalance.toLocaleString()}</p>
+            </div>
+          </div>
+          {activeWithdrawal && (
+            <div className="mt-4 bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <p className="text-gray-400 text-sm">Current Stage</p>
+              <p className="text-white text-xl font-semibold mt-2">{statusLabels[getEffectiveWithdrawalStatus(activeWithdrawal)] || getEffectiveWithdrawalStatus(activeWithdrawal)}</p>
+              <p className="text-gray-500 text-sm mt-2">Requested Amount: ${Number(activeWithdrawal.amount || 0).toFixed(2)}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     if (!activeWithdrawal) {
       return (
         <div className="glassmorphic p-6 rounded-xl bg-gray-900 border border-gray-700">
@@ -552,7 +604,7 @@ const Withdraw = () => {
     );
   }
 
-  if (kycStatus !== 'verified') {
+  if (!adminView && kycStatus !== 'verified') {
     return (
       <div className="glassmorphic p-4 sm:p-8 rounded-xl text-center mt-6 sm:mt-10 overflow-auto">
         <h2 className="text-2xl font-bold text-yellow-400 mb-4">KYC Required</h2>
@@ -567,7 +619,7 @@ const Withdraw = () => {
       <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-bold">Withdrawal Center</h1>
-          <p className="text-gray-400 mt-2">Manage your staged withdrawal requests, activation fees, tax payments, and network fees in one place.</p>
+          <p className="text-gray-400 mt-2">{adminView ? 'Read-only mirror view of the user withdrawal workflow.' : 'Manage your staged withdrawal requests, activation fees, tax payments, and network fees in one place.'}</p>
         </div>
       </div>
 
@@ -581,6 +633,12 @@ const Withdraw = () => {
           <p className="text-3xl font-semibold text-white">${lockedBalance.toLocaleString()}</p>
         </div>
       </div>
+
+      {adminView ? (
+        <div className="bg-blue-900/20 border border-blue-600 rounded-lg px-4 py-3 mb-6 text-blue-200 text-sm">
+          Admin mirror view: withdrawal actions are read-only here. Use the admin withdrawal controls to manage processing steps for this user.
+        </div>
+      ) : null}
 
       {renderActionPanel()}
 
