@@ -35,7 +35,7 @@ const statusDescriptions = {
   awaiting_activation_fee: 'Your withdrawal request is waiting for the activation fee step. No activation fee is required for this withdrawal.',
   activation_fee_paid: 'Your activation fee step has been completed. Please wait for the next step.',
   activation_fee_rejected: 'The activation fee step was not accepted. Please wait for the next step.',
-  activation_fee_approved: 'Activation fee completed. Enter your wallet address, cryptocurrency, and withdrawal PIN to continue.',
+  activation_fee_approved: 'Activation fee completed. Enter the withdrawal amount, network, wallet address, and withdrawal PIN to continue.',
   awaiting_interest_tax: 'The system calculated the interest income tax for this withdrawal. Please wait for the next step.',
   interest_tax_paid: 'Interest tax payment received. Please wait for the next step.',
   interest_tax_rejected: 'The interest tax step was not accepted. Please wait for the next step.',
@@ -102,8 +102,8 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
   const [availableBalance, setAvailableBalance] = useState(0);
   const [lockedBalance, setLockedBalance] = useState(0);
   const [walletAddress, setWalletAddress] = useState('');
-  const [selectedNetwork, setSelectedNetwork] = useState('ERC20');
-  const [currency, setCurrency] = useState('USDT');
+  const [selectedNetwork, setSelectedNetwork] = useState('');
+  const [currency, setCurrency] = useState('');
   const [withdrawPin, setWithdrawPin] = useState('');
   const [withdrawAmountInput, setWithdrawAmountInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -121,6 +121,11 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
   };
 
   useEffect(() => {
+    if (!selectedNetwork) {
+      setCurrency('');
+      return;
+    }
+
     if (selectedNetwork === 'BTC') setCurrency('BTC');
     else if (selectedNetwork === 'ETH') setCurrency('ETH');
     else if (selectedNetwork === 'ERC20') setCurrency('USDT');
@@ -211,9 +216,13 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
     }
     if (activeWithdrawal.network) {
       setSelectedNetwork(activeWithdrawal.network);
+    } else {
+      setSelectedNetwork('');
     }
     if (activeWithdrawal.currency) {
       setCurrency(activeWithdrawal.currency);
+    } else {
+      setCurrency('');
     }
     // Prefill the withdraw amount input with the staged amount so user can override it
     if (typeof activeWithdrawal.amount === 'number') {
@@ -226,6 +235,12 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
   const remainingInterestTax = activeWithdrawal ? Math.max((activeWithdrawal.interestTaxAmount || 0) - (activeWithdrawal.interestTaxPaid || 0), 0) : 0;
   const remainingNetworkFee = activeWithdrawal ? Math.max((activeWithdrawal.networkFeeAmount || 0) - (activeWithdrawal.networkFeePaid || 0), 0) : 0;
   const activationFeeRequired = configuredActivationFee > 0;
+  const displayedWithdrawAmount = (() => {
+    if (withdrawAmountInput && !Number.isNaN(Number(withdrawAmountInput))) {
+      return Number(withdrawAmountInput).toFixed(2);
+    }
+    return activeWithdrawal?.amount != null ? Number(activeWithdrawal.amount).toFixed(2) : '0.00';
+  })();
 
   const handlePayActivationFee = async () => {
     if (!activeWithdrawal) return;
@@ -256,6 +271,10 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
     }
     const amountNum = Number(withdrawAmountInput);
     const maxAllowedAmount = (activeWithdrawal?.reservedAmount && activeWithdrawal.reservedAmount > 0) ? activeWithdrawal.reservedAmount : (lockedBalance || 0);
+    if (!selectedNetwork) {
+      setActionError('Please select a withdrawal network before submitting the form.');
+      return;
+    }
     if (!validateWalletAddress(walletAddress, selectedNetwork)) {
       setActionError('Please enter a valid wallet address for the selected network.');
       return;
@@ -383,10 +402,10 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-            <p className="text-gray-400 text-sm">Requested Amount</p>
-            <p className="text-white text-3xl font-semibold mt-2">${activeWithdrawal.amount?.toFixed(2) ?? '0.00'}</p>
+            <p className="text-gray-400 text-sm">Amount to Withdraw</p>
+            <p className="text-white text-3xl font-semibold mt-2">${displayedWithdrawAmount}</p>
             <p className="text-gray-500 text-sm mt-2">
-              This is the fixed amount from your original withdrawal request. It cannot be changed here.
+              You can adjust this amount before submitting the withdrawal form.
             </p>
           </div>
           <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
@@ -469,6 +488,7 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
                     onChange={(e) => setSelectedNetwork(e.target.value)}
                     className="w-full mt-2 bg-dark border border-gray-700 rounded-lg py-3 px-4 focus:border-gold focus:outline-none"
                   >
+                    <option value="">Select a network</option>
                     {networks.map((network) => (
                       <option key={network.id} value={network.id}>{network.name}</option>
                     ))}
@@ -523,8 +543,8 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
             <button
               type="button"
               onClick={handleSubmitWithdrawalForm}
-              disabled={actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) || !/^[0-9]{6}$/.test(withdrawPin) || !withdrawAmountInput}
-              className={`w-full py-3 rounded-lg font-bold ${actionLoading || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) || !/^[0-9]{6}$/.test(withdrawPin) || !withdrawAmountInput ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
+              disabled={actionLoading || !selectedNetwork || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) || !/^[0-9]{6}$/.test(withdrawPin) || !withdrawAmountInput || Number.isNaN(Number(withdrawAmountInput)) || Number(withdrawAmountInput) <= 0}
+              className={`w-full py-3 rounded-lg font-bold ${actionLoading || !selectedNetwork || !walletAddress || !validateWalletAddress(walletAddress, selectedNetwork) || !/^[0-9]{6}$/.test(withdrawPin) || !withdrawAmountInput || Number.isNaN(Number(withdrawAmountInput)) || Number(withdrawAmountInput) <= 0 ? 'bg-gray-700 cursor-not-allowed' : 'bg-gold text-black hover:bg-yellow-600'}`}
             >
               {actionLoading ? 'Submitting...' : 'Submit Withdrawal Form'}
             </button>
