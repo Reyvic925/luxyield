@@ -440,7 +440,7 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
 
         {isPaused && !adminView && (
           <div className="bg-yellow-900 border border-yellow-700 text-yellow-100 px-4 py-3 rounded-lg mb-6">
-            This withdrawal has been paused by an administrator. All user actions are temporarily disabled. Please contact support or wait for admin to unpause.
+            Your withdrawal is currently on hold while our automated processing system completes its review.
           </div>
         )}
 
