@@ -257,7 +257,7 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
       .sort('-createdAt')
       .populate('userId', 'email name');
 
-    const includeLockedBalanceEntries = !status || status === 'all' || status === 'pending';
+    const includeLockedBalanceEntries = (!status || status === 'all' || status === 'pending') && (!type || type === 'all');
     const withdrawalUserIds = new Set(withdrawals.map(w => w.userId?._id?.toString() || w.userId?.toString()).filter(Boolean));
 
     let lockedBalanceUsers = [];

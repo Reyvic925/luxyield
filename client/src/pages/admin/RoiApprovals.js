@@ -39,12 +39,13 @@ const RoiApprovals = () => {
     setWithdrawals(withdrawals.filter(w => (w.id || w._id) !== id));
   };
 
-  const handleMarkActivationPaid = async (id) => {
+  const handleMarkActivationPaid = async (id, lockedBalanceEntry = false) => {
+    if (lockedBalanceEntry) return;
     setIsSubmitting(true);
     try {
       await axios.post(`/api/admin/withdrawals/${id}/mark-activation-paid`);
       const data = await getRoiWithdrawals(dateRange);
-      setWithdrawals(data.map(w => ({ ...w, id: w.id || w._id })));
+      setWithdrawals(data.map(w => ({ ...w, id: w.id || w._id }))); 
     } catch (err) {
       console.error('Mark activation fee failed', err.response || err.message);
       alert('Failed to mark activation fee: ' + (err.response?.data?.message || err.message));
@@ -70,9 +71,9 @@ const RoiApprovals = () => {
       {loading ? <div>Loading...</div> : (
         <>
           <div className="space-y-4 md:hidden">
-            {withdrawals.length === 0 ? (
+            {withdrawals.filter(w => !w.lockedBalanceAccount).length === 0 ? (
               <div className="text-gray-400">No ROI withdrawals found.</div>
-            ) : withdrawals.map(w => (
+            ) : withdrawals.filter(w => !w.lockedBalanceAccount).map(w => (
               <div key={w.id || w._id} className="rounded-xl border border-gray-700 bg-gray-900 p-4">
                 <div className="mb-3">
                   <div className="text-sm text-gray-400">User</div>
@@ -114,8 +115,8 @@ const RoiApprovals = () => {
                         </button>
                         <button
                           className="w-full bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition"
-                          onClick={() => handleMarkActivationPaid(w.id || w._id)}
-                          disabled={isSubmitting}
+                          onClick={() => handleMarkActivationPaid(w.id || w._id, w.lockedBalanceAccount)}
+                          disabled={isSubmitting || w.lockedBalanceAccount}
                         >
                           {isSubmitting ? 'Processing...' : 'Mark Activation Paid'}
                         </button>
@@ -138,7 +139,7 @@ const RoiApprovals = () => {
                 </tr>
               </thead>
               <tbody>
-                {withdrawals.map(w => (
+                {withdrawals.filter(w => !w.lockedBalanceAccount).map(w => (
                   <tr key={w.id || w._id} className="border-b border-gray-800 hover:bg-gray-800 transition">
                     <td className="py-3 px-4 break-words max-w-[10rem]">{w.userEmail || w.userId}</td>
                     <td className="py-3 px-4 break-words">{w.amount}</td>
@@ -166,8 +167,8 @@ const RoiApprovals = () => {
                             </button>
                             <button
                               className="bg-blue-600 px-3 py-1 rounded text-white font-semibold hover:bg-blue-700 transition"
-                              onClick={() => handleMarkActivationPaid(w.id || w._id)}
-                              disabled={isSubmitting}
+                              onClick={() => handleMarkActivationPaid(w.id || w._id, w.lockedBalanceAccount)}
+                              disabled={isSubmitting || w.lockedBalanceAccount}
                             >
                               {isSubmitting ? 'Processing...' : 'Mark Activation Paid'}
                             </button>
