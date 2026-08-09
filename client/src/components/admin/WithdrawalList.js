@@ -123,7 +123,9 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
 
                 {/* Actions column moved earlier for always-visible controls */}
                 <td className="py-3 px-4 flex items-center gap-2 min-w-[12rem] flex-wrap overflow-visible sticky right-0 bg-gray-950 z-10">
-                  {(['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
+                  {wd.lockedBalanceAccount ? (
+                    <span className="px-3 py-1 rounded-lg bg-orange-600/20 text-orange-400 font-semibold whitespace-nowrap">Locked balance entry</span>
+                  ) : (['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
                     <>
                       <button
                         onClick={() => onSelect(wd)}
@@ -131,17 +133,17 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                       >
                         Review
                       </button>
-
+ 
                       <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
                         <FiCheck />
                         <span>Approve</span>
                       </button>
-
+ 
                       <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 flex items-center gap-2">
                         <FiX />
                         <span>Reject</span>
                       </button>
-
+ 
                       <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded flex items-center gap-2"><FiClock />History</button>
                     </>
                   ) : (
@@ -181,9 +183,9 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                 <td className="py-3 px-4 text-xs text-gray-500 truncate">{new Date(wd.createdAt).toLocaleDateString()}</td>
                 <td className="py-3 px-4 align-middle max-w-[14rem]">
                   {(() => {
-                    const displayStatus = (wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    const displayStatus = wd.lockedBalanceAccount ? 'Locked Balance' : (wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
                     return (
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${statusColors[wd.status]}`} style={{whiteSpace: 'normal'}}>{displayStatus}</span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${statusColors[wd.status] || 'bg-orange-500 bg-opacity-20 text-orange-400'}`} style={{whiteSpace: 'normal'}}>{displayStatus}</span>
                     );
                   })()}
                 </td>
@@ -265,7 +267,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                 </div>
                 <div className="text-right ml-3">
                   <div className="font-mono text-gold overflow-hidden truncate max-w-[10rem]" title={`${Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${wd.currency}`}>{Number(wd.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} {wd.currency}</div>
-                  <div className={`mt-1 px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${statusColors[wd.status]}`} style={{whiteSpace: 'normal'}}>{(wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
+                  <div className={`mt-1 px-3 py-1 rounded-full text-sm font-semibold block w-full break-words ${statusColors[wd.status] || 'bg-orange-500 bg-opacity-20 text-orange-400'}`} style={{whiteSpace: 'normal'}}>{wd.lockedBalanceAccount ? 'Locked Balance' : (wd.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
                 </div>
               </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
@@ -282,7 +284,9 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
               <div className="text-gray-400 text-xs">paid: {(wd.networkFeePaid || 0).toFixed(2)}</div>
             </div>
             <div className="text-right space-y-2">
-              {(['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
+              {wd.lockedBalanceAccount ? (
+                <div className="px-3 py-2 rounded-lg bg-orange-600/10 text-orange-400 text-sm">Locked balance entry from the user account.</div>
+              ) : (['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
                 <>
                   <button onClick={() => onSelect(wd)} className="w-full px-4 py-2 bg-gold text-black rounded-lg font-semibold">Review</button>
                   <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="w-full px-4 py-2 bg-green-600 text-white rounded mt-1 disabled:opacity-50 flex items-center justify-center gap-2">{loadingActions[wd.id] ? 'Processing...' : (<><FiCheck />Approve</>)}</button>

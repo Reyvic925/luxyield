@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const Withdrawal = require('../../models/Withdrawal');
+const User = require('../../models/User');
 const auth = require('../../middleware/authAdmin');
 
 // Get withdrawals with filters
@@ -9,6 +10,8 @@ router.get('/', auth, async (req, res) => {
   try {
     const { status, currency, dateRange } = req.query;
     
+    const includeLockedBalanceEntries = !status || status === 'all' || status === 'pending';
+
     // Build query
     const query = {};
     if (status && status !== 'all') query.status = status;
@@ -29,9 +32,18 @@ router.get('/', auth, async (req, res) => {
       .sort('-createdAt')
       .limit(100)
       .populate('userId', 'email name');
-    
-    // Map to include userEmail and userName fields for frontend
-    const mapped = withdrawals.map(w => ({
+
+    const withdrawalUserIds = new Set(withdrawals.map(w => w.userId?._id?.toString() || w.userId?.toString()).filter(Boolean));
+
+    const lockedBalanceUsers = includeLockedBalanceEntries
+      ? await User.find({
+          role: 'user',
+          lockedBalance: { $gt: 0 },
+          _id: { $nin: Array.from(withdrawalUserIds) }
+        }).select('name email lockedBalance createdAt').lean()
+      : [];
+
+    const mapped = [...withdrawals.map(w => ({
       id: w._id.toString(),
       userId: w.userId?._id?.toString() || w.userId?.toString() || '',
       userEmail: w.userId?.email || '',
@@ -45,9 +57,27 @@ router.get('/', auth, async (req, res) => {
       createdAt: w.createdAt,
       processedAt: w.processedAt,
       processedBy: w.processedBy,
-    }));
-    
-    res.json(mapped);
+    })), ...lockedBalanceUsers.map(user => ({
+      id: `locked-balance-${user._id}`,
+      userId: user._id.toString(),
+      userEmail: user.email || '',
+      userName: user.name || '',
+      amount: Number(user.lockedBalance || 0),
+      currency: 'USD',
+      network: 'N/A',
+      walletAddress: '',
+      status: 'pending',
+      lockedBalanceAccount: true,
+      lockedBalanceAmount: Number(user.lockedBalance || 0),
+      adminNotes: 'Locked balance exists on this account. This entry was generated from the user balance record.',
+      createdAt: user.createdAt || new Date(),
+      processedAt: null,
+      processedBy: null,
+      type: 'locked_balance',
+    }))];
+
+    mapped.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json(mapped.slice(0, 100));
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

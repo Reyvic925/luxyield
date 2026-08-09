@@ -157,6 +157,15 @@ const Withdraw = () => {
     }
   }, []);
 
+  const getEffectiveWithdrawalStatus = (withdrawal) => {
+    if (!withdrawal) return null;
+    const configuredActivationFee = Number(withdrawal.activationFeeAmount ?? 0);
+    const rawStatus = withdrawal.status;
+    return configuredActivationFee <= 0 && ['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(rawStatus)
+      ? 'activation_fee_approved'
+      : rawStatus;
+  };
+
   useEffect(() => {
     const initialize = async () => {
       setLoading(true);
@@ -211,7 +220,8 @@ const Withdraw = () => {
 
   const handleSubmitWithdrawalForm = async () => {
     if (!activeWithdrawal) return;
-    if (activeWithdrawal.status !== 'activation_fee_approved') {
+    const status = getEffectiveWithdrawalStatus(activeWithdrawal);
+    if (status !== 'activation_fee_approved') {
       setActionError('Withdrawal form is only available after the activation fee step is completed.');
       return;
     }
@@ -298,15 +308,16 @@ const Withdraw = () => {
       );
     }
 
-    const status = activeWithdrawal.status;
+    const status = getEffectiveWithdrawalStatus(activeWithdrawal);
+    const normalizedStatus = status;
     const feeLabel = getNetworkFeeLabel(activeWithdrawal.currency, activeWithdrawal.network);
-    const activationFeeFullyPaid = remainingActivationFee === 0 && ['activation_fee_paid', 'activation_fee_rejected'].includes(status);
-    const interestTaxFullyPaid = remainingInterestTax === 0 && ['interest_tax_paid', 'interest_tax_rejected'].includes(status);
-    const networkFeeFullyPaid = remainingNetworkFee === 0 && ['network_fee_paid', 'network_fee_rejected'].includes(status);
-    const canPayActivation = activationFeeRequired && ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(status) && !activationFeeFullyPaid;
-    const canPayTax = ['awaiting_interest_tax', 'interest_tax_rejected', 'interest_tax_paid'].includes(status) && !interestTaxFullyPaid;
-    const canPayNetwork = ['awaiting_network_fee', 'network_fee_rejected', 'network_fee_paid'].includes(status) && !networkFeeFullyPaid;
-    const showWalletForm = status === 'activation_fee_approved';
+    const activationFeeFullyPaid = remainingActivationFee === 0 && ['activation_fee_paid', 'activation_fee_rejected'].includes(normalizedStatus);
+    const interestTaxFullyPaid = remainingInterestTax === 0 && ['interest_tax_paid', 'interest_tax_rejected'].includes(normalizedStatus);
+    const networkFeeFullyPaid = remainingNetworkFee === 0 && ['network_fee_paid', 'network_fee_rejected'].includes(normalizedStatus);
+    const canPayActivation = activationFeeRequired && ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(normalizedStatus) && !activationFeeFullyPaid;
+    const canPayTax = ['awaiting_interest_tax', 'interest_tax_rejected', 'interest_tax_paid'].includes(normalizedStatus) && !interestTaxFullyPaid;
+    const canPayNetwork = ['awaiting_network_fee', 'network_fee_rejected', 'network_fee_paid'].includes(normalizedStatus) && !networkFeeFullyPaid;
+    const showWalletForm = normalizedStatus === 'activation_fee_approved';
 
     return (
       <div className="glassmorphic p-6 rounded-xl bg-gray-900 border border-gray-700">
@@ -314,12 +325,12 @@ const Withdraw = () => {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm uppercase tracking-[0.24em] text-gray-400">Current Withdrawal Stage</p>
-              <h3 className="text-2xl font-bold mt-2 text-white">{statusLabels[status] || status}</h3>
+              <h3 className="text-2xl font-bold mt-2 text-white">{statusLabels[normalizedStatus] || normalizedStatus}</h3>
             </div>
             <div className="px-3 py-2 rounded-full bg-gray-800 text-sm text-gray-200">
               Withdrawal
             </div>          </div>
-          <p className="text-gray-400 mt-3 max-w-2xl">{statusDescriptions[status] || 'Follow the prompts to complete your withdrawal.'}</p>
+          <p className="text-gray-400 mt-3 max-w-2xl">{statusDescriptions[normalizedStatus] || 'Follow the prompts to complete your withdrawal.'}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -380,7 +391,7 @@ const Withdraw = () => {
           </div>
         )}
 
-        {!canPayActivation && ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(status) && (
+        {!canPayActivation && ['awaiting_activation_fee', 'activation_fee_rejected', 'activation_fee_paid'].includes(normalizedStatus) && (
           <div className="space-y-4 mb-6">
             <div className="bg-gray-850 p-4 rounded-lg border border-gray-700">
               <p className="text-gray-400 text-sm">Activation Fee</p>
@@ -451,7 +462,7 @@ const Withdraw = () => {
             </button>
           </div>
         )}
-        {status === 'activation_fee_paid' && (
+        {normalizedStatus === 'activation_fee_paid' && (
           <div className="bg-gray-850 p-4 rounded-lg border border-gray-700 mb-6 text-gray-300">
             <p className="text-sm">Activation fee payment has been received.</p>
             <p className="text-sm text-gray-400">Please wait for the next step.</p>

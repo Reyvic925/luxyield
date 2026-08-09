@@ -47,6 +47,27 @@ function matchesStoredPin(storedPin, submittedPin) {
   return storedPin === hashPin(submittedPin) || storedPin === submittedPin;
 }
 
+function isZeroFeeActivation(withdrawal) {
+  return Number(withdrawal?.activationFeeAmount ?? 0) <= 0;
+}
+
+async function normalizeWithdrawalStatus(withdrawal) {
+  if (!withdrawal) return withdrawal;
+
+  const shouldReleaseRoiFunds = withdrawal.type === 'roi' && isZeroFeeActivation(withdrawal) && ['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(withdrawal.status);
+  if (!shouldReleaseRoiFunds) return withdrawal;
+
+  const user = await User.findById(withdrawal.userId);
+  if (user) {
+    user.availableBalance = (user.availableBalance || 0) + (withdrawal.amount || 0);
+    await user.save();
+  }
+
+  withdrawal.status = 'activation_fee_approved';
+  await withdrawal.save();
+  return withdrawal;
+}
+
 // Simulate withdrawal request
 router.post('/', auth, async (req, res) => {
   try {
@@ -292,7 +313,11 @@ router.post('/:withdrawalId/pay-activation-fee', auth, async (req, res) => {
     const remainingFee = Math.max(configuredActivationFee - (withdrawal.activationFeePaid || 0), 0);
 
     if (configuredActivationFee <= 0) {
-      withdrawal.status = 'activation_fee_paid';
+      if (withdrawal.type === 'roi') {
+        user.availableBalance = (user.availableBalance || 0) + (withdrawal.amount || 0);
+        await user.save();
+      }
+      withdrawal.status = 'activation_fee_approved';
       await withdrawal.save();
       return res.json({
         success: true,
@@ -527,7 +552,10 @@ router.post('/:withdrawalId/pay-network-fee', auth, async (req, res) => {
 router.get('/', auth, async (req, res) => {
   try {
     const withdrawals = await Withdrawal.find({ userId: req.user.id }).sort('-createdAt');
-    const refreshed = await Promise.all(withdrawals.map(async w => await refreshWithdrawalProcessingStatus(w)));
+    const refreshed = await Promise.all(withdrawals.map(async w => {
+      const refreshedWithdrawal = await refreshWithdrawalProcessingStatus(w);
+      return normalizeWithdrawalStatus(refreshedWithdrawal);
+    }));
     return res.json({ success: true, withdrawals: refreshed });
   } catch (err) {
     console.error('[WITHDRAWAL] list error:', err);
@@ -546,6 +574,7 @@ router.get('/:withdrawalId', auth, async (req, res) => {
     }
 
     withdrawal = await refreshWithdrawalProcessingStatus(withdrawal);
+    withdrawal = await normalizeWithdrawalStatus(withdrawal);
     return res.json({ success: true, withdrawal });
   } catch (err) {
     console.error('[WITHDRAWAL] get withdrawal error:', err);

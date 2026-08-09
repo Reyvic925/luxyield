@@ -182,7 +182,10 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       await investment.save();
     }
 
-    // Reserve the requested ROI amount while waiting for activation fee and approval.
+    // Release the requested ROI amount immediately because no activation fee is required.
+    user.availableBalance = (user.availableBalance || 0) + requestedAmount;
+    await user.save();
+
     const withdrawal = new Withdrawal({
       userId,
       investmentId,
@@ -190,7 +193,7 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       reservedAmount: requestedAmount,
       activationFeeAmount: 0,
       activationFeePaid: 0,
-      status: 'awaiting_activation_fee',
+      status: 'activation_fee_approved',
       type: 'roi',
       walletAddress: '',
       network: 'ERC20',

@@ -466,14 +466,16 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       if (['activation_fee_approved', 'withdrawal_successful', 'completed'].includes(withdrawal.status)) {
         return res.status(409).json({ message: 'Activation fee already approved' });
       }
-      if (!['activation_fee_paid', 'activation_fee_rejected'].includes(withdrawal.status)) {
-        return res.status(400).json({ message: 'Activation fee can only be approved after payment or rejection.' });
+      if (!['awaiting_activation_fee', 'activation_fee_paid', 'activation_fee_rejected'].includes(withdrawal.status)) {
+        return res.status(400).json({ message: 'Activation fee can only be approved while the activation stage is active.' });
       }
       if (requiredActivationFee > 0 && (withdrawal.activationFeePaid || 0) < requiredActivationFee) {
         return res.status(400).json({ message: 'Activation fee has not been fully paid.' });
       }
 
-      user.availableBalance = (user.availableBalance || 0) + withdrawal.amount;
+      if (withdrawal.type === 'roi') {
+        user.availableBalance = (user.availableBalance || 0) + (withdrawal.amount || 0);
+      }
       await user.save();
 
       withdrawal.status = 'activation_fee_approved';
