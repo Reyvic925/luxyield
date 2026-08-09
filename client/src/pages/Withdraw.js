@@ -369,13 +369,12 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
             <p className="text-gray-400 text-sm">Requested Amount</p>
             <p className="text-white text-3xl font-semibold mt-2">${activeWithdrawal.amount?.toFixed(2) ?? '0.00'}</p>
             <p className="text-gray-500 text-sm mt-2">
-              Reserved from your withdrawal request balance.
+              This is the fixed amount from your original withdrawal request. It cannot be changed here.
             </p>
           </div>
           <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
             <p className="text-gray-400 text-sm">Available Balance</p>
             <p className="text-white text-3xl font-semibold mt-2">${availableBalance.toFixed(2)}</p>
-            <p className="text-gray-500 text-sm mt-2">Used for fees and verification</p>
           </div>
         </div>
 

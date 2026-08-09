@@ -47,7 +47,7 @@ const WithdrawalHistory = ({ withdrawals }) => {
                     {withdrawal.type === 'roi' ? 'ROI Withdrawal' : `Withdrawal to ${withdrawal.walletAddress || 'your wallet'}`}
                   </p>
                   <p className="text-xs theme-aware-text-muted mt-1">
-                    {withdrawal.network || withdrawal.currency || 'N/A'} • {withdrawal.createdAt ? new Date(withdrawal.createdAt).toLocaleDateString() : ''}
+                    {((withdrawal.network && withdrawal.network !== '') || (withdrawal.currency && withdrawal.currency !== '')) ? (withdrawal.network || withdrawal.currency) : 'Network not selected'} • {withdrawal.createdAt ? new Date(withdrawal.createdAt).toLocaleDateString() : ''}
                   </p>
                 </div>
                 <div className="mt-4 sm:mt-0 flex items-center gap-2">
