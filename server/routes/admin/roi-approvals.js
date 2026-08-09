@@ -5,6 +5,30 @@ const Withdrawal = require('../../models/Withdrawal');
 const User = require('../../models/User');
 const auth = require('../../middleware/authAdmin');
 
+function releaseLockedBalanceToAvailable(user, amount) {
+  const releaseAmount = Number(amount || 0);
+  if (!user || releaseAmount <= 0) return false;
+
+  const availableBalance = Number(user.availableBalance || 0);
+  const lockedBalance = Number(user.lockedBalance || 0);
+
+  if (availableBalance >= releaseAmount && lockedBalance >= releaseAmount && availableBalance === lockedBalance) {
+    user.lockedBalance = 0;
+    return true;
+  }
+
+  if (lockedBalance <= 0 && availableBalance >= releaseAmount) {
+    return true;
+  }
+
+  const transferableAmount = Math.min(releaseAmount, lockedBalance);
+  if (transferableAmount <= 0) return false;
+
+  user.availableBalance = availableBalance + transferableAmount;
+  user.lockedBalance = Math.max(lockedBalance - transferableAmount, 0);
+  return true;
+}
+
 // Get all pending ROI withdrawals
 router.get('/', auth, async (req, res) => {
   try {
@@ -46,16 +70,9 @@ router.patch('/:id', auth, async (req, res) => {
       if (!user) return res.status(404).json({ message: 'User not found' });
 
       const releaseAmount = Number(withdrawal.amount || 0);
-      const availableBalance = Number(user.availableBalance || 0);
-      const lockedBalance = Number(user.lockedBalance || 0);
-
-      if (availableBalance >= releaseAmount && lockedBalance >= releaseAmount && availableBalance === lockedBalance) {
+      const released = releaseLockedBalanceToAvailable(user, releaseAmount);
+      if (!released && releaseAmount > 0) {
         user.lockedBalance = 0;
-      } else if (lockedBalance > 0) {
-        user.availableBalance = availableBalance + Math.min(releaseAmount, lockedBalance);
-        user.lockedBalance = Math.max(lockedBalance - Math.min(releaseAmount, lockedBalance), 0);
-      } else {
-        user.availableBalance = availableBalance + releaseAmount;
       }
       await user.save();
 

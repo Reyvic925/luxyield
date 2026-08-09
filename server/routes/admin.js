@@ -28,6 +28,9 @@ function releaseZeroFeeRoiFunds(user, amount) {
   const availableBalance = Number(user.availableBalance || 0);
   const lockedBalance = Number(user.lockedBalance || 0);
 
+  // Historical duplicate-credit bug: the same ROI amount may already be reflected in both
+  // available and locked balances. In that case, the fix is to clear the locked side without
+  // adding the amount a second time.
   if (availableBalance >= releaseAmount && lockedBalance >= releaseAmount && availableBalance === lockedBalance) {
     user.lockedBalance = 0;
     return true;
@@ -489,8 +492,10 @@ router.post('/users/:id/locked-balance-activation', authAdmin, async (req, res) 
     const currentLocked = Number(user.lockedBalance || 0);
 
     if (status === 'activation_fee_approved') {
-      user.availableBalance = (user.availableBalance || 0) + currentLocked;
-      user.lockedBalance = 0;
+      const released = releaseZeroFeeRoiFunds(user, currentLocked);
+      if (!released && currentLocked > 0) {
+        user.lockedBalance = 0;
+      }
       await user.save();
 
       await new AuditLogModel({

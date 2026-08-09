@@ -313,32 +313,41 @@ const Withdraw = ({ adminView = false, adminUserId = null, adminPortfolioData = 
   };
 
   const renderActionPanel = () => {
+    // Admin mirror: normally read-only, but allow progressing through user-actionable stages
+    // (for example activation_fee_approved -> submit-form) so admins can simulate the user
+    // when necessary. If adminView is true and the withdrawal status is actionable, fall
+    // through to the normal interactive rendering below. Otherwise show the read-only mirror.
     if (adminView) {
-      return (
-        <div className="glassmorphic p-6 rounded-xl bg-gray-900 border border-gray-700">
-          <h3 className="text-xl font-bold mb-4">Withdrawal Review</h3>
-          <p className="text-gray-400 mb-4">
-            This is a read-only mirror of the user withdrawal workflow. Admin actions should be handled from the main withdrawal approval screens.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-              <p className="text-gray-400 text-sm">Available Balance</p>
-              <p className="text-white text-3xl font-semibold mt-2">${availableBalance.toLocaleString()}</p>
+      const status = getEffectiveWithdrawalStatus(activeWithdrawal);
+      const actionableForAdmin = activeWithdrawal && ['activation_fee_approved', 'awaiting_interest_tax', 'awaiting_network_fee', 'activation_fee_paid', 'interest_tax_paid', 'network_fee_paid', 'withdrawal_processing'].includes(status);
+      if (!actionableForAdmin) {
+        return (
+          <div className="glassmorphic p-6 rounded-xl bg-gray-900 border border-gray-700">
+            <h3 className="text-xl font-bold mb-4">Withdrawal Review</h3>
+            <p className="text-gray-400 mb-4">
+              This is a read-only mirror of the user withdrawal workflow. Admin actions should be handled from the main withdrawal approval screens.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <p className="text-gray-400 text-sm">Available Balance</p>
+                <p className="text-white text-3xl font-semibold mt-2">${availableBalance.toLocaleString()}</p>
+              </div>
+              <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <p className="text-gray-400 text-sm">Locked Balance</p>
+                <p className="text-white text-3xl font-semibold mt-2">${lockedBalance.toLocaleString()}</p>
+              </div>
             </div>
-            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-              <p className="text-gray-400 text-sm">Locked Balance</p>
-              <p className="text-white text-3xl font-semibold mt-2">${lockedBalance.toLocaleString()}</p>
-            </div>
+            {activeWithdrawal && (
+              <div className="mt-4 bg-gray-800 p-4 rounded-lg border border-gray-700">
+                <p className="text-gray-400 text-sm">Current Stage</p>
+                <p className="text-white text-xl font-semibold mt-2">{statusLabels[getEffectiveWithdrawalStatus(activeWithdrawal)] || getEffectiveWithdrawalStatus(activeWithdrawal)}</p>
+                <p className="text-gray-500 text-sm mt-2">Requested Amount: ${Number(activeWithdrawal.amount || 0).toFixed(2)}</p>
+              </div>
+            )}
           </div>
-          {activeWithdrawal && (
-            <div className="mt-4 bg-gray-800 p-4 rounded-lg border border-gray-700">
-              <p className="text-gray-400 text-sm">Current Stage</p>
-              <p className="text-white text-xl font-semibold mt-2">{statusLabels[getEffectiveWithdrawalStatus(activeWithdrawal)] || getEffectiveWithdrawalStatus(activeWithdrawal)}</p>
-              <p className="text-gray-500 text-sm mt-2">Requested Amount: ${Number(activeWithdrawal.amount || 0).toFixed(2)}</p>
-            </div>
-          )}
-        </div>
-      );
+        );
+      }
+      // If actionableForAdmin is true, fall through to render the interactive user panel below
     }
 
     if (!activeWithdrawal) {
