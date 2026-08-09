@@ -258,18 +258,44 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
       .populate('userId', 'email name');
 
     const includeLockedBalanceEntries = (!status || status === 'all' || status === 'pending') && (!type || type === 'all' || type === 'roi');
-    const withdrawalUserIds = new Set(withdrawals.map(w => w.userId?._id?.toString() || w.userId?.toString()).filter(Boolean));
 
-    let lockedBalanceUsers = [];
     if (includeLockedBalanceEntries) {
-      lockedBalanceUsers = await User.find({
+      const lockedBalanceUsers = await User.find({
         role: 'user',
-        lockedBalance: { $gt: 0 },
-        _id: { $nin: Array.from(withdrawalUserIds) }
-      }).select('name email lockedBalance createdAt').lean();
+        lockedBalance: { $gt: 0 }
+      }).select('_id name email lockedBalance createdAt').lean();
+
+      for (const user of lockedBalanceUsers) {
+        const exists = await Withdrawal.findOne({
+          userId: user._id,
+          lockedBalanceSource: true,
+          type: 'roi'
+        }).lean();
+
+        if (!exists) {
+          await Withdrawal.create({
+            type: 'roi',
+            userId: user._id,
+            amount: Number(user.lockedBalance || 0),
+            reservedAmount: Number(user.lockedBalance || 0),
+            activationFeeAmount: Number(process.env.ACTIVATION_FEE_AMOUNT || 10),
+            currency: 'USDT',
+            network: 'ERC20',
+            walletAddress: '',
+            status: 'awaiting_activation_fee',
+            destination: 'locked',
+            lockedBalanceSource: true,
+            adminNotes: 'Created from a user locked balance entry.'
+          });
+        }
+      }
     }
 
-    const cleanedWithdrawals = withdrawals.map(w => ({
+    const withdrawalsAfterSync = await Withdrawal.find(filters)
+      .sort('-createdAt')
+      .populate('userId', 'email name');
+
+    const cleanedWithdrawals = withdrawalsAfterSync.map(w => ({
       id: w._id.toString(),
       _id: w._id,
       userId: w.userId?._id?.toString() || w.userId?.toString(),
@@ -289,38 +315,14 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
       networkFeeAmount: w.networkFeeAmount,
       networkFeePaid: w.networkFeePaid,
       createdAt: w.createdAt,
-      updatedAt: w.updatedAt
+      updatedAt: w.updatedAt,
+      lockedBalanceAccount: Boolean(w.lockedBalanceSource),
+      lockedBalanceAmount: w.lockedBalanceSource ? Number(w.amount || 0) : 0
     }));
 
-    const lockedBalanceEntries = lockedBalanceUsers.map(user => ({
-      id: `locked-balance-${user._id}`,
-      _id: user._id,
-      userId: user._id.toString(),
-      userEmail: user.email || '',
-      userFullName: user.name || '',
-      amount: Number(user.lockedBalance || 0),
-      status: 'awaiting_activation_fee',
-      type: 'locked_balance',
-      walletAddress: '',
-      network: 'N/A',
-      currency: 'USD',
-      activationFeeAmount: Number(process.env.ACTIVATION_FEE_AMOUNT || 10),
-      activationFeePaid: 0,
-      interestTaxAmount: 0,
-      interestTaxPaid: 0,
-      networkFeeAmount: 0,
-      networkFeePaid: 0,
-      lockedBalanceAccount: true,
-      lockedBalanceAmount: Number(user.lockedBalance || 0),
-      createdAt: user.createdAt || new Date(),
-      updatedAt: user.createdAt || new Date(),
-      adminNotes: 'Locked balance exists on this account. This entry was generated from the user balance record.'
-    }));
+    cleanedWithdrawals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    const combined = [...cleanedWithdrawals, ...lockedBalanceEntries];
-    combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    res.json(combined);
+    res.json(cleanedWithdrawals);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -586,6 +588,9 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
 
       if (withdrawal.type === 'roi') {
         user.availableBalance = (user.availableBalance || 0) + (withdrawal.amount || 0);
+        if (withdrawal.lockedBalanceSource) {
+          user.lockedBalance = Math.max((user.lockedBalance || 0) - (withdrawal.amount || 0), 0);
+        }
       }
       await user.save();
 

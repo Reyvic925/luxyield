@@ -59,6 +59,10 @@ const WithdrawalSchema = new mongoose.Schema({
     enum: ['available', 'locked'],
     default: 'available',
     required: true
+  },
+  lockedBalanceSource: {
+    type: Boolean,
+    default: false
   }
 }, { 
   timestamps: true,

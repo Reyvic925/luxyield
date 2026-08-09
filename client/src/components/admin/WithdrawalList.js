@@ -123,9 +123,7 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
 
                 {/* Actions column moved earlier for always-visible controls */}
                 <td className="py-3 px-4 flex items-center gap-2 min-w-[12rem] flex-wrap overflow-visible sticky right-0 bg-gray-950 z-10">
-                  {wd.lockedBalanceAccount ? (
-                    <span className="px-3 py-1 rounded-lg bg-orange-600/20 text-orange-400 font-semibold whitespace-nowrap">Locked balance entry</span>
-                  ) : (['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
+                  {(['awaiting_activation_fee','activation_fee_paid','activation_fee_rejected','pending'].includes(wd.status)) ? (
                     <>
                       <button
                         onClick={() => onSelect(wd)}
@@ -133,17 +131,17 @@ const WithdrawalList = ({ withdrawals = [], onSelect, onExport }) => {
                       >
                         Review
                       </button>
- 
+  
                       <button onClick={() => openApproveModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
                         <FiCheck />
                         <span>Approve</span>
                       </button>
- 
+  
                       <button onClick={() => openRejectModal(wd.id)} disabled={loadingActions[wd.id]} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 flex items-center gap-2">
                         <FiX />
                         <span>Reject</span>
                       </button>
- 
+  
                       <button onClick={() => toggleAudit(wd.id)} className="px-3 py-1 bg-gray-700 text-gray-200 rounded flex items-center gap-2"><FiClock />History</button>
                     </>
                   ) : (

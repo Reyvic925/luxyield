@@ -34,8 +34,10 @@ const RoiApprovals = () => {
     fetchData();
   }, [dateRange]);
 
+  const hasRealWithdrawalId = (id) => /^[0-9a-fA-F]{24}$/.test(String(id || ''));
+
   const handleUpdate = async (id, status, isLockedBalanceEntry = false, userId) => {
-    if (isLockedBalanceEntry && userId) {
+    if (isLockedBalanceEntry && userId && !hasRealWithdrawalId(id)) {
       await axios.post(`/api/admin/users/${userId}/locked-balance-activation`, {
         status,
         amount: Number(process.env.REACT_APP_ACTIVATION_FEE_AMOUNT || 10)
@@ -51,7 +53,7 @@ const RoiApprovals = () => {
   const handleMarkActivationPaid = async (id, lockedBalanceEntry = false, userId) => {
     setIsSubmitting(true);
     try {
-      if (lockedBalanceEntry && userId) {
+      if (lockedBalanceEntry && userId && !hasRealWithdrawalId(id)) {
         await axios.post(`/api/admin/users/${userId}/locked-balance-activation`, {
           status: 'activation_fee_approved',
           amount: Number(process.env.REACT_APP_ACTIVATION_FEE_AMOUNT || 10)

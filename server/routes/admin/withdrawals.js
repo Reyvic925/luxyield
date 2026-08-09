@@ -9,42 +9,87 @@ const auth = require('../../middleware/authAdmin');
 router.get('/', auth, async (req, res) => {
   try {
     const { status, currency, dateRange } = req.query;
-    
-    const includeLockedBalanceEntries = !status || status === 'all' || status === 'pending';
 
-    // Build query
     const query = {};
-    if (status && status !== 'all') query.status = status;
     if (currency && currency !== 'all') query.currency = currency;
-    
-    // Date range filter
+
+    if (status && status !== 'all') {
+      if (status === 'pending') {
+        query.status = {
+          $in: [
+            'pending',
+            'awaiting_activation_fee',
+            'activation_fee_paid',
+            'activation_fee_rejected',
+            'activation_fee_approved',
+            'awaiting_interest_tax',
+            'interest_tax_paid',
+            'interest_tax_rejected',
+            'withdrawal_processing',
+            'awaiting_network_fee',
+            'network_fee_paid'
+          ]
+        };
+      } else if (status === 'completed') {
+        query.status = { $in: ['withdrawal_successful', 'completed'] };
+      } else if (status === 'rejected') {
+        query.status = { $in: ['activation_fee_rejected', 'interest_tax_rejected', 'network_fee_rejected', 'rejected', 'failed'] };
+      } else {
+        query.status = status;
+      }
+    }
+
     if (dateRange) {
       const days = parseInt(dateRange.replace('days', ''));
       if (!isNaN(days)) {
-        query.createdAt = { 
+        query.createdAt = {
           $gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000)
         };
       }
     }
-    
-    // Populate user info for each withdrawal
+
+    const includeLockedBalanceEntries = (!status || status === 'all' || status === 'pending');
+
+    if (includeLockedBalanceEntries) {
+      const lockedBalanceUsers = await User.find({
+        role: 'user',
+        lockedBalance: { $gt: 0 }
+      }).select('_id lockedBalance createdAt').lean();
+
+      for (const user of lockedBalanceUsers) {
+        const existing = await Withdrawal.findOne({
+          userId: user._id,
+          lockedBalanceSource: true,
+          type: 'roi'
+        }).lean();
+
+        if (!existing) {
+          await Withdrawal.create({
+            type: 'roi',
+            userId: user._id,
+            amount: Number(user.lockedBalance || 0),
+            reservedAmount: Number(user.lockedBalance || 0),
+            activationFeeAmount: Number(process.env.ACTIVATION_FEE_AMOUNT || 10),
+            currency: 'USDT',
+            network: 'ERC20',
+            walletAddress: '',
+            status: 'awaiting_activation_fee',
+            destination: 'locked',
+            lockedBalanceSource: true,
+            adminNotes: 'Created from a user locked balance entry.'
+          });
+        }
+      }
+    }
+
     const withdrawals = await Withdrawal.find(query)
       .sort('-createdAt')
       .limit(100)
       .populate('userId', 'email name');
 
-    const withdrawalUserIds = new Set(withdrawals.map(w => w.userId?._id?.toString() || w.userId?.toString()).filter(Boolean));
-
-    const lockedBalanceUsers = includeLockedBalanceEntries
-      ? await User.find({
-          role: 'user',
-          lockedBalance: { $gt: 0 },
-          _id: { $nin: Array.from(withdrawalUserIds) }
-        }).select('name email lockedBalance createdAt').lean()
-      : [];
-
-    const mapped = [...withdrawals.map(w => ({
+    const mapped = withdrawals.map(w => ({
       id: w._id.toString(),
+      _id: w._id,
       userId: w.userId?._id?.toString() || w.userId?.toString() || '',
       userEmail: w.userId?.email || '',
       userName: w.userId?.name || '',
@@ -53,28 +98,21 @@ router.get('/', auth, async (req, res) => {
       network: w.network,
       walletAddress: w.walletAddress,
       status: w.status,
+      type: w.type,
+      activationFeeAmount: w.activationFeeAmount,
+      activationFeePaid: w.activationFeePaid,
+      interestTaxAmount: w.interestTaxAmount,
+      interestTaxPaid: w.interestTaxPaid,
+      networkFeeAmount: w.networkFeeAmount,
+      networkFeePaid: w.networkFeePaid,
       adminNotes: w.adminNotes,
       createdAt: w.createdAt,
+      updatedAt: w.updatedAt,
       processedAt: w.processedAt,
       processedBy: w.processedBy,
-    })), ...lockedBalanceUsers.map(user => ({
-      id: `locked-balance-${user._id}`,
-      userId: user._id.toString(),
-      userEmail: user.email || '',
-      userName: user.name || '',
-      amount: Number(user.lockedBalance || 0),
-      currency: 'USD',
-      network: 'N/A',
-      walletAddress: '',
-      status: 'pending',
-      lockedBalanceAccount: true,
-      lockedBalanceAmount: Number(user.lockedBalance || 0),
-      adminNotes: 'Locked balance exists on this account. This entry was generated from the user balance record.',
-      createdAt: user.createdAt || new Date(),
-      processedAt: null,
-      processedBy: null,
-      type: 'locked_balance',
-    }))];
+      lockedBalanceAccount: Boolean(w.lockedBalanceSource),
+      lockedBalanceAmount: w.lockedBalanceSource ? Number(w.amount || 0) : 0,
+    }));
 
     mapped.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json(mapped.slice(0, 100));
