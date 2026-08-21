@@ -21,8 +21,6 @@ async function setupTestData() {
       password: 'hashed_password',
       phone: '+1234567890',
       country: 'US',
-      securityQuestion: 'What is your pet name?',
-      securityAnswer: 'Fluffy',
       referralCode: `REF${Date.now()}`,
       role: 'user',
       tier: 'Gold',
@@ -91,4 +89,4 @@ async function setupTestData() {
   }
 }
 
-setupTestData();`n
+setupTestData();

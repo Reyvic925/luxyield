@@ -26,8 +26,6 @@ async function createAdmin() {
     username: email.split('@')[0],
     phone: '+10000000000',
     country: 'Admin',
-    securityQuestion: 'What is your admin code?',
-    securityAnswer: 'admin',
     password: hash,
     role: 'admin',
     tier: 'Diamond', // Changed from 'VIP' to 'Diamond' to match allowed values

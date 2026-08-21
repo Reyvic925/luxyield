@@ -100,14 +100,6 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  securityQuestion: {
-    type: String,
-    required: true
-  },
-  securityAnswer: {
-    type: String,
-    required: true
-  },
   withdrawal2faCode: {
     type: String,
     default: undefined

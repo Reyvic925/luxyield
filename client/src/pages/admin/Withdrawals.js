@@ -237,7 +237,8 @@ const AdminWithdrawals = () => {
                         </button>
                       </div>
                     );
-                  })()}                </div>
+                  })()
+}                </div>
               )}
             </div>
             );
