@@ -130,8 +130,8 @@ const AdminMirrorUser = ({ userId, onBack }) => {
   };
 
   // Helper: get KYC info
-  const kycInfo = profile?.kyc || {};
-  const kycStatus = kycInfo.status || kyc?.kycStatus || 'not_submitted';
+  const kycInfo = profile?.kyc || kyc?.kyc || {};
+  const kycStatus = kycInfo.status || 'not_submitted';
 
   // Helper: portfolio summary
   const summary = portfolioData?.summary || {};

@@ -213,7 +213,12 @@ router.delete('/market-events/:id', authAdmin, async (req, res) => {
 router.get('/users', authAdmin, async (req, res) => {
   try {
     const users = await User.find();
-    res.json(users);
+    const normalizedUsers = users.map(user => ({
+      ...user.toObject(),
+      kycStatus: user.kyc?.status || 'not_submitted',
+      kyc: user.kyc || { status: 'not_submitted' }
+    }));
+    res.json(normalizedUsers);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -1346,10 +1351,14 @@ router.get('/users/:id/kyc', authAdmin, async (req, res) => {
       console.warn('[ADMIN][KYC] User not found for userId:', userId);
       return res.status(404).json({ error: 'User not found' });
     }
-    // Assuming KYC data is stored on the user model (adjust as needed)
+
     res.json({
-      kycStatus: user.kycStatus || 'not_submitted',
-      kycData: user.kycData || null
+      kyc: user.kyc || {
+        status: 'not_submitted',
+        rejectionReason: '',
+        country: '',
+        documentType: ''
+      }
     });
   } catch (err) {
     console.error('[ADMIN][KYC] Error:', err.message, err.stack);

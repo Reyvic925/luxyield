@@ -33,6 +33,12 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
   // Ensure users is always an array
   const safeUsers = Array.isArray(users) ? users : [];
 
+  const getUserKycStatus = (user) => {
+    if (user?.kyc?.status) return user.kyc.status;
+    if (user?.kycStatus) return user.kycStatus;
+    return 'not_submitted';
+  };
+
   // Apply filters and search
   const filteredUsers = safeUsers.filter(user => {
     const matchesSearch = 
@@ -40,7 +46,7 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
       user.name?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesTier = filters.tier === 'all' || user.tier === filters.tier;
-    const matchesKYC = filters.kycStatus === 'all' || user.kycStatus === filters.kycStatus;
+    const matchesKYC = filters.kycStatus === 'all' || getUserKycStatus(user) === filters.kycStatus;
     const matchesActive = !filters.activeOnly || user.status === 'active';
 
     return matchesSearch && matchesTier && matchesKYC && matchesActive;
@@ -228,35 +234,38 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
             </tr>
           </thead>
           <tbody>
-            {uniqueUsers.map(user => (
-              <tr key={user.id || user._id} className="border-b theme-aware-border-secondary theme-aware-hover-bg transition-colors theme-aware-text">
-                <td className="py-4 px-4 min-w-0">
-                  <div className="flex items-center min-w-0 gap-3">
-                    <div className="w-10 h-10 rounded-full theme-aware-bg-secondary flex items-center justify-center flex-shrink-0 theme-aware-text-secondary font-semibold">
-                      {user.avatar ? (
-                        <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
-                      ) : (
-                        <FiUser className="w-5 h-5" />
-                      )}
+            {uniqueUsers.map(user => {
+              const kycStatus = getUserKycStatus(user);
+
+              return (
+                <tr key={user.id || user._id} className="border-b theme-aware-border-secondary theme-aware-hover-bg transition-colors theme-aware-text">
+                  <td className="py-4 px-4 min-w-0">
+                    <div className="flex items-center min-w-0 gap-3">
+                      <div className="w-10 h-10 rounded-full theme-aware-bg-secondary flex items-center justify-center flex-shrink-0 theme-aware-text-secondary font-semibold">
+                        {user.avatar ? (
+                          <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <FiUser className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div className="min-w-0 overflow-hidden">
+                        <div className="font-medium truncate theme-aware-text">{user.name || 'No name'}</div>
+                        <div className="text-xs theme-aware-text-secondary truncate">ID: {user.id || user._id}</div>
+                      </div>
                     </div>
-                    <div className="min-w-0 overflow-hidden">
-                      <div className="font-medium truncate theme-aware-text">{user.name || 'No name'}</div>
-                      <div className="text-xs theme-aware-text-secondary truncate">ID: {user.id || user._id}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-4 px-4 min-w-0 break-words max-w-[16rem] theme-aware-text-secondary">{user.email || 'N/A'}</td>
-                <td className="py-4 px-4 min-w-0">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTierColor(user.tier)}`}>
-                    {user.tier || 'Unknown'}
-                  </span>
-                </td>
-                <td className="py-4 px-4 min-w-0">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getKYCStatusColor(user.kycStatus)}`}>
-                    {user.kycStatus || 'Not Submitted'}
-                  </span>
-                </td>
-                <td className="py-4 px-4 min-w-0 font-mono theme-aware-text">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</td>
+                  </td>
+                  <td className="py-4 px-4 min-w-0 break-words max-w-[16rem] theme-aware-text-secondary">{user.email || 'N/A'}</td>
+                  <td className="py-4 px-4 min-w-0">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTierColor(user.tier)}`}>
+                      {user.tier || 'Unknown'}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 min-w-0">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getKYCStatusColor(kycStatus)}`}>
+                      {kycStatus || 'Not Submitted'}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4 min-w-0 font-mono theme-aware-text">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</td>
                 <td className="py-4 px-4 min-w-0">
                   <div className="flex flex-wrap gap-2">
                     <button 
@@ -289,55 +298,60 @@ const EnhancedUserTable = ({ users, onSelectUser, onUpdateUser }) => {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
  
       {/* Mobile card view */}
       <div className="block md:hidden space-y-3">
-        {uniqueUsers.map(user => (
-          <div key={user.id || user._id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-300 dark:border-gray-600">
-            <div className="flex flex-col sm:flex-row justify-between gap-3">
-              <div className="min-w-0">
-                <div className="font-semibold text-gray-900 dark:text-white truncate">{user.name || 'No name'}</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 break-words truncate">{user.email || 'N/A'}</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">ID: {user.id || user._id}</div>
+        {uniqueUsers.map(user => {
+          const kycStatus = getUserKycStatus(user);
+
+          return (
+            <div key={user.id || user._id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-300 dark:border-gray-600">
+              <div className="flex flex-col sm:flex-row justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-semibold text-gray-900 dark:text-white truncate">{user.name || 'No name'}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 break-words truncate">{user.email || 'N/A'}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">ID: {user.id || user._id}</div>
+                </div>
+                <div className="flex flex-col items-start sm:items-end text-right gap-2">
+                  <div className="font-mono text-sm text-gray-900 dark:text-gray-100">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</div>
+                  <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTierColor(user.tier)}`}>{user.tier || 'Unknown'}</div>
+                  <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${getKYCStatusColor(kycStatus)}`}>{kycStatus || 'Not Submitted'}</div>
+                </div>
               </div>
-              <div className="flex flex-col items-start sm:items-end text-right gap-2">
-                <div className="font-mono text-sm text-gray-900 dark:text-gray-100">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</div>
-                <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTierColor(user.tier)}`}>{user.tier || 'Unknown'}</div>
-                <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${getKYCStatusColor(user.kycStatus)}`}>{user.kycStatus || 'Not Submitted'}</div>
+   
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-lg bg-gray-200 dark:bg-gray-600 p-3">
+                  <div className="text-gray-600 dark:text-gray-400 text-xs">Email</div>
+                  <div className="text-sm text-gray-900 dark:text-white break-words">{user.email || 'N/A'}</div>
+                </div>
+                <div className="rounded-lg bg-gray-200 dark:bg-gray-600 p-3">
+                  <div className="text-gray-600 dark:text-gray-400 text-xs">Tier</div>
+                  <div className="text-sm text-gray-900 dark:text-white break-words">{user.tier || 'Unknown'}</div>
+                </div>
+                <div className="rounded-lg bg-gray-200 dark:bg-gray-600 p-3">
+                  <div className="text-gray-600 dark:text-gray-400 text-xs">KYC Status</div>
+                  <div className="text-sm text-gray-900 dark:text-white break-words">{kycStatus || 'Not Submitted'}</div>
+                </div>
+                <div className="rounded-lg bg-gray-200 dark:bg-gray-600 p-3">
+                  <div className="text-gray-600 dark:text-gray-400 text-xs">Balance</div>
+                  <div className="text-sm text-gray-900 dark:text-white break-words">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</div>
+                </div>
+              </div>
+   
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button onClick={() => onSelectUser(user)} className="w-full p-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors border border-gray-300 dark:border-gray-500">View</button>
+                <button className="w-full p-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors border border-gray-300 dark:border-gray-500">Edit</button>
+                <button onClick={() => setSelectedUserForBalance(user)} className="w-full p-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors border border-gray-300 dark:border-gray-500">Balance</button>
+                <button onClick={() => setSelectedUserForInvestment(user)} className="w-full p-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-colors border border-gray-300 dark:border-gray-500">Invest</button>
               </div>
             </div>
- 
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              <div className="rounded-lg bg-gray-200 dark:bg-gray-600 p-3">
-                <div className="text-gray-600 dark:text-gray-400 text-xs">Email</div>
-                <div className="text-sm text-gray-900 dark:text-white break-words">{user.email || 'N/A'}</div>
-              </div>
-              <div className="rounded-lg bg-gray-200 dark:bg-gray-600 p-3">
-                <div className="text-gray-600 dark:text-gray-400 text-xs">Tier</div>
-                <div className="text-sm text-gray-900 dark:text-white break-words">{user.tier || 'Unknown'}</div>
-              </div>
-              <div className="rounded-lg bg-gray-200 dark:bg-gray-600 p-3">
-                <div className="text-gray-600 dark:text-gray-400 text-xs">KYC Status</div>
-                <div className="text-sm text-gray-900 dark:text-white break-words">{user.kycStatus || 'Not Submitted'}</div>
-              </div>
-              <div className="rounded-lg bg-gray-200 dark:bg-gray-600 p-3">
-                <div className="text-gray-600 dark:text-gray-400 text-xs">Balance</div>
-                <div className="text-sm text-gray-900 dark:text-white break-words">{typeof user.balance === 'number' ? `$${user.balance.toLocaleString()}` : 'N/A'}</div>
-              </div>
-            </div>
- 
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={() => onSelectUser(user)} className="w-full p-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors border border-gray-300 dark:border-gray-500">View</button>
-              <button className="w-full p-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors border border-gray-300 dark:border-gray-500">Edit</button>
-              <button onClick={() => setSelectedUserForBalance(user)} className="w-full p-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors border border-gray-300 dark:border-gray-500">Balance</button>
-              <button onClick={() => setSelectedUserForInvestment(user)} className="w-full p-2 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-colors border border-gray-300 dark:border-gray-500">Invest</button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Balance Management Modal */}
