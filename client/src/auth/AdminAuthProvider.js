@@ -40,6 +40,7 @@ export const AdminAuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const { token, admin: adminData } = await adminLogin(email, password);
+      localStorage.removeItem('token');
       localStorage.setItem('adminToken', token);
       setAdmin(adminData);
       navigate('/admin');
@@ -51,6 +52,7 @@ export const AdminAuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('token');
     setAdmin(null);
     navigate('/admin/login');
   };

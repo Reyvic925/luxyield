@@ -10,12 +10,17 @@ export const UserProvider = ({ children }) => {
   const [kycLoading, setKycLoading] = useState(true);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
 
+  const clearUserSession = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    setKycStatus(null);
+    setKycLoading(false);
+    setIsEmailVerified(false);
+  };
+
   const fetchKycStatus = async (token) => {
     if (!token) {
-      setUser(null);
-      setKycStatus(null);
-      setKycLoading(false);
-      setIsEmailVerified(false);
+      clearUserSession();
       return;
     }
 
@@ -39,28 +44,35 @@ export const UserProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetchKycStatus(token);
-      return;
-    }
-    setUser(null);
-    setKycStatus(null);
-    setKycLoading(false);
-    setIsEmailVerified(false);
+    const syncUserState = () => {
+      const adminToken = localStorage.getItem('adminToken');
+      if (adminToken) {
+        clearUserSession();
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetchKycStatus(token);
+        return;
+      }
+
+      clearUserSession();
+    };
+
+    syncUserState();
+    window.addEventListener('storage', syncUserState);
+    return () => window.removeEventListener('storage', syncUserState);
   }, []);
 
   const login = (token) => {
+    localStorage.removeItem('adminToken');
     localStorage.setItem('token', token);
     fetchKycStatus(token);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    setKycStatus(null);
-    setKycLoading(false);
-    setIsEmailVerified(false);
+    clearUserSession();
   };
 
   const refreshUserContext = async () => {
@@ -83,7 +95,7 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout, kycStatus, kycLoading, isEmailVerified, refreshUserContext }}>
+    <UserContext.Provider value={{ user, login, logout, clearUserSession, kycStatus, kycLoading, isEmailVerified, refreshUserContext }}>
       {children}
     </UserContext.Provider>
   );

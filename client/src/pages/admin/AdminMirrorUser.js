@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import axios, { adminApi } from '../../utils/axios';
+import { useUser } from '../../contexts/UserContext';
 import Portfolio from '../../pages/Portfolio';
 import Dashboard from '../../pages/Dashboard';
 import Settings from '../../pages/Settings';
@@ -8,6 +9,7 @@ import Withdraw from '../../pages/Withdraw';
 import { getUserKeys } from '../../services/adminAPI';
 
 const AdminMirrorUser = ({ userId, onBack }) => {
+  const { clearUserSession } = useUser();
   const [portfolioData, setPortfolioData] = useState(null);
   const [profile, setProfile] = useState(null);
   const [kyc, setKyc] = useState(null);
@@ -53,6 +55,11 @@ const AdminMirrorUser = ({ userId, onBack }) => {
       setAdjustLoading(false);
     }
   };
+
+  useEffect(() => {
+    clearUserSession();
+    localStorage.removeItem('token');
+  }, [clearUserSession, userId]);
 
   useEffect(() => {
     const fetchAll = async () => {

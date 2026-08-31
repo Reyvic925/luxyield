@@ -16,6 +16,7 @@ const AdminLogin = () => {
     try {
       const res = await axios.post('/api/admin/login', { email, password });
       if (res.data.token) {
+        localStorage.removeItem('token');
         localStorage.setItem('adminToken', res.data.token);
         navigate('/admin/dashboard');
       } else {

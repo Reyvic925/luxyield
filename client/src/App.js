@@ -80,6 +80,14 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [hasNewAnnouncement, setHasNewAnnouncement] = useState(false);
 
+  React.useEffect(() => {
+    const hasAdminToken = !!localStorage.getItem('adminToken');
+    const hasUserToken = !!localStorage.getItem('token');
+    if (hasAdminToken && hasUserToken) {
+      localStorage.removeItem('token');
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <NotificationProvider>
