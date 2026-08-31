@@ -57,6 +57,9 @@ const AdminMirrorUser = ({ userId, onBack }) => {
   };
 
   useEffect(() => {
+    setPortfolioData(null);
+    setProfile(null);
+    setKyc(null);
     clearUserSession();
     localStorage.removeItem('token');
   }, [clearUserSession, userId]);
@@ -78,6 +81,8 @@ const AdminMirrorUser = ({ userId, onBack }) => {
         setKyc(null);
       }
     };
+
+    if (!userId) return;
     fetchAll();
   }, [userId]);
 

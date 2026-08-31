@@ -10,7 +10,11 @@ const AdminMirror = () => {
       {!selectedUserId ? (
         <AdminUserList onSelectUser={setSelectedUserId} />
       ) : (
-        <AdminMirrorUser userId={selectedUserId} onBack={() => setSelectedUserId(null)} />
+        <AdminMirrorUser
+          key={selectedUserId}
+          userId={selectedUserId}
+          onBack={() => setSelectedUserId(null)}
+        />
       )}
     </div>
   );
