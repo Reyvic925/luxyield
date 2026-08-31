@@ -3,43 +3,62 @@ import axios from 'axios';
 // Set base URL globally for all axios requests
 axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || '';
 
-// Attach Authorization header for all requests if token exists
-axios.interceptors.request.use((config) => {
-  const adminToken = localStorage.getItem('adminToken');
-  const userToken = localStorage.getItem('token');
+const attachToken = (config, token) => {
+  if (!config) return config;
   config.headers = config.headers || {};
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+};
 
+const pickUserToken = () => localStorage.getItem('token');
+const pickAdminToken = () => localStorage.getItem('adminToken');
+
+// Explicit user client: all normal user routes must use the user token.
+export const userApi = axios.create({
+  baseURL: axios.defaults.baseURL,
+});
+userApi.interceptors.request.use((config) => {
+  const userToken = pickUserToken();
+  return attachToken(config, userToken);
+});
+
+// Explicit admin client: all admin-only routes must use the admin token.
+export const adminApi = axios.create({
+  baseURL: axios.defaults.baseURL,
+});
+adminApi.interceptors.request.use((config) => {
+  const adminToken = pickAdminToken();
+  return attachToken(config, adminToken);
+});
+
+// Default axios is kept for general app use, but it must never let the admin token override a user route.
+axios.interceptors.request.use((config) => {
+  const adminToken = pickAdminToken();
+  const userToken = pickUserToken();
   const url = typeof config.url === 'string' ? config.url : '';
 
-  // Explicit admin-only routes must use the admin token.
   if (adminToken && url.includes('/api/admin')) {
-    config.headers.Authorization = `Bearer ${adminToken}`;
-    return config;
+    return attachToken(config, adminToken);
   }
 
-  // User portfolio/profile requests must use the regular user token even if an admin is logged in.
-  // This prevents mirrored admin views from accidentally querying the admin's own portfolio.
-  if (userToken && (url.includes('/api/portfolio') || url.includes('/api/user'))) {
-    config.headers.Authorization = `Bearer ${userToken}`;
-    return config;
+  if (userToken && (url.includes('/api/portfolio') || url.includes('/api/user') || url.includes('/api/deposit') || url.includes('/api/withdrawal'))) {
+    return attachToken(config, userToken);
   }
 
-  // General authenticated requests use the user's token when present.
   if (userToken) {
-    config.headers.Authorization = `Bearer ${userToken}`;
-    return config;
+    return attachToken(config, userToken);
   }
 
-  // Fall back to admin token only for admin-specific requests when no user token exists.
   if (adminToken) {
-    config.headers.Authorization = `Bearer ${adminToken}`;
+    return attachToken(config, adminToken);
   }
 
   return config;
 });
 
 // Global Axios interceptor for 401 errors
-// Note: We don't redirect here - components should handle redirects based on their own auth context
 axios.interceptors.response.use(
   response => response,
   error => {

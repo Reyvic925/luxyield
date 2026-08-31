@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import axios from '../../utils/axios';
+import axios, { adminApi } from '../../utils/axios';
 import Portfolio from '../../pages/Portfolio';
 import Dashboard from '../../pages/Dashboard';
 import Settings from '../../pages/Settings';
@@ -30,7 +30,7 @@ const AdminMirrorUser = ({ userId, onBack }) => {
     setAdjustLoading(true);
     try {
       // use configured axios so baseURL + auth header are applied consistently
-      const resp = await axios.post(`/api/admin/investment/${activeInvestment._id || activeInvestment.id}/set-gain-loss`, { amount: Number(adjustAmount), type: adjustType });
+      const resp = await adminApi.post(`/api/admin/investment/${activeInvestment._id || activeInvestment.id}/set-gain-loss`, { amount: Number(adjustAmount), type: adjustType });
       console.log('[ADMIN UI] Axios response:', resp.status, resp.data);
 
       const data = resp.data;
@@ -58,9 +58,9 @@ const AdminMirrorUser = ({ userId, onBack }) => {
     const fetchAll = async () => {
       try {
         const [portfolioRes, profileRes, kycRes] = await Promise.all([
-          axios.get(`/api/admin/users/${userId}/portfolio`),
-          axios.get(`/api/admin/users/${userId}/profile`),
-          axios.get(`/api/admin/users/${userId}/kyc`)
+          adminApi.get(`/api/admin/users/${userId}/portfolio`),
+          adminApi.get(`/api/admin/users/${userId}/profile`),
+          adminApi.get(`/api/admin/users/${userId}/kyc`)
         ]);
         setPortfolioData(portfolioRes.data);
         setProfile(profileRes.data);
@@ -78,9 +78,9 @@ const AdminMirrorUser = ({ userId, onBack }) => {
   const handleCompleteActiveInvestment = async () => {
     if (!userId) return;
     try {
-      await axios.post(`/api/admin/users/${userId}/complete-active-investment`);
+      await adminApi.post(`/api/admin/users/${userId}/complete-active-investment`);
       // Refresh portfolio data after completion
-      const portfolioRes = await axios.get(`/api/admin/users/${userId}/portfolio`);
+      const portfolioRes = await adminApi.get(`/api/admin/users/${userId}/portfolio`);
       setPortfolioData(portfolioRes.data);
       alert('Active investment completed successfully.');
     } catch (err) {
@@ -92,9 +92,9 @@ const AdminMirrorUser = ({ userId, onBack }) => {
   const handleContinueCompletedInvestment = async () => {
     if (!userId) return;
     try {
-      await axios.post(`/api/admin/users/${userId}/continue-completed-investment`);
+      await adminApi.post(`/api/admin/users/${userId}/continue-completed-investment`);
       // Refresh portfolio data after continuation
-      const portfolioRes = await axios.get(`/api/admin/users/${userId}/portfolio`);
+      const portfolioRes = await adminApi.get(`/api/admin/users/${userId}/portfolio`);
       setPortfolioData(portfolioRes.data);
       alert('Investment continued successfully.');
     } catch (err) {

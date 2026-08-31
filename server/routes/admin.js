@@ -1297,6 +1297,10 @@ router.patch('/notification-preferences', authAdmin, async (req, res) => {
 router.get('/users/:id/portfolio', authAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
     console.log('[ADMIN][PORTFOLIO] Requested userId:', userId);
     const User = require('../models/User');
     const userDoc = await User.findById(userId);
@@ -1304,7 +1308,7 @@ router.get('/users/:id/portfolio', authAdmin, async (req, res) => {
       console.warn('[ADMIN][PORTFOLIO] User not found for userId:', userId);
       return res.status(404).json({ error: 'User not found' });
     }
-    // Use shared portfolio logic
+
     const { getPortfolioData } = require('./portfolio');
     const data = await getPortfolioData(userId);
     res.json(data);
