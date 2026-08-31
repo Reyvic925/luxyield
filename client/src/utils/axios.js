@@ -5,24 +5,36 @@ axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || '';
 
 // Attach Authorization header for all requests if token exists
 axios.interceptors.request.use((config) => {
-  // Prefer adminToken for admin routes, else use user token
   const adminToken = localStorage.getItem('adminToken');
   const userToken = localStorage.getItem('token');
   config.headers = config.headers || {};
 
-  // For /api/admin routes, always use adminToken
-  if (adminToken && config.url && config.url.includes('/api/admin')) {
+  const url = typeof config.url === 'string' ? config.url : '';
+
+  // Explicit admin-only routes must use the admin token.
+  if (adminToken && url.includes('/api/admin')) {
     config.headers.Authorization = `Bearer ${adminToken}`;
+    return config;
   }
-  // For non-admin routes, check if admin is viewing (has adminToken) - they may be viewing user data from mirror
-  // In this case, still use adminToken for the API call to user endpoints when accessed from mirror feature
-  else if (adminToken && config.url && (config.url.includes('/api/user') || config.url.includes('/api/portfolio'))) {
-    config.headers.Authorization = `Bearer ${adminToken}`;
-  }
-  // Otherwise use user token if available - covers /api/auth routes and general user endpoints
-  else if (userToken) {
+
+  // User portfolio/profile requests must use the regular user token even if an admin is logged in.
+  // This prevents mirrored admin views from accidentally querying the admin's own portfolio.
+  if (userToken && (url.includes('/api/portfolio') || url.includes('/api/user'))) {
     config.headers.Authorization = `Bearer ${userToken}`;
+    return config;
   }
+
+  // General authenticated requests use the user's token when present.
+  if (userToken) {
+    config.headers.Authorization = `Bearer ${userToken}`;
+    return config;
+  }
+
+  // Fall back to admin token only for admin-specific requests when no user token exists.
+  if (adminToken) {
+    config.headers.Authorization = `Bearer ${adminToken}`;
+  }
+
   return config;
 });
 
