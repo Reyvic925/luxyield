@@ -121,6 +121,11 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
 
   // Re-fetch data when lastRefresh changes (after any user action)
   useEffect(() => {
+    if (adminView) {
+      setLoading(false);
+      return;
+    }
+
     const fetchPortfolioData = async () => {
       try {
         const response = await axios.get('/api/portfolio', {
@@ -157,10 +162,12 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
       }
     };
     fetchPortfolioData();
-  }, [lastRefresh]);
+  }, [adminView, lastRefresh]);
 
   // Auto-refresh every 60 seconds
   useEffect(() => {
+    if (adminView) return undefined;
+
     const interval = setInterval(() => {
       // Only refresh if not loading
       if (!loading) {
@@ -198,10 +205,12 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
       }
     }, 60000); // 60 seconds
     return () => clearInterval(interval);
-  }, [loading]);
+  }, [adminView, loading]);
 
   // Auto-refresh every 10 seconds for deposit confirmation
   useEffect(() => {
+    if (adminView) return undefined;
+
     const interval = setInterval(() => {
       (async () => {
         try {
@@ -236,7 +245,7 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
       })();
     }, 10000); // 10 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [adminView]);
 
   // Fetch market news automatically from CoinStats API
   useEffect(() => {
@@ -529,7 +538,7 @@ const Dashboard = ({ adminView = false, portfolioData: adminPortfolioData }) => 
                       <p className="text-xs text-gray-400 break-all">{activity.address}</p>
                     )}
                     <p className="text-xs text-gray-400">
-                      {activity.fund ? `${activity.fund} • ` : ''}{activity.description}
+                      {activity.fund ? `${activity.fund} ï¿½ ` : ''}{activity.description}
                     </p>
                   </div>
                   <div className="col-span-2 text-xs text-gray-400 text-center">

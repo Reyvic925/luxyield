@@ -122,18 +122,16 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
   // Fetch real user profile from backend on mount and when KYC status may change
   useEffect(() => {
     if (adminView) {
-      // In admin view, profile is passed as prop, no need to fetch
+      setProfile(adminProfile);
+      setForm(adminProfile);
       setLoadingProfile(false);
       return;
     }
     async function fetchProfileAndKYC() {
       try {
-        // Fetch user profile
         const res = await axios.get('/api/user/profile', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
         let userProfile = res.data.user;
-        // Fetch latest KYC status
         const kycRes = await axios.get('/api/user/kyc-status', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-        // Only update KYC status if not already verified
         if (userProfile.kyc?.status !== 'verified') {
           userProfile.kyc = kycRes.data.kyc;
         }
@@ -146,7 +144,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
       }
     }
     fetchProfileAndKYC();
-  }, [lastRefresh, adminView]);
+  }, [lastRefresh, adminView, adminProfile]);
 
   const navigate = useNavigate();
   const { theme, themeMode, setThemeMode, isDark, isSystem } = useTheme();

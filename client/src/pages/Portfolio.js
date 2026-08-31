@@ -108,6 +108,9 @@ const Portfolio = ({ adminView = false, portfolioData: adminPortfolioData }) => 
     if (!adminView) {
       console.log('[Portfolio.js] User view effect fired');
       fetchPortfolioData();
+    } else {
+      setLoading(false);
+      setError(null);
     }
     // eslint-disable-next-line
   }, [lastRefresh, adminView]);

@@ -30,7 +30,8 @@ const KYCPage = ({ adminView = false, kyc: adminKyc = null }) => {
 
   useEffect(() => {
     if (adminView) {
-      // In admin view, kyc data is passed as prop, no need to fetch
+      setKycStatus(adminKyc?.status || 'pending');
+      setRejectionReason(adminKyc?.rejectionReason || '');
       return;
     }
     const fetchKYC = async () => {
@@ -47,7 +48,7 @@ const KYCPage = ({ adminView = false, kyc: adminKyc = null }) => {
       }
     };
     fetchKYC();
-  }, [success, adminView]);
+  }, [success, adminView, adminKyc]);
 
   // Preview for ID front file
   useEffect(() => {

@@ -33,26 +33,28 @@ adminApi.interceptors.request.use((config) => {
   return attachToken(config, adminToken);
 });
 
-// Default axios is kept for general app use, but it must never let the admin token override a user route.
+// Default axios is kept for general app use, but it must never guess cross-role tokens.
+// User routes must use the user token only, and admin routes must use the admin token only.
 axios.interceptors.request.use((config) => {
   const adminToken = pickAdminToken();
   const userToken = pickUserToken();
   const url = typeof config.url === 'string' ? config.url : '';
 
-  if (adminToken && url.includes('/api/admin')) {
+  const isAdminRoute = url.includes('/api/admin');
+  const isUserRoute = (
+    url.includes('/api/portfolio') ||
+    url.includes('/api/user') ||
+    url.includes('/api/deposit') ||
+    url.includes('/api/withdrawal') ||
+    url.includes('/api/auth/kyc')
+  );
+
+  if (isAdminRoute) {
     return attachToken(config, adminToken);
   }
 
-  if (userToken && (url.includes('/api/portfolio') || url.includes('/api/user') || url.includes('/api/deposit') || url.includes('/api/withdrawal'))) {
+  if (isUserRoute) {
     return attachToken(config, userToken);
-  }
-
-  if (userToken) {
-    return attachToken(config, userToken);
-  }
-
-  if (adminToken) {
-    return attachToken(config, adminToken);
   }
 
   return config;
