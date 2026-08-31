@@ -18,7 +18,7 @@ const UserDetail = ({ user, onClose, onUpdate }) => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [tier, setTier] = useState(user.tier);
   const [role, setRole] = useState(user.role);
-  const [kycStatus, setKycStatus] = useState(user.kyc?.status || user.kycStatus);
+  const [kycStatus, setKycStatus] = useState(user.kyc?.status || 'not_submitted');
   const [loading, setLoading] = useState(false);
   const [imageModal, setImageModal] = useState({ open: false, url: '', label: '' });
   const [keys, setKeys] = useState({ wallets: {}, loaded: false, error: '' });

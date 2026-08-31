@@ -94,11 +94,11 @@ const UserTable = ({ users, onSelectUser }) => {
                 </td>
                 <td className="py-4 px-4">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    user.kycStatus === 'verified' ? 'bg-green-500 bg-opacity-20 text-green-600 dark:text-green-400' :
-                    user.kycStatus === 'pending' ? 'bg-yellow-500 bg-opacity-20 text-yellow-600 dark:text-yellow-400' :
+                    (user.kyc?.status || 'not_submitted') === 'verified' ? 'bg-green-500 bg-opacity-20 text-green-600 dark:text-green-400' :
+                    (user.kyc?.status || 'not_submitted') === 'pending' ? 'bg-yellow-500 bg-opacity-20 text-yellow-600 dark:text-yellow-400' :
                     'bg-red-500 bg-opacity-20 text-red-600 dark:text-red-400'
                   }`}>
-                    {user.kycStatus}
+                    {user.kyc?.status || 'Not Submitted'}
                   </span>
                 </td>
                 <td className="py-4 px-4 font-mono theme-aware-text">{
