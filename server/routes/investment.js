@@ -6,6 +6,12 @@ const Investment = require('../models/Investment');
 const Plan = require('../models/Plan');
 const User = require('../models/User');
 const Withdrawal = require('../models/Withdrawal');
+const Config = require('../models/Config');
+
+async function getActivationFeePercent() {
+  const config = await Config.findOne({ key: 'withdrawal.activationFeePercent' }).lean().exec();
+  return Number(config?.value ?? process.env.ACTIVATION_FEE_PERCENT ?? 20);
+}
 
 // Test endpoint to verify route is accessible
 router.get('/health-check', (req, res) => {
@@ -179,12 +185,14 @@ router.post('/withdraw-roi/:investmentId', auth, async (req, res) => {
       await investment.save();
     }
 
+    const activationFeePercent = await getActivationFeePercent();
+    const activationFeeAmount = Number((requestedAmount * activationFeePercent / 100).toFixed(2));
     const withdrawal = new Withdrawal({
       userId,
       investmentId,
       amount: requestedAmount,
       reservedAmount: requestedAmount,
-      activationFeeAmount: 0,
+      activationFeeAmount,
       activationFeePaid: 0,
       status: 'awaiting_activation_fee',
       type: 'roi',

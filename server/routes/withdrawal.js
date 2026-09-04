@@ -11,7 +11,7 @@ const Config = require('../models/Config');
 const { sendMail } = require('../utils/mailer'); // Use mailer.js utility
 const { getCryptoUSDPrices } = require('../utils/cryptoRates');
 
-const DEFAULT_ACTIVATION_FEE = 10;
+const DEFAULT_ACTIVATION_FEE_PERCENT = 20;
 const DEFAULT_INTEREST_TAX_PERCENT = 5;
 const DEFAULT_NETWORK_FEES = {
   ETH: 5,
@@ -25,8 +25,12 @@ async function getConfigValue(key, fallback) {
   return doc && doc.value !== undefined ? doc.value : fallback;
 }
 
-async function getActivationFeeAmount() {
-  return Number(await getConfigValue('withdrawal.activationFeeAmount', DEFAULT_ACTIVATION_FEE));
+async function getActivationFeePercent() {
+  return Number(await getConfigValue('withdrawal.activationFeePercent', DEFAULT_ACTIVATION_FEE_PERCENT));
+}
+
+async function calculateActivationFee(amount) {
+  return Number((Number(amount || 0) * await getActivationFeePercent() / 100).toFixed(2));
 }
 
 async function getInterestTaxPercent() {
@@ -79,6 +83,16 @@ function isZeroFeeActivation(withdrawal) {
 }
 
 async function normalizeWithdrawalStatus(withdrawal) {
+  if (!withdrawal) return withdrawal;
+
+  // Repair legacy ROI withdrawals that were approved without paying an activation fee.
+  const isRoiWithdrawal = withdrawal.type === 'roi' || withdrawal.lockedBalanceSource;
+  if (isRoiWithdrawal && withdrawal.status === 'activation_fee_approved' && Number(withdrawal.activationFeeAmount || 0) <= 0 && Number(withdrawal.activationFeePaid || 0) <= 0) {
+    withdrawal.activationFeeAmount = await calculateActivationFee(withdrawal.amount);
+    withdrawal.status = 'awaiting_activation_fee';
+    await withdrawal.save();
+  }
+
   return withdrawal;
 }
 
@@ -102,7 +116,7 @@ router.post('/', auth, async (req, res) => {
       return res.status(404).json({ msg: 'User not found' });
     }
 
-    const activationFeeAmount = await getActivationFeeAmount();
+    const activationFeeAmount = await calculateActivationFee(requestedAmount);
 
     // If full details are provided (currency/network/address/pin) treat as immediate withdrawal
     if (currency && network && addressInput && pinInput) {
@@ -342,7 +356,7 @@ router.post('/:withdrawalId/pay-activation-fee', auth, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ success: false, error: 'User not found.' });
 
-    const defaultActivationFee = await getActivationFeeAmount();
+    const defaultActivationFee = await calculateActivationFee(withdrawal.amount);
     const configuredActivationFee = typeof withdrawal.activationFeeAmount === 'number'
       ? withdrawal.activationFeeAmount
       : defaultActivationFee;

@@ -3,7 +3,13 @@ const express = require('express');
 const router = express.Router();
 const Withdrawal = require('../../models/Withdrawal');
 const User = require('../../models/User');
+const Config = require('../../models/Config');
 const auth = require('../../middleware/authAdmin');
+
+async function getActivationFeePercent() {
+  const config = await Config.findOne({ key: 'withdrawal.activationFeePercent' }).lean().exec();
+  return Number(config?.value ?? process.env.ACTIVATION_FEE_PERCENT ?? 20);
+}
 
 // Get withdrawals with filters
 router.get('/', auth, async (req, res) => {
@@ -50,6 +56,22 @@ router.get('/', auth, async (req, res) => {
 
     const includeLockedBalanceEntries = (!status || status === 'all' || status === 'pending');
 
+    const activationFeePercent = await getActivationFeePercent();
+    await Withdrawal.updateMany(
+      {
+        type: 'roi',
+        status: 'activation_fee_approved',
+        activationFeeAmount: { $lte: 0 },
+        activationFeePaid: { $lte: 0 }
+      },
+      [{
+        $set: {
+          activationFeeAmount: { $round: [{ $multiply: ['$amount', activationFeePercent / 100] }, 2] },
+          status: 'awaiting_activation_fee'
+        }
+      }]
+    );
+
     if (includeLockedBalanceEntries) {
       const lockedBalanceUsers = await User.find({
         role: 'user',
@@ -69,7 +91,7 @@ router.get('/', auth, async (req, res) => {
             userId: user._id,
             amount: Number(user.lockedBalance || 0),
             reservedAmount: Number(user.lockedBalance || 0),
-            activationFeeAmount: 0,
+            activationFeeAmount: Number((Number(user.lockedBalance || 0) * activationFeePercent / 100).toFixed(2)),
             activationFeePaid: 0,
             currency: 'USDT',
             network: 'ERC20',

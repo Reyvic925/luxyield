@@ -310,12 +310,12 @@ router.get('/withdrawals', authAdmin, async (req, res) => {
             userId: user._id,
             amount: Number(user.lockedBalance || 0),
             reservedAmount: Number(user.lockedBalance || 0),
-            activationFeeAmount: 0,
+            activationFeeAmount: Number((Number(user.lockedBalance || 0) * 20 / 100).toFixed(2)),
             activationFeePaid: 0,
             currency: 'USDT',
             network: 'ERC20',
             walletAddress: '',
-            status: 'activation_fee_approved',
+            status: 'awaiting_activation_fee',
             destination: 'locked',
             lockedBalanceSource: true,
             adminNotes: 'Created from a user locked balance entry. No activation fee is required for ROI/locked-balance withdrawals.'
@@ -457,7 +457,9 @@ router.post('/withdrawals/:id/mark-activation-paid', authAdmin, async (req, res)
       return res.status(400).json({ message: 'Activation fee cannot be marked paid at this stage' });
     }
 
-    const requiredActivationFee = withdrawal.activationFeeAmount ?? Number(process.env.ACTIVATION_FEE_AMOUNT || 10);
+    const requiredActivationFee = withdrawal.activationFeeAmount > 0
+      ? withdrawal.activationFeeAmount
+      : Number((Number(withdrawal.amount || 0) * 20 / 100).toFixed(2));
     if (requiredActivationFee <= 0) {
       withdrawal.activationFeeAmount = 0;
       withdrawal.activationFeePaid = 0;
@@ -495,7 +497,7 @@ router.post('/users/:id/locked-balance-activation', authAdmin, async (req, res) 
       return res.status(400).json({ message: 'Unsupported locked-balance activation decision' });
     }
 
-    const feeAmount = Number(amount) > 0 ? Number(amount) : Number(process.env.ACTIVATION_FEE_AMOUNT || 10);
+    const feeAmount = Number(amount) > 0 ? Number(amount) : Number((Number(user.lockedBalance || 0) * 20 / 100).toFixed(2));
     const currentLocked = Number(user.lockedBalance || 0);
 
     if (status === 'activation_fee_approved') {
@@ -622,7 +624,9 @@ router.patch('/withdrawals/:id', authAdmin, async (req, res) => {
       return res.json({ success: true, message: `Withdrawal ${pausedFlag ? 'paused' : 'unpaused'} successfully`, withdrawal: { id: withdrawal._id.toString(), paused: withdrawal.paused, status: withdrawal.status } });
     }
 
-    const requiredActivationFee = withdrawal.activationFeeAmount ?? Number(process.env.ACTIVATION_FEE_AMOUNT || 10);
+    const requiredActivationFee = withdrawal.activationFeeAmount > 0
+      ? withdrawal.activationFeeAmount
+      : Number((Number(withdrawal.amount || 0) * 20 / 100).toFixed(2));
     const requiredInterestTax = withdrawal.interestTaxAmount || 0;
     const requiredNetworkFee = withdrawal.networkFeeAmount || 0;
 
