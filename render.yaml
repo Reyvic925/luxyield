@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 services:
   - type: web
     name: luxyield-client
@@ -7,7 +6,7 @@ services:
     staticPublishPath: ./client/build
     envVars:
       - key: NODE_VERSION
-        value: 16
+        value: 20
       - key: REACT_APP_API_URL
         sync: false
 
@@ -18,33 +17,8 @@ services:
     startCommand: cd server && npm start
     envVars:
       - key: NODE_VERSION
-        value: 16
+        value: 20
       - key: NODE_ENV
         value: production
       - key: PORT
-=======
-services:
-  - type: web
-    name: luxyield-client
-    env: static
-    buildCommand: cd client && npm install && npm run build
-    staticPublishPath: ./client/build
-    envVars:
-      - key: NODE_VERSION
-        value: 16
-      - key: REACT_APP_API_URL
-        sync: false
-
-  - type: web
-    name: luxyield-api
-    env: node
-    buildCommand: cd server && npm install
-    startCommand: cd server && npm start
-    envVars:
-      - key: NODE_VERSION
-        value: 16
-      - key: NODE_ENV
-        value: production
-      - key: PORT
->>>>>>> d9aeb3e (Improve admin panel mobile responsiveness)
         value: 5000
