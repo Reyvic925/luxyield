@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useContext, createContext } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import axios from 'axios';
+import axios from '../utils/axios';
 
 const UserContext = createContext();
 
@@ -35,18 +35,22 @@ export const UserProvider = ({ children }) => {
       if (profileRes.data?.user) {
         setUser(profileRes.data.user);
       }
+    } catch (err) {
+      console.warn('[UserContext] profile fetch error', err?.message || err);
+    } finally {
+      setKycLoading(false);
+    }
 
+    try {
       const res = await axios.get('/api/auth/kyc/status', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setKycStatus(res.data?.kyc?.status || 'pending');
       setIsEmailVerified(Boolean(res.data?.isEmailVerified));
     } catch (err) {
-      console.warn('[UserContext] fetchKycStatus error', err?.message || err);
+      console.warn('[UserContext] KYC fetch error', err?.message || err);
       setKycStatus('pending');
       setIsEmailVerified(false);
-    } finally {
-      setKycLoading(false);
     }
   };
 
