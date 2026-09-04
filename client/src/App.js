@@ -58,6 +58,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import InviteFriends from './pages/InviteFriends';
 import VerifySuccess from './pages/VerifySuccess';
 import VerifyFailed from './pages/VerifyFailed';
+import SupportChat from './pages/SupportChat';
 
 function AppLayout({ sidebarCollapsed, setSidebarCollapsed, hasNewAnnouncement, children }) {
   console.log('AppLayout rendered');
@@ -122,6 +123,7 @@ function App() {
                   <Route path="/legal" element={<LegalDisclaimerPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/group-chat" element={<GroupChat />} />
+                  <Route path="/support" element={<SupportChat />} />
                   <Route path="/dashboard" element={<DashboardLayout sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} hasNewAnnouncement={hasNewAnnouncement} />}>
                     <Route index element={<Dashboard />} />
                     <Route path="portfolio" element={<Portfolio />} />

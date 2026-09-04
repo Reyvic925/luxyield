@@ -20,6 +20,7 @@ const TopRightBar = () => {
 
 
   const handleLogout = () => {
+    setMenuOpen(false);
     logout();
     navigate('/login');
   };
@@ -91,8 +92,8 @@ const TopRightBar = () => {
     };
   }, [menuOpen]);
 
-  const displayName = user?.name || 'Victor Agapiah';
-  const displayEmail = user?.email || 'victor@email.com';
+  const displayName = user?.name || user?.fullName || user?.username || 'Investor';
+  const displayEmail = user?.email || '';
 
   return (
     <div className="flex items-center gap-2 p-2 md:p-2 rounded-xl border theme-aware-border-secondary theme-aware-bg-primary theme-aware-text backdrop-blur shadow-sm">
@@ -132,7 +133,7 @@ const TopRightBar = () => {
               <div className="border-t theme-aware-border-secondary"></div>
               <div className="flex flex-col py-2">
                 <Link
-                  to="/dashboard/settings"
+                  to="/dashboard/settings#profile"
                   onClick={() => setMenuOpen(false)}
                   className="px-4 py-2 text-sm hover:bg-gold/10 transition"
                 >
@@ -146,18 +147,11 @@ const TopRightBar = () => {
                   Settings
                 </Link>
                 <Link
-                  to="/dashboard/settings"
+                  to="/dashboard/settings#security"
                   onClick={() => setMenuOpen(false)}
                   className="px-4 py-2 text-sm hover:bg-gold/10 transition"
                 >
                   Security
-                </Link>
-                <Link
-                  to="/dashboard/education"
-                  onClick={() => setMenuOpen(false)}
-                  className="px-4 py-2 text-sm hover:bg-gold/10 transition"
-                >
-                  Help Center
                 </Link>
               </div>
               <div className="border-t theme-aware-border-secondary"></div>

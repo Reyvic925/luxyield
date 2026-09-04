@@ -245,7 +245,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
       {adminView && <div className="bg-blue-900 bg-opacity-30 border border-blue-600 rounded-lg p-3 mb-4 text-blue-300 text-sm">Admin View - Settings are read-only</div>}
       <h1 className="text-2xl sm:text-3xl font-bold text-gold-gradient mb-6 flex items-center gap-2"><FiSettings /> Settings</h1>
       {/* Profile Section */}
-      <div className="glassmorphic p-3 sm:p-6 rounded-xl w-full space-y-4">
+      <div id="profile" className="glassmorphic p-3 sm:p-6 rounded-xl w-full space-y-4">
         <div className="flex items-center gap-4 mb-4">
           <FiUser className="text-2xl text-gold" />
           <span className="font-semibold text-lg">Profile</span>
@@ -483,7 +483,7 @@ export default function Settings({ adminView = false, profile: adminProfile = nu
         {changePassMsg && <span className={`text-sm mt-2 ${changePassMsg.includes('success') ? 'text-green-400' : 'text-red-400'}`}>{changePassMsg}</span>}
       </div>
       {/* Security Section */}
-      <div className="glassmorphic p-3 sm:p-6 rounded-xl w-full space-y-4">
+      <div id="security" className="glassmorphic p-3 sm:p-6 rounded-xl w-full space-y-4">
         <div className="flex items-center gap-4 mb-4">
           <FiLock className="text-2xl text-gold" />
           <span className="font-semibold text-lg">Security</span>

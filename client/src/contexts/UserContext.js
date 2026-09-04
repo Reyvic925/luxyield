@@ -27,7 +27,14 @@ export const UserProvider = ({ children }) => {
     setKycLoading(true);
     try {
       const decoded = jwtDecode(token);
-      setUser(decoded.user);
+      setUser(decoded.user || { id: decoded.id, role: decoded.role });
+
+      const profileRes = await axios.get('/api/user/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (profileRes.data?.user) {
+        setUser(profileRes.data.user);
+      }
 
       const res = await axios.get('/api/auth/kyc/status', {
         headers: { Authorization: `Bearer ${token}` }
