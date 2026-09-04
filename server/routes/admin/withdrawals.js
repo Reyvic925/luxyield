@@ -74,7 +74,7 @@ router.get('/', auth, async (req, res) => {
             currency: 'USDT',
             network: 'ERC20',
             walletAddress: '',
-            status: 'activation_fee_approved',
+            status: 'awaiting_activation_fee',
             destination: 'locked',
             lockedBalanceSource: true,
             adminNotes: 'Created from a user locked balance entry. No activation fee is required for ROI/locked-balance withdrawals.'
