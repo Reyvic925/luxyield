@@ -21,20 +21,32 @@ app.use('/socket.io', (req, res, next) => {
 });
 const server = http.createServer(app);
 
+// Unified CORS configuration
+// Allow localhost in development and the deployed frontend in production.
+const allowedOrigins = process.env.NODE_ENV === 'development'
+  ? ['http://localhost:3000', 'http://localhost:3001']
+  : ['https://www.luxyield.com'];
+
 // Configure CORS for Express
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'https://www.luxyield.com'],
-  credentials: true
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS origin not allowed: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+  exposedHeaders: ['Authorization']
 }));
 
 // Log CORS configuration
-console.log('[DEBUG] CORS origins:', ['http://localhost:3000', 'http://localhost:3001', 'https://www.luxyield.com']);
+console.log('[DEBUG] CORS origins:', allowedOrigins);
 
 const io = socketio(server, { 
   cors: { 
-    origin: process.env.NODE_ENV === 'development' 
-      ? ['http://localhost:3000', 'http://localhost:3001']
-      : ['https://www.luxyield.com'],
+    origin: allowedOrigins,
     credentials: true 
   } 
 });
@@ -47,27 +59,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// Unified CORS configuration
-// Allow localhost origins in development and the production domain in production
-const allowedOrigins = process.env.NODE_ENV === 'development'
-  ? ['http://localhost:3000', 'http://localhost:3001']
-  : ['https://www.luxyield.com'];
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Expose-Headers', 'Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  if (req.method === 'OPTIONS') {
-    // Short-circuit preflight
-    return res.sendStatus(204);
-  }
-  next();
-});
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
