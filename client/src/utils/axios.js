@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Set base URL globally for all axios requests
-axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || '';
+axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || '';
 
 const attachToken = (config, token) => {
   if (!config) return config;
