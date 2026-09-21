@@ -144,12 +144,25 @@ app.use('/api/plans', require('./routes/plans'));
 app.use('/api/admin/config', require('./routes/admin/config'));
 
 // Database connection
-mongoose.connect(process.env.MONGO_URI)
+mongoose.set('bufferTimeoutMS', 10000);
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 10000,
+  connectTimeoutMS: 10000,
+  socketTimeoutMS: 15000
+})
   .then(() => {
     console.log('MongoDB connected');
     startRoiCron(); // Start ROI simulation cron after DB is connected
   })
   .catch(err => console.log(err));
+
+mongoose.connection.on('disconnected', () => {
+  console.error('[MONGO] Database connection disconnected');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('[MONGO] Database connection error:', err.message);
+});
 
 // Routes
 const authRouter = require('./routes/auth');

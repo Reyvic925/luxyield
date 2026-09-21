@@ -1025,11 +1025,21 @@ router.patch('/users/:id/role', authAdmin, async (req, res) => {
 
 // Get all deposits
 router.get('/deposits', authAdmin, async (req, res) => {
+  const startedAt = Date.now();
+  console.log('[DEPOSITS] Controller started');
   try {
-    const deposits = await Deposit.find().populate('user', 'email username name').sort('-createdAt');
+    const deposits = await Deposit.find()
+      .populate('user', 'email username name')
+      .sort({ createdAt: -1 })
+      .limit(500)
+      .lean()
+      .maxTimeMS(10000)
+      .exec();
+    console.log(`[DEPOSITS] Database query finished in ${Date.now() - startedAt}ms (${deposits.length} records)`);
     res.json(deposits);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error(`[DEPOSITS] Query failed after ${Date.now() - startedAt}ms:`, err.message);
+    res.status(503).json({ message: 'Deposits are temporarily unavailable' });
   }
 });
 
