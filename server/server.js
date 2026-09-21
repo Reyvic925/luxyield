@@ -27,8 +27,7 @@ const allowedOrigins = process.env.NODE_ENV === 'development'
   ? ['http://localhost:3000', 'http://localhost:3001']
   : ['https://www.luxyield.com'];
 
-// Configure CORS for Express
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
@@ -39,7 +38,11 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
   exposedHeaders: ['Authorization']
-}));
+};
+
+// Configure CORS before every route and terminate browser preflight requests here.
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Log CORS configuration
 console.log('[DEBUG] CORS origins:', allowedOrigins);
@@ -47,7 +50,8 @@ console.log('[DEBUG] CORS origins:', allowedOrigins);
 const io = socketio(server, { 
   cors: { 
     origin: allowedOrigins,
-    credentials: true 
+    credentials: true,
+    methods: ['GET', 'POST']
   } 
 });
 
